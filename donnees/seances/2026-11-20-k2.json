@@ -1,0 +1,42 @@
+{
+  "creeLe": "2026-11-21T12:01:19.941Z",
+  "date": "2026-11-20",
+  "participants": [
+    "abdou-lahad",
+    "alioune-sylla",
+    "babacar-sarr",
+    "bachir-faye",
+    "boucar",
+    "cheikh-bane",
+    "cheikh-kebe",
+    "issakha",
+    "mamadou-lamine",
+    "mohamed-camara",
+    "mouhamed-seydi",
+    "mountakha",
+    "papa-madior-top",
+    "saliou-diop",
+    "xaadim-sylla",
+    "yacoub"
+  ],
+  "statuts": {
+    "abdou-lahad": "A",
+    "alioune-sylla": "A",
+    "babacar-sarr": "A",
+    "bachir-faye": "A",
+    "boucar": "P",
+    "cheikh-bane": "R",
+    "cheikh-kebe": "A",
+    "issakha": "A",
+    "mamadou-lamine": "P",
+    "mohamed-camara": "P",
+    "mouhamed-seydi": "P",
+    "mountakha": "P",
+    "papa-madior-top": "A",
+    "saliou-diop": "P",
+    "xaadim-sylla": "P",
+    "yacoub": "P"
+  },
+  "tari": "aucun",
+  "type": "k2"
+}

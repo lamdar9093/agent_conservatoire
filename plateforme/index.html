@@ -1,0 +1,1919 @@
+<title>Conservatoire MBTE</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;1,400&family=Harmattan:wght@500;700&display=swap">
+<style>
+/* Mise en page : une colonne d'outil. Onglets épinglés en haut ; séances, bilan et membres en dessous. */
+:root {
+  --paper: #f7f8f5;
+  --surface: #ffffff;
+  --ink: #151a18;
+  --ink-soft: #59615d;
+  --rule: #dfe2dc;
+  --accent: #0b6a4c;
+  --accent-ink: #ffffff;
+  --accent-soft: #e0eee7;
+  --good: #1d7a45;
+  --good-soft: #e3f2e8;
+  --warn: #9a5a00;
+  --warn-soft: #fbefd9;
+  --bad: #b3261e;
+  --bad-soft: #fbe5e3;
+  --info: #2f5f9e;
+  --info-soft: #e4ecf7;
+  --shadow: 0 1px 2px rgba(18, 28, 24, 0.06), 0 8px 28px rgba(18, 28, 24, 0.10);
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-text: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1312; --surface: #161b19; --ink: #eaece7; --ink-soft: #a2aaa6; --rule: #29302d;
+    --accent: #6cc7a0; --accent-ink: #0b1a14; --accent-soft: #15302a;
+    --good: #6fd39a; --good-soft: #143222; --warn: #efb65e; --warn-soft: #33260f; --bad: #f28b82; --bad-soft: #3a1714; --info: #8fb6ea; --info-soft: #172840;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.42);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1312; --surface: #161b19; --ink: #eaece7; --ink-soft: #a2aaa6; --rule: #29302d;
+  --accent: #6cc7a0; --accent-ink: #0b1a14; --accent-soft: #15302a;
+  --good: #6fd39a; --good-soft: #143222; --warn: #efb65e; --warn-soft: #33260f; --bad: #f28b82; --bad-soft: #3a1714; --info: #8fb6ea; --info-soft: #172840;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.42);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 40; background: var(--surface); }
+.wrap { width: 100%; max-width: 820px; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--ink-soft); }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); border-bottom: 1px solid var(--rule); }
+.top .wrap { padding-block: 12px 0; display: grid; gap: 10px; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand-name { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; min-width: 0; }
+.brand-name .logo { flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: "Harmattan", serif; font-size: 17px; font-weight: 700; line-height: 1; }
+.brand-name b { display: block; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
+.brand-name small { display: block; font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-name > span:last-child { min-width: 0; }
+.brand-side { display: flex; align-items: center; gap: 8px; flex: none; }
+.gear { display: none; color: var(--ink-soft); padding: 6px; border-radius: 8px; }
+@media (max-width: 720px) { .brand-side .role { display: none; } .brand-name b { font-size: 17px; } }
+.gear[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+.ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.brand .role { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; }
+.tabs a { display: inline-flex; align-items: center; gap: 7px; padding: 10px 12px; text-decoration: none; color: var(--ink-soft); font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs a .ico { width: 18px; height: 18px; }
+.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs a[aria-current="page"] .ico { color: var(--accent); }
+.bottom-nav { display: none; }
+@media (max-width: 720px) {
+  .tabs { display: none; }
+  .top .wrap { padding-block: 10px; }
+  .gear { display: inline-flex; }
+  .bottom-nav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; background: var(--surface); border-top: 1px solid var(--rule); padding: 6px max(6px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .bottom-nav a { display: grid; justify-items: center; gap: 3px; padding: 5px 2px; border-radius: 10px; text-decoration: none; color: var(--ink-soft); font-size: 11.5px; font-weight: 500; }
+  .bottom-nav a .ico { width: 22px; height: 22px; }
+  .bottom-nav a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+  main { padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important; }
+  body.lecture .bottom-nav { display: none; }
+  body.lecture main { padding-bottom: 0 !important; }
+}
+.kh-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.kh-card { display: grid; gap: 6px; padding: 16px; border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); text-decoration: none; color: var(--ink); cursor: pointer; text-align: left; }
+.kh-card:hover { border-color: var(--accent); }
+.kh-card .kh-ar { font-size: 30px; line-height: 1.5; color: var(--accent); text-align: right; }
+.kh-card b { font-size: 16px; font-weight: 600; }
+.kh-card .muted { font-size: 13px; }
+.kh-card .go { color: var(--accent); font-weight: 600; font-size: 13.5px; margin-top: 4px; }
+body.lecture main { padding-top: 0; gap: 0; max-width: none; padding-left: 0; padding-right: 0; }
+.lecture-bar { display: flex; align-items: center; gap: 10px; padding: 8px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--rule); background: var(--surface); }
+.lecture-bar b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lecture-frame { display: block; width: 100%; border: 0; background: var(--paper); }
+
+main { padding-block: 20px 60px; display: grid; gap: 16px; }
+main > * { min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; }
+.panel h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+.panel p { margin: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--ink-soft); }
+.field textarea { padding: 9px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; resize: vertical; min-height: 64px; }
+.field input, .field select { padding: 9px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); min-width: 0; }
+.btn { border: 1px solid var(--rule); background: var(--surface); color: var(--ink); padding: 9px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { color: var(--bad); border-color: var(--bad); background: transparent; }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.list { display: grid; gap: 8px; }
+.seance { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; cursor: pointer; text-align: left; width: 100%; }
+.seance:hover { border-color: var(--accent); }
+.seance .when { flex: 1; min-width: 0; display: grid; }
+.seance .when b { font-weight: 600; }
+.seance .when .pill { font-size: 12.5px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.counts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.c-p { color: var(--good); } .c-r { color: var(--warn); } .c-a { color: var(--bad); }
+.pill { padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.pill.p { background: var(--good-soft); color: var(--good); }
+.pill.r { background: var(--warn-soft); color: var(--warn); }
+.pill.a { background: var(--bad-soft); color: var(--bad); }
+
+.detail-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.people { display: grid; gap: 6px; margin-top: 12px; }
+.person { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.person .name { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.person .tags { font-size: 11.5px; color: var(--ink-soft); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; padding: 2px; background: var(--surface); flex: none; }
+.seg button { border: 0; background: transparent; padding: 6px 10px; border-radius: 999px; cursor: pointer; font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+.seg button[aria-pressed="true"][data-v="P"] { background: var(--good); color: var(--surface); }
+.seg button[aria-pressed="true"][data-v="R"] { background: var(--warn); color: var(--surface); }
+.seg button[aria-pressed="true"][data-v="A"] { background: var(--bad); color: var(--surface); }
+.seg button[aria-pressed="true"][data-v="E"] { background: var(--info); color: var(--surface); }
+.pill.e { background: var(--info-soft); color: var(--info); }
+.motifs { order: 5; flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-top: 2px; }
+.motifs .lbl { font-size: 12.5px; color: var(--ink-soft); margin-right: 2px; }
+.motifs .toggle[aria-pressed="true"] { border-color: var(--info); background: var(--info-soft); color: var(--info); }
+.motifs input { flex: 1 1 160px; min-width: 0; padding: 6px 9px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 13.5px; }
+.person.prev { border-color: var(--info); }
+.sub { display: block; font-size: 11.5px; color: var(--info); font-weight: 500; }
+.seg button[aria-pressed="true"]:not([data-v]) { background: var(--ink); color: var(--paper); }
+@media (max-width: 560px) {
+  .person { flex-wrap: wrap; padding: 10px; }
+  .person .name { flex: 1 1 100%; }
+  .person .seg { flex: 1 1 100%; display: flex; }
+  .person .seg button { flex: 1; padding: 10px 6px; font-size: 14px; }
+  .person .toggle.tari { flex: 1 1 100%; padding: 8px; }
+  .person .motifs { order: 0; }
+  .seance { flex-wrap: wrap; }
+  .seance .counts { flex: 1 1 100%; justify-content: flex-start; }
+  .list .member input[type="text"] { flex: 1 1 100%; }
+  form#f-membre .field, form#f-kh .field { flex: 1 1 100% !important; }
+  .tari-box .seg { display: flex; width: 100%; }
+  .tari-box .seg button { flex: 1; padding: 8px 4px; }
+  .table-wrap .bar { display: none; }
+  .table-wrap th, .table-wrap td { padding: 8px 5px; }
+  .table-wrap th { font-size: 10.5px; letter-spacing: 0.02em; }
+  .table-wrap table { font-size: 13.5px; }
+  .table-wrap th:nth-child(2), .table-wrap td:nth-child(2) { display: none; }
+  .table-wrap .sub { white-space: normal; font-size: 10.5px; line-height: 1.25; }
+}
+
+.confirm { margin-top: 12px; padding: 12px; border-radius: 10px; background: var(--bad-soft); display: grid; gap: 8px; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.table-wrap { overflow-x: auto; margin-top: 12px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+th, td { padding: 9px 8px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; }
+th { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
+.bar { display: inline-block; width: 60px; height: 6px; border-radius: 3px; background: var(--rule); vertical-align: middle; margin-right: 6px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--good); }
+.flag { display: inline-block; margin-left: 6px; font-size: 11.5px; font-weight: 600; color: var(--bad); }
+
+.member { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.member input[type="text"] { flex: 1 1 180px; min-width: 0; padding: 7px 9px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--ink); font-weight: 500; }
+.member input[type="text"]:hover, .member input[type="text"]:focus { border-color: var(--rule); background: var(--surface); }
+.wa { margin-top: 14px; padding: 12px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule); }
+.wa-bulle { max-width: 520px; padding: 10px 12px; border-radius: 4px 12px 12px 12px; background: var(--accent-soft); color: var(--ink); font-size: 14.5px; line-height: 1.5; overflow-wrap: anywhere; box-shadow: var(--shadow); }
+.check { display: flex; align-items: center; gap: 8px; flex: 1 1 100%; font-size: 14px; color: var(--ink); cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.vers-select { font-family: var(--font-ui), "Harmattan", serif; }
+.member.off { opacity: 0.6; }
+.date-inline { padding: 3px 6px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 12.5px; }
+[lang="ar"] { font-family: "Harmattan", "Noto Naskh Arabic", "Geeza Pro", serif; }
+.kh-ar { font-size: 26px; line-height: 1.6; direction: rtl; }
+.item { padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); display: grid; gap: 4px; }
+.item.attente { border-color: var(--warn); background: var(--warn-soft); }
+.item .ligne { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.item a, .tari-box a { color: var(--accent); font-weight: 600; }
+.stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.tari-box { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); }
+.toggle.tari { color: var(--warn); border-color: var(--warn); }
+.toggle.tari.ok { color: var(--good); border-color: var(--good); background: var(--good-soft); }
+.panel.alert { border-color: var(--warn); background: var(--warn-soft); }
+.owed { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.member .who { flex: 1 1 220px; min-width: 0; display: grid; gap: 2px; }
+.member .meta { font-size: 12.5px; color: var(--ink-soft); }
+.member .actions { display: flex; gap: 6px; margin-left: auto; }
+.btn.small { padding: 6px 10px; font-size: 13px; }
+.inline-form { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 8px; align-items: end; padding: 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--rule); }
+h3.group { margin: 18px 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+.linkish { border: 0; background: none; padding: 4px 2px; color: var(--ink-soft); cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 2px; }
+h3.group .linkish { text-decoration: none; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; font-size: 12px; }
+.toggle { border: 1px solid var(--rule); background: transparent; padding: 5px 11px; border-radius: 999px; cursor: pointer; font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+.toggle[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+.empty { padding: 28px 16px; text-align: center; color: var(--ink-soft); border: 1px dashed var(--rule); border-radius: 12px; }
+.toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50; max-width: min(92vw, 480px); width: max-content; padding: 10px 14px; border-radius: 8px; background: var(--ink); color: var(--paper); font-size: 14px; box-shadow: var(--shadow); }
+.dz-card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px; text-align: left; cursor: pointer; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; color: var(--ink); }
+.dz-card:hover { border-color: var(--accent); }
+.dz-card.alerte { border-color: var(--warn); }
+.dz-date { flex: none; width: 58px; padding: 6px 0; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; justify-items: center; line-height: 1.1; }
+.dz-date small { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.dz-date b { font-size: 22px; font-weight: 600; }
+.dz-body { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.dz-body b { font-size: 15.5px; font-weight: 600; }
+.dz-go { flex: none; font-size: 22px; color: var(--ink-soft); }
+.big-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.big-stat { padding: 12px 14px; border-radius: 12px; display: grid; gap: 2px; }
+.big-stats.one { grid-template-columns: 1fr; }
+.big-stat b small { font-size: 16px; font-weight: 500; opacity: 0.75; }
+.name-grid span.off { opacity: 0.55; border-style: dashed; }
+.seg-full { display: flex; width: 100%; }
+.seg-full button { flex: 1; padding: 9px 8px; }
+.big-stat b { font-size: 28px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.big-stat span { font-size: 13.5px; font-weight: 500; }
+.big-stat.ok { background: var(--good-soft); color: var(--good); }
+.big-stat.wait { background: var(--warn-soft); color: var(--warn); }
+.big-stat.zero { background: var(--paper); color: var(--ink-soft); }
+.wait-card { padding: 10px 12px; border: 1px solid var(--warn); border-radius: 10px; background: var(--warn-soft); display: grid; gap: 8px; }
+.wait-card > div > b { font-weight: 600; font-size: 15.5px; }
+.wait-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.wait-row + .wait-row { padding-top: 8px; border-top: 1px dashed var(--warn); }
+.wait-row .what { flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--ink-soft); }
+.wait-row .what b { color: var(--ink); }
+.wait-row .btn { flex: none; background: var(--surface); }
+.name-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; margin-top: 10px; }
+.name-grid span { padding: 8px 10px; border-radius: 8px; background: var(--paper); border: 1px solid var(--rule); font-weight: 500; overflow-wrap: anywhere; }
+.name-grid em { font-style: normal; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
+.me-banner { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 12px; font-weight: 500; }
+.me-banner.ok { background: var(--good-soft); color: var(--good); }
+.me-banner.info { background: var(--info-soft); color: var(--info); }
+.me-banner.wait { background: var(--warn-soft); color: var(--warn); }
+@media (max-width: 560px) {
+  .wait-row .btn { flex: 1 1 100%; padding: 10px; }
+  .seg-full { display: grid; grid-template-columns: 1fr 1fr; border-radius: 14px; gap: 2px; }
+  .seg-full button { border-radius: 11px; }
+  .name-grid { grid-template-columns: 1fr 1fr; }
+}
+.rap-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.rap-when { flex: 1 1 200px; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.rap-when .muted { flex: 1 1 100%; font-size: 13px; }
+.rap-row.annulee { border-style: dashed; }
+.rap-row.annulee .rap-when b { text-decoration: line-through; color: var(--ink-soft); }
+@media (max-width: 560px) { .rap-row > .btn { flex: 1 1 auto; padding: 10px; } .rap-row > .btn.ghost { flex: 0 0 auto; } }
+.rap-when .pill { font-size: 12px; }
+.toggle.sugg { text-align: left; white-space: normal; line-height: 1.35; padding: 6px 11px; border-radius: 14px; }
+.toggle.sugg[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.seg-tabs { margin-bottom: 2px; }
+.suivi-card { padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); }
+.suivi-card.pret { border-color: var(--good); }
+.suivi-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
+.suivi-head b { font-size: 15.5px; font-weight: 600; }
+.suivi-head .pill { font-size: 12px; }
+.tuiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+.tuile { padding: 8px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--rule); display: grid; gap: 2px; }
+.tuile span { font-size: 11.5px; color: var(--ink-soft); }
+.tuile b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tuile.ok { border-color: var(--good); } .tuile.ok b { color: var(--good); }
+.tuile.ko b { color: var(--warn); }
+.eval-form { margin-top: 10px; }
+.eval-ligne { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.eval-ligne > span:first-child { font-weight: 500; }
+.eval-ligne .seg button[data-niv="1"][aria-pressed="true"] { background: var(--warn); color: var(--surface); }
+.eval-ligne .seg button[data-niv="2"][aria-pressed="true"] { background: var(--info); color: var(--surface); }
+.eval-ligne .seg button[data-niv="3"][aria-pressed="true"] { background: var(--good); color: var(--surface); }
+.confirm.promo { background: var(--good-soft); }
+.pill.n { background: var(--surface); color: var(--ink-soft); border: 1px solid var(--rule); }
+.acc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.acc-row .who { flex: 1 1 180px; min-width: 0; }
+.acc-row .tags { font-size: 11.5px; color: var(--ink-soft); }
+.raisons { display: flex; flex-wrap: wrap; gap: 5px; }
+.raisons .pill { font-size: 12px; }
+@media (max-width: 560px) {
+  .tuiles { grid-template-columns: 1fr 1fr; }
+  .tuile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .eval-ligne .seg { display: flex; width: 100%; }
+  .eval-ligne .seg button { flex: 1; padding: 8px 4px; font-size: 13px; }
+}
+.eval-vue { display: grid; gap: 8px; }
+.eval-vue .eval-ligne .pill { font-size: 12.5px; }
+.eval-com { margin-top: 10px !important; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--paper); border-radius: 0 8px 8px 0; font-family: var(--font-text); font-style: italic; }
+.etapes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.etapes li { display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; border-radius: 8px; background: var(--paper); border: 1px solid var(--rule); color: var(--ink-soft); }
+.etapes li span { font-weight: 600; width: 1em; flex: none; }
+.etapes li.ok { color: var(--ink); border-color: var(--good); }
+.etapes li.ok span { color: var(--good); }
+.sv-choix { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.sv-btn { display: grid; gap: 4px; text-align: left; padding: 14px; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; }
+.sv-btn b { font-size: 15px; font-weight: 600; }
+.sv-btn span { font-size: 13px; color: var(--ink-soft); }
+.sv-btn.primary { background: var(--accent-soft); border-color: var(--accent); }
+.sv-btn.primary b { color: var(--accent); }
+.sv-btn:hover { border-color: var(--accent); }
+@media (max-width: 560px) { .sv-choix { grid-template-columns: 1fr; } }
+textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: 13px/1.5 ui-monospace, Menlo, monospace; }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <a class="brand-name" href="#seances"><span class="logo" lang="ar" aria-hidden="true">مفاتح</span><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></a>
+      <span class="brand-side"><span class="role" id="role">Chargement…</span><a class="gear" href="#reglages" data-view="reglages" aria-label="Réglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/></svg></a></span>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#khassidas" data-view="khassidas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/></svg><span>Khassidas</span></a>
+      <a href="#seances" data-view="seances"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg><span>Répétitions</span></a>
+      <a href="#dahira" data-view="dahira"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.8-3.3 3.2-5.2 6-5.2s5.2 1.9 6 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M16.6 14.3c2.3.3 3.9 2 4.4 4.7"/></svg><span>Dahira</span></a>
+      <a href="#bilan" data-view="bilan"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2.5 20h19"/></svg><span>Bilan</span></a>
+      <a href="#moi" data-view="moi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c1-3.9 3.8-6.1 7-6.1s6 2.2 7 6.1"/></svg><span>Mon espace</span></a>
+      <a href="#reglages" data-view="reglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/></svg><span>Réglages</span></a>
+    </nav>
+  </div>
+</header>
+<nav class="bottom-nav" aria-label="Sections">
+  <a href="#khassidas" data-view="khassidas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/></svg><span>Khassidas</span></a>
+  <a href="#seances" data-view="seances"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg><span>Répétitions</span></a>
+  <a href="#dahira" data-view="dahira"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.8-3.3 3.2-5.2 6-5.2s5.2 1.9 6 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M16.6 14.3c2.3.3 3.9 2 4.4 4.7"/></svg><span>Dahira</span></a>
+  <a href="#bilan" data-view="bilan"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2.5 20h19"/></svg><span>Bilan</span></a>
+  <a href="#moi" data-view="moi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c1-3.9 3.8-6.1 7-6.1s6 2.2 7 6.1"/></svg><span>Moi</span></a>
+</nav>
+
+<main class="wrap" id="app">
+  <div class="empty">Chargement des présences…</div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var TYPES = { k1: "Kourel 1", k2: "Kourel 2", rg: "Répétition générale" };
+  var STATUTS = { P: "Présent", R: "Retard", A: "Absent" };
+  /* « Prévenu » = absent qui a prévenu : enregistré comme statut A + entrée dans s.prevenus {id: {motif, note}}. */
+  var CHOIX = { P: "Présent", R: "Retard", A: "Absent", E: "Prévenu" };
+  var MOTIFS = ["Travail", "Études", "Santé", "Famille", "Voyage", "Autre"];
+  function aPrevenu(s, id) { return ((s.statuts || {})[id] || "P") === "A" && !!(s.prevenus || {})[id]; }
+  function choixDe(s, id) { return aPrevenu(s, id) ? "E" : ((s.statuts || {})[id] || "P"); }
+  function motifTexte(s, id) {
+    var p = (s.prevenus || {})[id] || {};
+    if (p.motif === "Autre") return p.note || "Autre";
+    return (p.motif || "") + (p.motif && p.note ? " : " + p.note : "");
+  }
+  var app = document.getElementById("app");
+  var db = null, peutModifier = false;
+  var membres = {}, seances = [], charge = { m: false, s: false };
+  var vue = "seances", seanceOuverte = null, confirmerSuppression = false;
+  var lecture = null;
+  var dahiraOuvert = null, apercuDahira = false, rappelOuvert = null, programmes = {}, editRep = null;
+  var filtre = { periode: "mois", kourel: "tous" };
+  var bilanMode = "presences", evalOuvert = null, promoOuvert = null, evaluations = {};
+  var apercu = false;
+  var formOuvert = null, voirPartis = false, ajusterListe = false, tariEdition = false, confirmerTari = false;
+  function statutMembre(m) { return m.statut || (m.actif === false ? "pause" : "actif"); }
+  var TARI = { aucun: "Pas de Tari", absents: "Les absents", tous: "Tout le monde" };
+  function isoPlus(iso, n) { var d = asDate(iso); d.setDate(d.getDate() + n); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  /* Dahira concerné : le samedi de la semaine suivante (semaine du lundi au dimanche). */
+  function dahiraConcerne(iso) { var mi = (asDate(iso).getDay() + 6) % 7; return isoPlus(iso, 5 - mi + 7); }
+  function tariConcerne(s, id) {
+    var t = s.tari || "aucun";
+    if (t === "tous") return true;
+    if (t === "absents") return ((s.statuts || {})[id] || "P") === "A";
+    return false;
+  }
+  function requis(s, id) {
+    var m = membres[id];
+    if (!m || statutMembre(m) === "actif") return true;
+    return m.depuis ? s.date < m.depuis : false;
+  }
+  function tariCompte(s) {
+    var c = { dus: 0, recus: 0, manquants: [] };
+    (s.participants || []).forEach(function (id) {
+      if (!requis(s, id) || !tariConcerne(s, id)) return;
+      c.dus++;
+      if ((s.tariRecu || {})[id]) c.recus++; else c.manquants.push(id);
+    });
+    return c;
+  }
+  var khassidas = {}, dahirasCfg = {};
+  function tariTexte(td, avecLien) {
+    var kh = khassidas[td.khassida];
+    if (!kh && !td.consigne) return "";
+    var t = kh ? "<b>" + esc(kh.titre) + "</b>" : "";
+    if (kh && td.tout) t += " · khassida entier";
+    else if (kh && td.de) t += " · vers " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
+    if (td.consigne) t += (t ? " · " : "") + esc(td.consigne);
+    if (avecLien !== false && kh && (kh.page || kh.lien)) t += ' · <a href="' + esc(pageKhassida(kh, td.de)) + '"' + (kh.page ? "" : ' target="_blank" rel="noopener"') + ">Lire et écouter</a>";
+    return t;
+  }
+  function versControles(td) {
+    var kh = khassidas[td.khassida];
+    if (!kh) return '<p class="muted" style="flex:1 1 100%;margin:0">Choisissez un khassida pour choisir les vers.</p>';
+    var n = kh.vers || 0, debuts = kh.versDebut || [];
+    function opts(from, sel) {
+      var o = "";
+      for (var i = from; i <= n; i++) o += '<option value="' + i + '"' + (Number(sel) === i ? " selected" : "") + ">" + i + (debuts[i - 1] ? " · " + esc(debuts[i - 1]) : "") + "</option>";
+      return o;
+    }
+    var tout = !!td.tout;
+    return '<label class="check"><input type="checkbox" id="t-tout"' + (tout ? " checked" : "") + "> Tout le khassida (" + n + " vers)</label>" +
+      (tout ? "" :
+        '<label class="field" style="flex:1 1 200px">Du vers<select id="t-de" class="vers-select">' + opts(1, td.de || 1) + "</select></label>" +
+        '<label class="field" style="flex:1 1 200px">Au vers<select id="t-a" class="vers-select">' + opts(Number(td.de) || 1, td.a || n) + "</select></label>");
+  }
+  function tariDetailHTML(s) {
+    if (!s.tari || s.tari === "aucun") return "";
+    var td = s.tariDetail || {};
+    var h = "";
+    if (peutModifier) {
+      var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
+      h += '<div class="row" style="margin-top:8px">' +
+        '<label class="field" style="flex:1 1 220px">Khassida à envoyer<select id="t-kh"><option value="">Choisir…</option>' +
+        kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (td.khassida === k.id ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") + "</select></label>" +
+        versControles(td) +
+        '<label class="field" style="flex:1 1 240px">Consigne (facultatif)<input type="text" id="t-cons" value="' + esc(td.consigne || "") + '" placeholder="Xàjj du dieuwrigne, chaque vers deux fois…"></label></div>';
+    }
+    var t = tariTexte(td);
+    h += t ? '<p style="margin-top:8px">À envoyer : ' + t + "</p>" : (peutModifier ? "" : '<p class="muted" style="margin-top:6px">Le contenu du Tari n’a pas encore été précisé.</p>');
+    return h;
+  }
+  function samediLong(iso) { return "samedi " + asDate(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }); }
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function asDate(iso) { return new Date(iso + "T12:00:00"); }
+  function jourLong(iso) { var s = asDate(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function moisLabel(m) { var s = asDate(m + "-15").toLocaleDateString("fr-FR", { month: "long", year: "numeric" }); return s.charAt(0).toUpperCase() + s.slice(1); }
+  var HORAIRE = { k1: "18h - 21h", k2: "18h - 21h", rg: "12h - 16h" };
+  function horaireDe(s) { return s.horaire != null ? s.horaire : (HORAIRE[s.type] || ""); }
+  function typeDuJour(iso) { var j = asDate(iso).getDay(); return j === 4 ? "k1" : j === 5 ? "k2" : j === 0 ? "rg" : "k1"; }
+  function slug(s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "membre"; }
+  function tagsKourel(m) { var t = []; if (m.k1) t.push("K1"); if (m.k2) t.push("K2"); return t.join(" · ") || "Aucun Kourel"; }
+  function triNom(a, b) { return (a.nom || "").localeCompare(b.nom || "", "fr"); }
+  var toastTimer = 0;
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3500); }
+  function echec(e) { toast(e && e.code === "invalid_argument" ? "Modification refusée : seul l’administrateur peut modifier les présences." : "La modification n’a pas pu être enregistrée. Réessayez."); }
+
+  function compter(s) {
+    var c = { P: 0, R: 0, A: 0, E: 0 };
+    (s.participants || []).forEach(function (id) { if (!requis(s, id)) return; var v = (s.statuts || {})[id] || "P"; c[v] = (c[v] || 0) + 1; if (aPrevenu(s, id)) c.E++; });
+    return c;
+  }
+  function countsHTML(c) {
+    var sans = c.A - (c.E || 0);
+    return '<span class="pill p">' + c.P + " présent" + (c.P > 1 ? "s" : "") + "</span>" +
+      (c.R ? '<span class="pill r">' + c.R + " retard" + (c.R > 1 ? "s" : "") + "</span>" : "") +
+      (sans ? '<span class="pill a">' + sans + " absent" + (sans > 1 ? "s" : "") + "</span>" : "") +
+      (c.E ? '<span class="pill e">' + c.E + " prévenu" + (c.E > 1 ? "s" : "") + "</span>" : "");
+  }
+
+  /* ---------- Séances ---------- */
+  function vueSeances() {
+    if (rappelOuvert) return vueRappel(rappelOuvert);
+    if (dahiraOuvert) return vueDahira(dahiraOuvert);
+    if (seanceOuverte) return vueSeance(seances.filter(function (s) { return s.id === seanceOuverte; })[0]);
+    var html = "";
+    if (peutModifier) {
+      var d = today();
+      html += '<section class="panel"><h2>Nouvelle séance</h2><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
+        '<form class="row" id="f-seance" style="margin-top:12px">' +
+        '<label class="field">Date<input type="date" id="s-date" value="' + d + '" required></label>' +
+        '<label class="field">Répétition<select id="s-type">' +
+        Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (k === typeDuJour(d) ? " selected" : "") + ">" + TYPES[k] + "</option>"; }).join("") +
+        "</select></label>" +
+        '<label class="field">Horaire<input type="text" id="s-heure" value="' + esc(HORAIRE[typeDuJour(d)]) + '" placeholder="18h - 21h" style="width:120px"></label>' +
+        '<button class="btn primary" type="submit">Créer la séance</button></form></section>';
+    }
+    /* Prochaines répétitions : rappel WhatsApp, avec modification, annulation et ajout exceptionnel */
+    if (peutModifier) {
+      var pr = prochainesRepetitions();
+      html += '<section class="panel"><h2>Prochaines répétitions</h2><p class="muted">Préparez le rappel à envoyer dans le groupe. Une répétition change exceptionnellement ? Touchez « Modifier ».</p><div class="list" style="margin-top:10px">' +
+        pr.map(function (r) {
+          var prog = progDe(r.id), kh = khassidas[prog.khassida];
+          var when = '<span class="rap-when"><b>' + esc(jourCourt(r.date)) + '</b> <span class="chip">' + esc(TYPES[r.type]) + "</span>" +
+            (prog.extra ? ' <span class="pill e">Date exceptionnelle</span>' : "");
+          if (prog.annulee) {
+            return '<div class="rap-row annulee">' + when + '<span class="muted">' +
+              (prog.deplaceeVers ? "Déplacée au " + esc(jourCourt(prog.deplaceeVers.slice(0, 10))) + (prog.deplaceeVers.slice(11) !== r.type ? " (" + esc(TYPES[prog.deplaceeVers.slice(11)]) + ")" : "") : "Annulée" + (prog.motifAnnulation ? " · " + esc(prog.motifAnnulation) : "")) + "</span></span>" +
+              (prog.deplaceeVers ? "" : '<button type="button" class="btn small primary" data-rappel="' + esc(r.id) + '">Message d’annulation</button><button type="button" class="btn small ghost" data-action="rep-retablir" data-id="' + esc(r.id) + '">Rétablir</button>') + "</div>";
+          }
+          var h = '<div class="rap-row">' + when + '<span class="muted">' + esc(prog.horaire) + (kh ? " · " + esc(kh.titre) : "") + "</span></span>" +
+            '<button type="button" class="btn small' + (prog.envoye ? "" : " primary") + '" data-rappel="' + esc(r.id) + '">' + (prog.envoye ? "Rappel envoyé ✓" : "Préparer le rappel") + "</button>" +
+            '<button type="button" class="btn small ghost" data-action="rep-edit" data-id="' + esc(r.id) + '">Modifier</button>';
+          if (editRep === r.id) {
+            h += '<div class="inline-form">' +
+              '<label class="field" style="flex:1 1 150px">Date<input type="date" id="e-date" value="' + r.date + '"></label>' +
+              '<label class="field" style="flex:1 1 150px">Répétition<select id="e-type">' + Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (k === r.type ? " selected" : "") + ">" + TYPES[k] + "</option>"; }).join("") + "</select></label>" +
+              '<label class="field" style="flex:1 1 110px">Horaire<input type="text" id="e-heure" value="' + esc(prog.horaire) + '" placeholder="18h - 21h"></label>' +
+              '<div class="row" style="flex:1 1 100%"><button type="button" class="btn primary small" data-action="rep-save" data-id="' + esc(r.id) + '">Enregistrer</button>' +
+              '<button type="button" class="btn small" data-action="rep-fermer">Fermer</button>' +
+              '<button type="button" class="btn danger small" data-action="rep-annuler" data-id="' + esc(r.id) + '" style="margin-left:auto">Annuler cette répétition</button></div>' +
+              '<label class="field" style="flex:1 1 100%">Motif de l’annulation (facultatif)<input type="text" id="e-motif" placeholder="Événement au dahira, fête…"></label></div>';
+          }
+          return h + "</div>";
+        }).join("") + "</div>";
+      if (editRep === "new") {
+        var dn = isoPlus(today(), 1);
+        html += '<div class="inline-form" style="margin-top:10px">' +
+          '<label class="field" style="flex:1 1 150px">Date<input type="date" id="n-date" value="' + dn + '"></label>' +
+          '<label class="field" style="flex:1 1 150px">Répétition<select id="n-type">' + Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (k === typeDuJour(dn) ? " selected" : "") + ">" + TYPES[k] + "</option>"; }).join("") + "</select></label>" +
+          '<label class="field" style="flex:1 1 110px">Horaire<input type="text" id="n-heure" value="' + esc(HORAIRE[typeDuJour(dn)]) + '" placeholder="18h - 21h"></label>' +
+          '<div class="row" style="flex:1 1 100%"><button type="button" class="btn primary small" data-action="rep-add">Ajouter la répétition</button><button type="button" class="btn small" data-action="rep-fermer">Fermer</button></div></div>';
+      } else {
+        html += '<div style="margin-top:10px"><button type="button" class="btn ghost small" data-action="rep-new">+ Ajouter une répétition exceptionnelle</button></div>';
+      }
+      html += "</section>";
+    }
+    if (!seances.length) {
+      html += '<div class="empty">Aucune séance enregistrée pour l’instant.' + (peutModifier ? " Créez la première ci-dessus." : "") + "</div>";
+    } else {
+      html += '<section class="list" aria-label="Séances">' + seances.map(function (s) {
+        var tc = tariCompte(s);
+        return '<button type="button" class="seance" data-open="' + esc(s.id) + '"><span class="when"><b>' + esc(jourLong(s.date)) + '</b><span><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
+          (tc.dus ? ' <span class="pill ' + (tc.recus === tc.dus ? "p" : "r") + '">Tari ' + tc.recus + "/" + tc.dus + "</span>" : "") + "</span></span>" +
+          '<span class="counts">' + countsHTML(compter(s)) + "</span></button>";
+      }).join("") + "</section>";
+    }
+    app.innerHTML = html;
+    var f = document.getElementById("f-seance");
+    if (f) {
+      document.getElementById("s-date").addEventListener("change", function (e) {
+        var ty = typeDuJour(e.target.value);
+        document.getElementById("s-type").value = ty;
+        document.getElementById("s-heure").value = HORAIRE[ty];
+      });
+      document.getElementById("s-type").addEventListener("change", function (e) { document.getElementById("s-heure").value = HORAIRE[e.target.value]; });
+      f.addEventListener("submit", function (e) { e.preventDefault(); creerSeance(document.getElementById("s-date").value, document.getElementById("s-type").value, document.getElementById("s-heure").value.trim()); });
+    }
+  }
+
+  function creerSeance(date, type, horaire) {
+    if (!date) return;
+    var id = date + "-" + type;
+    if (seances.some(function (s) { return s.id === id; })) { seanceOuverte = id; afficher(); toast("Cette séance existe déjà : la voici."); return; }
+    var participants = Object.keys(membres).map(function (k) { return membres[k]; })
+      .filter(function (m) { return statutMembre(m) === "actif" && (type === "rg" ? (m.k1 || m.k2) : m[type]); })
+      .sort(triNom).map(function (m) { return m.id; });
+    if (!participants.length) { toast("Aucun membre actif pour ce Kourel : ajoutez-en dans l’onglet Membres."); return; }
+    var statuts = {};
+    participants.forEach(function (id) { statuts[id] = "P"; });
+    db.doc("seances/" + id).set({ date: date, type: type, horaire: horaire || "", participants: participants, statuts: statuts, creeLe: new Date().toISOString() })
+      .then(function () { seanceOuverte = id; afficher(); toast("Séance créée : " + participants.length + " membres, tous présents par défaut."); }, echec);
+  }
+
+  function vueSeance(s) {
+    if (!s) { seanceOuverte = null; return vueSeances(); }
+    var c = compter(s);
+    var noms = (s.participants || []).map(function (id) { return { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé", m: membres[id] }; }).sort(triNom);
+    var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
+      '<section class="panel"><div class="detail-head"><div><h2>' + esc(jourLong(s.date)) + '</h2><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
+      (peutModifier
+        ? ' <input type="text" class="date-inline" id="s-horaire" value="' + esc(horaireDe(s)) + '" placeholder="Horaire" aria-label="Horaire de la répétition" style="width:110px">'
+        : (horaireDe(s) ? ' <span class="muted">' + esc(horaireDe(s)) + "</span>" : "")) + "</div>" +
+      '<div class="counts">' + countsHTML(c) + "</div></div>";
+    var tc = tariCompte(s), tmode = s.tari || "aucun";
+    html += '<div class="people">' + noms.map(function (p) {
+        var v = choixDe(s, p.id);
+        var tariHtml = "";
+        if (requis(s, p.id) && tariConcerne(s, p.id)) {
+          var recu = !!(s.tariRecu || {})[p.id];
+          tariHtml = peutModifier
+            ? '<button type="button" class="toggle tari' + (recu ? " ok" : "") + '" data-tarirecu="' + esc(p.id) + '" aria-pressed="' + recu + '">' + (recu ? "Tari reçu" : "Tari attendu") + "</button>"
+            : '<span class="pill ' + (recu ? "p" : "r") + '">' + (recu ? "Tari reçu" : "Tari attendu") + "</span>";
+        }
+        var ctrl = !requis(s, p.id)
+          ? '<span class="pill">Présence non requise</span>'
+          : peutModifier
+          ? '<span class="seg" role="group" aria-label="Statut de ' + esc(p.nom) + '">' + Object.keys(CHOIX).map(function (k) {
+              return '<button type="button" data-set="' + esc(p.id) + '" data-v="' + k + '" aria-pressed="' + (v === k) + '">' + CHOIX[k] + "</button>";
+            }).join("") + "</span>"
+          : '<span class="pill ' + v.toLowerCase() + '">' + (v === "E" ? "Absent · a prévenu" : STATUTS[v]) + "</span>";
+        var motifs = "";
+        if (v === "E" && requis(s, p.id)) {
+          var pv = (s.prevenus || {})[p.id] || {};
+          motifs = peutModifier
+            ? '<div class="motifs"><span class="lbl">Motif :</span>' + MOTIFS.map(function (mo) {
+                return '<button type="button" class="toggle" data-motif="' + esc(p.id) + '" data-m="' + mo + '" aria-pressed="' + (pv.motif === mo) + '">' + mo + "</button>";
+              }).join("") +
+              (pv.motif ? '<input type="text" data-note="' + esc(p.id) + '" value="' + esc(pv.note || "") + '" placeholder="' + (pv.motif === "Autre" ? "Précisez le motif" : "Précision (facultatif)") + '" aria-label="Précision du motif">' : "") + "</div>"
+            : (motifTexte(s, p.id) ? '<div class="motifs"><span class="lbl">Motif : ' + esc(motifTexte(s, p.id)) + "</span></div>" : "");
+        }
+        var etat = p.m && statutMembre(p.m) !== "actif" ? " · " + (statutMembre(p.m) === "pause" ? "en pause" : "parti") : "";
+        return '<div class="person' + (v === "E" ? " prev" : "") + '"><span class="name">' + esc(p.nom) + (p.m ? ' <span class="tags">' + esc(tagsKourel(p.m) + etat) + "</span>" : "") +
+          (peutModifier && ajusterListe ? ' <button type="button" class="linkish" data-action="retirer" data-id="' + esc(p.id) + '">Retirer</button>' : "") + "</span>" + ctrl + motifs + tariHtml + "</div>";
+      }).join("") + "</div>";
+    if (peutModifier) {
+      html += '<div style="margin-top:10px"><button type="button" class="btn ghost small" data-action="ajuster">' + (ajusterListe ? "Terminer l’ajustement" : "Ajuster la liste : ajouter ou retirer quelqu’un") + "</button></div>";
+      if (ajusterListe) {
+        var dispo = Object.keys(membres).map(function (k) { return membres[k]; })
+          .filter(function (m) { return statutMembre(m) !== "parti" && (s.participants || []).indexOf(m.id) < 0; }).sort(triNom);
+        if (dispo.length) {
+          html += '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 220px">Ajouter quelqu’un à cette séance<select id="s-ajout"><option value="">Choisir un membre…</option>' +
+            dispo.map(function (m) { return '<option value="' + esc(m.id) + '">' + esc(m.nom) + " (" + esc(tagsKourel(m)) + (statutMembre(m) === "pause" ? ", en pause" : "") + ")</option>"; }).join("") +
+            '</select></label><button type="button" class="btn" data-action="ajouter-seance">Ajouter</button></div>';
+        }
+      }
+    }
+    html += '<div class="tari-box"><div class="row" style="align-items:center;justify-content:space-between"><b>Tari</b>' +
+      (peutModifier && !tariEdition ? '<button type="button" class="btn ghost small" data-action="edit-tari">' + (tmode === "aucun" ? "Demander un Tari" : "Modifier") + "</button>" : "") + "</div>";
+    if (peutModifier && tariEdition) {
+      html += '<p class="muted" style="margin-top:6px">Qui doit envoyer son Tari ?</p><span class="seg" role="group" aria-label="Qui doit envoyer son Tari">' + Object.keys(TARI).map(function (k) {
+          return '<button type="button" data-tari="' + k + '" aria-pressed="' + (tmode === k) + '">' + TARI[k] + "</button>";
+        }).join("") + "</span>" + tariDetailHTML(s) +
+        '<div class="row" style="margin-top:10px"><button type="button" class="btn primary small" data-action="fin-tari">Terminé</button>' +
+        (tmode !== "aucun" && !confirmerTari ? '<button type="button" class="btn danger small" data-action="suppr-tari">Supprimer le Tari</button>' : "") + "</div>" +
+        (confirmerTari ? '<div class="confirm"><b>Supprimer ce Tari ?</b><span>La demande et les Taris déjà cochés comme reçus pour cette séance seront effacés.</span>' +
+          '<div class="row"><button type="button" class="btn danger" data-action="ok-suppr-tari">Oui, supprimer</button><button type="button" class="btn" data-action="non-suppr-tari">Annuler</button></div></div>' : "");
+    } else if (tmode === "aucun") {
+      html += '<p class="muted" style="margin-top:6px">Pas de Tari demandé pour cette séance.</p>';
+    } else {
+      var tt = tariTexte(s.tariDetail || {});
+      html += '<p style="margin-top:6px">' + (tt ? "À envoyer : " + tt : "Contenu à préciser.") + "</p>" +
+        '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " reçu" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + " · avant le dahira du " + esc(samediLong(dahiraConcerne(s.date))) + "</p>";
+    }
+    html += "</div>";
+    if (peutModifier) {
+      html += confirmerSuppression
+        ? '<div class="confirm"><b>Supprimer cette séance et ses présences ?</b><div class="row"><button type="button" class="btn danger" data-del>Oui, supprimer</button><button type="button" class="btn" data-nodel>Annuler</button></div></div>'
+        : '<div style="margin-top:14px"><button type="button" class="btn ghost" data-askdel>Supprimer la séance</button></div>';
+    }
+    html += "</section>";
+    app.innerHTML = html;
+  }
+
+  /* ---------- Dahira du samedi : qui peut entrer dans le kourel ---------- */
+  function prochainsDahiras() {
+    var t = today(), mi = (asDate(t).getDay() + 6) % 7, sam = isoPlus(t, 5 - mi);
+    if (sam < t) sam = isoPlus(sam, 7);
+    return [sam, isoPlus(sam, 7)];
+  }
+  /* Au dahira : le Kourel 2 preste en premier, puis le Kourel 1 ; parfois un seul des deux, parfois « Kourel général ».
+     Réglage par samedi : dahiras/{date}.mode = k2k1 (défaut) | k1 | k2 | general (ancien champ fusion:true = general).
+     Kourel 1 / Kourel 2 (règle stricte) : un Tari demandé à une répétition de ce kourel, dû pour ce dahira et pas reçu, bloque l'entrée.
+     Kourel général : on suit la dernière répétition générale avant ce samedi ; venu (présent ou en retard) = dans le kourel ;
+     absent = dehors, même avec un Tari envoyé (règle confirmée par le Conservatoire). */
+  var MODES = { k2k1: "K2 puis K1", k1: "Kourel 1 seul", k2: "Kourel 2 seul", general: "Kourel général" };
+  var MODE_PHRASE = {
+    k2k1: "1er passage : Kourel 2, puis 2e passage : Kourel 1.",
+    k1: "La prestation sera effectuée par le Kourel 1.",
+    k2: "La prestation sera effectuée par le Kourel 2.",
+    general: "Kourel général : les Kourels 1 et 2 prestent ensemble."
+  };
+  function modeDahira(dz) {
+    var c = dahirasCfg[dz] || {};
+    return MODES[c.mode] ? c.mode : (c.fusion ? "general" : "k2k1");
+  }
+  function derniereRG(dz) {
+    return seances.filter(function (s) { return s.type === "rg" && s.date < dz; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0] || null;
+  }
+  function etatDahira(dz) {
+    var sd = seances.filter(function (s) { return s.tari && s.tari !== "aucun" && dahiraConcerne(s.date) === dz; });
+    var attente = {}, recus = {};
+    sd.forEach(function (s) {
+      (s.participants || []).forEach(function (id) {
+        if (!requis(s, id) || !tariConcerne(s, id)) return;
+        if ((s.tariRecu || {})[id]) recus[id] = true; else (attente[id] = attente[id] || []).push(s);
+      });
+    });
+    var mode = modeDahira(dz), fusion = mode === "general";
+    var rg = fusion ? derniereRG(dz) : null;
+    var actifs = Object.keys(membres).map(function (k) { return membres[k]; })
+      .filter(function (m) { return statutMembre(m) === "actif" && (m.k1 || m.k2); }).sort(triNom);
+    function verdict(id, k) {
+      if (k !== "tout") {
+        var t = (attente[id] || []).filter(function (s) { return s.type === k; });
+        return t.length ? { taris: t } : null;
+      }
+      if (!rg) return null;
+      var dedans = (rg.participants || []).indexOf(id) > -1 && requis(rg, id);
+      if (dedans && ((rg.statuts || {})[id] || "P") !== "A") return null;
+      return { taris: [], horsRG: true };
+    }
+    function groupe(k, label, court, ordre) {
+      var ms = actifs.filter(function (m) { return k === "tout" ? true : m[k]; });
+      var g = { k: k, label: label, court: court, ordre: ordre, total: ms.length, ok: [], bloques: [] };
+      ms.forEach(function (m) { var v = verdict(m.id, k); if (v) { v.m = m; g.bloques.push(v); } else g.ok.push(m); });
+      return g;
+    }
+    var groupes = fusion ? [groupe("tout", "Kourel général", "Général", "")]
+      : mode === "k1" ? [groupe("k1", "Kourel 1", "K1", "")]
+      : mode === "k2" ? [groupe("k2", "Kourel 2", "K2", "")]
+      : [groupe("k2", "Kourel 2", "K2", "1er passage"), groupe("k1", "Kourel 1", "K1", "2e passage")];
+    var parMembre = {}, raisons = {};
+    groupes.forEach(function (g) {
+      g.bloques.forEach(function (b) {
+        (raisons[b.m.id] = raisons[b.m.id] || []).push({ label: g.label, tari: b.taris.length > 0 });
+        if (!b.taris.length) return;
+        var x = parMembre[b.m.id] || (parMembre[b.m.id] = { m: b.m, seances: [], kourels: [] });
+        x.kourels.push(g.label);
+        b.taris.forEach(function (s) { if (x.seances.indexOf(s) < 0) x.seances.push(s); });
+      });
+    });
+    var tariBloques = Object.keys(parMembre).map(function (k) { return parMembre[k]; }).sort(function (a, b) { return triNom(a.m, b.m); });
+    tariBloques.forEach(function (x) { x.seances.sort(function (a, b) { return a.date < b.date ? -1 : 1; }); });
+    var tariSeances = [];
+    tariBloques.forEach(function (x) { x.seances.forEach(function (s) { if (tariSeances.indexOf(s) < 0) tariSeances.push(s); }); });
+    tariSeances.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    var horsRG = fusion ? groupes[0].bloques.filter(function (b) { return b.horsRG; }).map(function (b) { return b.m; }) : [];
+    return { mode: mode, fusion: fusion, rg: rg, recus: recus, groupes: groupes, tariBloques: tariBloques, tariSeances: tariSeances, horsRG: horsRG, raisons: raisons, tariDemandes: sd.length };
+  }
+  function dimancheLong(iso) { return "dimanche " + asDate(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }); }
+  function seanceCourte(s) { return (TYPES[s.type] || "") + " du " + asDate(s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
+  function vueDahiras() {
+    if (dahiraOuvert) return vueDahira(dahiraOuvert);
+    var html = "";
+    /* Prochains dahiras : qui peut entrer dans le kourel */
+    var cartes = "";
+    prochainsDahiras().forEach(function (dz, i) {
+      var e = etatDahira(dz);
+      if (i > 0 && !e.tariDemandes) return;
+      var d = asDate(dz);
+      cartes += '<button type="button" class="dz-card' + (e.tariBloques.length ? " alerte" : "") + '" data-dahira="' + dz + '">' +
+        '<span class="dz-date"><small>Sam.</small><b>' + d.getDate() + "</b><small>" + esc(d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "")) + "</small></span>" +
+        '<span class="dz-body"><b>Qui preste au dahira du ' + esc(samediLong(dz)) + " ?</b>" +
+        '<span class="counts" style="justify-content:flex-start">' + e.groupes.map(function (g) { return '<span class="pill p">' + g.court + " : " + g.ok.length + " / " + g.total + "</span>"; }).join("") +
+        (e.tariBloques.length ? '<span class="pill r">' + e.tariBloques.length + " Tari en attente</span>" : "") + "</span></span>" +
+        '<span class="dz-go" aria-hidden="true">›</span></button>';
+    });
+    html += '<section class="panel"><h2>Prochains dahiras</h2><p class="muted">Qui preste, quel kourel, et les Taris encore attendus.</p><div class="list" style="margin-top:12px">' + cartes + "</div></section>";
+    app.innerHTML = html;
+  }
+  function vueDahira(dz) {
+    var e = etatDahira(dz);
+    var intro = e.fusion
+      ? (e.rg ? "Kourel général : ceux qui sont venus à la répétition générale du " + dimancheLong(e.rg.date) + "."
+              : "Kourel général. Aucune répétition générale enregistrée avant ce samedi : tous les membres actifs sont comptés.")
+      : MODE_PHRASE[e.mode] + " Un membre qui doit encore un Tari de son kourel n’y entre pas.";
+    var html = '<div><button type="button" class="btn ghost" data-back>← Prochains dahiras</button></div>' +
+      '<section class="panel"><h2>Dahira du ' + esc(samediLong(dz)) + '</h2><p class="muted">' + esc(intro) + "</p>";
+    if (peutModifier) {
+      html += '<span class="seg seg-full" role="group" aria-label="Organisation du kourel" style="margin-top:12px">' +
+        Object.keys(MODES).map(function (k) { return '<button type="button" data-mode="' + k + '" aria-pressed="' + (e.mode === k) + '">' + MODES[k] + "</button>"; }).join("") + "</span>";
+    }
+    html += '<div class="big-stats' + (e.groupes.length === 1 ? " one" : "") + '">' + e.groupes.map(function (g) {
+      return '<div class="big-stat ok"><b>' + g.ok.length + '<small> / ' + g.total + "</small></b><span>" + esc(g.label) + (g.ordre ? " · " + g.ordre : "") + "</span></div>";
+    }).join("") + "</div>";
+    var nb = e.tariBloques.length;
+    if (nb) html += '<div class="me-banner wait" style="margin-top:10px">⏳ <span>' + nb + " membre" + (nb > 1 ? "s attendent encore leur" : " attend encore son") + " Tari : voir plus bas.</span></div>";
+    html += '<div class="row" style="margin-top:14px"><button type="button" class="btn primary" data-action="apercu-dahira">' + (apercuDahira ? "Masquer le message" : "Préparer le message WhatsApp") + "</button></div>";
+    if (apercuDahira) {
+      html += '<div class="wa"><p class="muted" style="margin:0 0 8px">Aperçu du message, tel qu’il s’affichera dans WhatsApp :</p>' +
+        '<div class="wa-bulle">' + waHtml(texteDahira(dz, e)) + "</div>" +
+        '<div class="row" style="margin-top:10px"><button type="button" class="btn primary" data-action="copier-dahira">Copier le message</button>' +
+        '<button type="button" class="btn ghost" data-action="apercu-dahira">Fermer</button></div>' +
+        '<textarea class="copy" id="dz-texte" readonly hidden aria-label="Message à copier"></textarea></div>';
+    }
+    html += "</section>";
+    if (nb) {
+      html += '<section class="panel"><h2>Tari en attente · ' + nb + "</h2>" +
+        '<p class="muted">' + (peutModifier ? "Dès qu’un Tari arrive, touchez « Tari reçu » : le membre rejoint son kourel." : "Ces membres doivent encore envoyer leur Tari.") + "</p>" +
+        '<div class="list" style="margin-top:12px">' + e.tariBloques.map(function (x) {
+          return '<div class="wait-card"><div><b>' + esc(x.m.nom) + '</b> <span class="muted" style="font-size:13px">· ne peut pas entrer dans le ' + esc(x.kourels.join(" ni dans le ")) + "</span></div>" +
+            x.seances.map(function (s) {
+              var t = tariTexte(s.tariDetail || {});
+              return '<div class="wait-row"><span class="what">' + (t || "Contenu à préciser") + "<br>Demandé à la " + (s.type === "rg" ? "répétition générale du " + esc(dimancheLong(s.date)) : "répétition du " + esc(seanceCourte(s))) + "</span>" +
+                (peutModifier ? '<button type="button" class="btn small" data-recu="' + esc(s.id) + "|" + esc(x.m.id) + '">Tari reçu</button>' : "") + "</div>";
+            }).join("") + "</div>";
+        }).join("") + "</div></section>";
+    }
+    e.groupes.forEach(function (g) {
+      html += '<section class="panel"><h2>' + (g.ordre ? esc(g.ordre) + " · " : "") + esc(g.label) + ' <span class="muted" style="font-weight:500">· ' + g.ok.length + " / " + g.total + "</span></h2>" +
+        (g.total ? '<div class="name-grid">' + g.ok.map(function (m) {
+          return "<span>" + esc(m.nom) + (e.recus[m.id] ? " <em>· Tari reçu</em>" : "") + "</span>";
+        }).join("") + g.bloques.map(function (b) {
+          return '<span class="off">' + esc(b.m.nom) + " <em>· " + (b.taris.length ? "Tari en attente" : "absent à la répétition générale") + "</em></span>";
+        }).join("") + "</div>" : '<p class="muted" style="margin-top:8px">Aucun membre actif.</p>') + "</section>";
+    });
+    app.innerHTML = html;
+  }
+  function texteDahira(dz, e) {
+    var L = [];
+    L.push("🕌 *DAHIRA DU " + samediLong(dz).toUpperCase() + "*");
+    L.push("");
+    L.push("_Selon les dernières informations reçues et en application des chartes, voici la liste pour la prestation :_");
+    L.push("");
+    e.groupes.forEach(function (g) {
+      L.push("✅ *" + (g.ordre ? g.ordre + " : " : (e.groupes.length === 1 && !e.fusion ? "Prestation : " : "")) + g.label + "* (" + g.ok.length + ")");
+      puces(L, g.ok.map(function (m) { return m.nom; }));
+      L.push("");
+    });
+    if (e.tariBloques.length) {
+      var plusieurs = e.tariSeances.length > 1;
+      e.tariSeances.forEach(function (s) {
+        var noms = e.tariBloques.filter(function (x) { return x.seances.indexOf(s) > -1; }).map(function (x) { return x.m.nom; });
+        if (!noms.length) return;
+        L.push("⏳ *Tari pas encore reçu* (" + noms.length + ")");
+        L.push(tariPlain(s.tariDetail || {}) + (plusieurs ? " · " + seanceCourte(s) : ""));
+        puces(L, noms);
+        L.push("");
+      });
+      L.push("_Envoyez votre Tari avant samedi pour pouvoir entrer dans le kourel._");
+      L.push("");
+    }
+    L.push("Merci à tous pour votre engagement.");
+    L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
+    return L.join("\n");
+  }
+
+  /* ---------- Rappel avant une répétition ---------- */
+  /* Programme d'une répétition à venir : programmes/{date-type} {horaire, lieu, khassida, tout, de, a, note, taris, envoye}. */
+  function titreRepetition(ty) { return ty === "rg" ? "RÉPÉTITION GÉNÉRALE" : "RÉPÉTITION " + (TYPES[ty] || "").toUpperCase(); }
+  function dernierDimancheDuMois(iso) { return asDate(iso).getDay() === 0 && isoPlus(iso, 7).slice(0, 7) !== iso.slice(0, 7); }
+  function prochainesRepetitions() {
+    var l = [], t = today();
+    for (var i = 0; i <= 8; i++) {
+      var d = isoPlus(t, i), j = asDate(d).getDay();
+      var ty = j === 4 ? "k1" : j === 5 ? "k2" : (j === 0 && dernierDimancheDuMois(d)) ? "rg" : null;
+      if (ty) l.push({ id: d + "-" + ty, date: d, type: ty });
+    }
+    var deja = {};
+    l.forEach(function (r) { deja[r.id] = true; });
+    Object.keys(programmes).forEach(function (id) {
+      var d = id.slice(0, 10);
+      if (!deja[id] && programmes[id].extra && !programmes[id].annulee && d >= t && d <= isoPlus(t, 45)) l.push({ id: id, date: d, type: id.slice(11) });
+    });
+    return l.sort(function (a, b) { return a.date === b.date ? (a.type < b.type ? -1 : 1) : (a.date < b.date ? -1 : 1); });
+  }
+  function lieuParDefaut() {
+    var l = Object.keys(programmes).sort().reverse().map(function (k) { return programmes[k].lieu; }).filter(Boolean);
+    return l[0] || LIEU_DEFAUT;
+  }
+  var LIEU_DEFAUT = "65 Rue Belvédère Nord";
+  var MOT_DEFAUT = {
+    k1: "Écoutez l’enregistrement avant de venir : nous travaillerons les xàjj et le souffle collectif.",
+    k2: "Écoutez l’enregistrement avant de venir : nous travaillerons la prononciation et la mémorisation.",
+    rg: "Dernière répétition avant la prestation : venez avec ferveur et à l’heure."
+  };
+  var MOT_SUGG = [
+    "Écoutez l’enregistrement avant de venir pour avoir la mélodie en tête.",
+    "Révisez les vers au programme : nous les reprendrons un par un.",
+    "Venez avec ferveur et à l’heure : chaque répétition est une khidma.",
+    "Pensez à envoyer votre Tari si ce n’est pas encore fait."
+  ];
+  function progDe(id) {
+    var p = programmes[id] || {}, ty = id.slice(11);
+    return {
+      horaire: p.horaire != null ? p.horaire : (HORAIRE[ty] || ""), lieu: p.lieu != null ? p.lieu : lieuParDefaut(),
+      khassida: p.khassida || "", tout: !!p.tout, de: p.de || 1, a: p.a || null, note: p.note != null ? p.note : (MOT_DEFAUT[ty] || ""), taris: p.taris !== false, envoye: !!p.envoye,
+      extra: !!p.extra, annulee: !!p.annulee, deplaceeVers: p.deplaceeVers || null, deplaceeDe: p.deplaceeDe || null, motifAnnulation: p.motifAnnulation || ""
+    };
+  }
+  function samediApres(iso) { var mi = (asDate(iso).getDay() + 6) % 7; return isoPlus(iso, mi <= 5 ? 5 - mi : 6); }
+  /* Taris encore attendus pour le dahira qui suit la répétition, pour les membres de ce kourel. */
+  function tarisPourRappel(date, type) {
+    var dz = samediApres(date), out = [];
+    seances.filter(function (s) { return s.tari && s.tari !== "aucun" && dahiraConcerne(s.date) === dz && (type === "rg" || s.type === type); })
+      .sort(function (a, b) { return a.date < b.date ? -1 : 1; })
+      .forEach(function (s) {
+        var noms = tariCompte(s).manquants.map(function (id) { return membres[id] ? membres[id].nom : ""; }).filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
+        if (noms.length) out.push({ s: s, noms: noms });
+      });
+    return { dz: dz, liste: out };
+  }
+  function texteRappel(id) {
+    var date = id.slice(0, 10), ty = id.slice(11), p = progDe(id), kh = khassidas[p.khassida];
+    var L = [];
+    if (p.annulee) {
+      L.push("📢 *" + titreRepetition(ty) + " ANNULÉE*");
+      L.push("");
+      L.push("*" + jourLong(date).replace(/ \d{4}$/, "") + "*" + (p.horaire ? " · " + p.horaire : ""));
+      L.push("");
+      L.push("La répétition de ce jour n’aura pas lieu" + (p.motifAnnulation ? " : " + p.motifAnnulation.replace(/^./, function (c) { return c.toLowerCase(); }) : "") + ".");
+      L.push("");
+      L.push("Merci de votre compréhension.");
+      L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
+      return L.join("\n");
+    }
+    L.push("🔔 *RAPPEL · " + titreRepetition(ty) + "*");
+    L.push("");
+    L.push("*" + jourLong(date).replace(/ \d{4}$/, "") + "*" + (p.horaire ? " · " + p.horaire : ""));
+    if (p.lieu) L.push("📍 " + p.lieu);
+    L.push("");
+    if (p.extra) { L.push("⚠️ _Date exceptionnelle : attention au changement de jour._"); L.push(""); }
+    if (ty === "rg") { L.push("_Kourels 1 et 2 ensemble, pour préparer la prestation du Kourel général._"); L.push(""); }
+    if (kh) {
+      L.push("📖 *Au programme*");
+      L.push(kh.titre + (p.tout ? ", khassida entier" : ", vers " + p.de + (p.a && Number(p.a) !== Number(p.de) ? " à " + p.a : "")));
+      if (kh.lien) L.push("🎧 Lire et écouter : " + kh.lien + (p.tout ? "" : "#v" + Number(p.de)));
+      L.push("");
+    }
+    var notes = p.note.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+    if (notes.length === 1) { L.push("📝 " + notes[0]); L.push(""); }
+    else if (notes.length > 1) { L.push("📝 *Mot du Conservatoire*"); puces(L, notes); L.push(""); }
+    if (p.taris) {
+      var tr = tarisPourRappel(date, ty);
+      tr.liste.forEach(function (x) {
+        L.push("⏳ *Tari à envoyer avant le dahira du " + samediLong(tr.dz) + "*");
+        L.push(tariPlain(x.s.tariDetail || {}));
+        puces(L, x.noms);
+        L.push("");
+      });
+    }
+    L.push("Niogui sakku ci kounek nieuw ci waxtu wi nguir niou meuna tela paré.");
+    L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
+    return L.join("\n");
+  }
+  function vueRappel(id) {
+    var date = id.slice(0, 10), ty = id.slice(11), p = progDe(id), kh = khassidas[p.khassida];
+    var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
+    var n = kh ? (kh.vers || 0) : 0, debuts = kh ? (kh.versDebut || []) : [];
+    function opts(from, sel) { var o = ""; for (var i = from; i <= n; i++) o += '<option value="' + i + '"' + (Number(sel) === i ? " selected" : "") + ">" + i + (debuts[i - 1] ? " · " + esc(debuts[i - 1]) : "") + "</option>"; return o; }
+    if (p.annulee) {
+      app.innerHTML = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
+        '<section class="panel"><h2>Annulation · ' + esc(jourLong(date)) + '</h2><span class="chip">' + esc(TYPES[ty]) + "</span>" +
+        '<div class="row" style="margin-top:14px"><label class="field" style="flex:1 1 100%">Motif (facultatif)<input type="text" id="r-motif" value="' + esc(p.motifAnnulation) + '" placeholder="Événement au dahira, fête…"></label></div></section>' +
+        '<section class="panel"><h2>Message WhatsApp</h2><div class="wa" style="margin-top:10px"><div class="wa-bulle">' + waHtml(texteRappel(id)) + "</div>" +
+        '<div class="row" style="margin-top:10px"><button type="button" class="btn primary" data-action="copier-rappel">Copier le message</button></div>' +
+        '<textarea class="copy" id="r-texte" readonly hidden aria-label="Message à copier"></textarea></div></section>';
+      return;
+    }
+    var tr = tarisPourRappel(date, ty), nbT = tr.liste.reduce(function (a, x) { return a + x.noms.length; }, 0);
+    var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
+      '<section class="panel"><h2>Rappel · ' + esc(jourLong(date)) + '</h2><span class="chip">' + esc(TYPES[ty]) + "</span>" + (p.extra ? ' <span class="pill e">Date exceptionnelle</span>' : "") +
+      '<div class="row" style="margin-top:14px">' +
+      '<label class="field" style="flex:0 1 140px">Horaire<input type="text" id="r-heure" value="' + esc(p.horaire) + '" placeholder="18h - 21h"></label>' +
+      '<label class="field" style="flex:1 1 220px">Lieu (facultatif)<input type="text" id="r-lieu" value="' + esc(p.lieu) + '" placeholder="Adresse ou salle"></label></div>' +
+      '<h3 class="group">Au programme</h3><div class="row">' +
+      '<label class="field" style="flex:1 1 220px">Khassida<select id="r-kh"><option value="">Aucun khassida précisé</option>' +
+      kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (p.khassida === k.id ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") + "</select></label>" +
+      (kh && n ? '<label class="check"><input type="checkbox" id="r-tout"' + (p.tout ? " checked" : "") + "> Tout le khassida (" + n + " vers)</label>" +
+        (p.tout ? "" : '<label class="field" style="flex:1 1 200px">Du vers<select id="r-de" class="vers-select">' + opts(1, p.de) + '</select></label>' +
+          '<label class="field" style="flex:1 1 200px">Au vers<select id="r-a" class="vers-select">' + opts(Number(p.de) || 1, p.a || n) + "</select></label>") : "") +
+      '<label class="field" style="flex:1 1 100%">Mot du Conservatoire (facultatif)<textarea id="r-note" rows="' + Math.max(2, p.note.split("\n").length + 1) + '" placeholder="Laisser vide pour ne rien ajouter">' + esc(p.note) + "</textarea></label>" +
+      '<div class="motifs"><span class="lbl">Suggestions :</span>' + MOT_SUGG.concat(MOT_DEFAUT[ty] && MOT_SUGG.indexOf(MOT_DEFAUT[ty]) < 0 ? [MOT_DEFAUT[ty]] : []).map(function (m, i, arr) {
+        var on = p.note.split("\n").map(function (x) { return x.trim(); }).indexOf(m) > -1;
+        return '<button type="button" class="toggle sugg" data-sugg="' + i + '" aria-pressed="' + on + '">' + (on ? "✓ " : "") + esc(m) + "</button>";
+      }).join("") + (p.note ? '<button type="button" class="linkish" data-sugg="vide">Effacer</button>' : "") + "</div></div>" +
+      (nbT ? '<label class="check" style="margin-top:12px"><input type="checkbox" id="r-taris"' + (p.taris ? " checked" : "") + "> Rappeler les Taris en attente (" + nbT + ")</label>" : "") +
+      "</section>" +
+      '<section class="panel"><h2>Message WhatsApp</h2><div class="wa" style="margin-top:10px"><div class="wa-bulle">' + waHtml(texteRappel(id)) + "</div>" +
+      '<div class="row" style="margin-top:10px"><button type="button" class="btn primary" data-action="copier-rappel">Copier le message</button>' +
+      (p.envoye ? '<span class="pill p">Marqué comme envoyé</span>' : '<button type="button" class="btn ghost" data-action="rappel-envoye">Marquer comme envoyé</button>') + "</div>" +
+      '<textarea class="copy" id="r-texte" readonly hidden aria-label="Message à copier"></textarea></div></section>';
+    app.innerHTML = html;
+  }
+  function enregistrerRappel(id, patch) {
+    var p = progDe(id);
+    Object.keys(patch).forEach(function (k) { p[k] = patch[k]; });
+    var kh = khassidas[p.khassida], n = kh ? (kh.vers || null) : null;
+    if (!kh) { p.tout = false; p.de = 1; p.a = null; }
+    if (p.a && p.de > p.a) p.a = p.de;
+    if (!p.a && n) p.a = n;
+    db.doc("programmes/" + id).set(p).catch(echec);
+  }
+
+  /* ---------- Suivi des membres : passage Kourel 2 → Kourel 1 et accompagnement ---------- */
+  /* Fenêtre : 3 derniers mois. Critères proposés (à valider par le Conservatoire). */
+  var SUIVI = { jours: 90, assiduite: 80, retardsMax: 2, suiteMax: 1, minSeances: 3 };
+  var CRITERES = { prononciation: "Prononciation", memorisation: "Mémorisation", justesse: "Justesse" };
+  var NIVEAUX = { 1: "À travailler", 2: "En progrès", 3: "Maîtrisé" };
+  function suiviMembre(m) {
+    var debut = isoPlus(today(), -SUIVI.jours);
+    var liste = seances.filter(function (s) { return s.date >= debut && s.date <= today(); });
+    var st = calculerBilan(liste).filter(function (x) { return x.id === m.id; })[0] || { total: 0, P: 0, R: 0, A: 0, E: 0, suite: 0, tdus: 0, trecus: 0 };
+    var suiteMax = 0, cours = 0;
+    liste.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (s) {
+      if ((s.participants || []).indexOf(m.id) < 0 || !requis(s, m.id)) return;
+      cours = ((s.statuts || {})[m.id] || "P") === "A" ? cours + 1 : 0;
+      if (cours > suiteMax) suiteMax = cours;
+    });
+    var ev = evaluations[m.id] || {};
+    var notes = Object.keys(CRITERES).map(function (k) { return Number(ev[k]) || 0; });
+    var r = {
+      m: m, st: st, ev: ev, notes: notes, suiteMax: suiteMax,
+      assid: st.total ? Math.round(100 * (st.P + st.R) / st.total) : null,
+      evalue: notes.every(function (n) { return n > 0; }),
+      maitrise: notes.every(function (n) { return n === 3; })
+    };
+    r.ok = {
+      assid: r.assid != null && r.assid >= SUIVI.assiduite,
+      ponct: st.R <= SUIVI.retardsMax,
+      suite: suiteMax <= SUIVI.suiteMax,
+      tari: st.trecus >= st.tdus,
+      eval: r.maitrise
+    };
+    if (st.total < SUIVI.minSeances) r.niveau = "donnees";
+    else if (r.ok.assid && r.ok.ponct && r.ok.suite && r.ok.tari && r.ok.eval) r.niveau = "pret";
+    else if (r.ok.assid && r.ok.suite && r.ok.tari) r.niveau = "bientot";
+    else r.niveau = "progres";
+    var raisons = [];
+    if (st.suite >= 2) raisons.push(st.suite + " absences de suite");
+    if (st.total >= SUIVI.minSeances && r.assid < 60) raisons.push("assiduité " + r.assid + " %");
+    if (st.tdus - st.trecus > 0) raisons.push((st.tdus - st.trecus) + " Tari" + (st.tdus - st.trecus > 1 ? "s" : "") + " non envoyé" + (st.tdus - st.trecus > 1 ? "s" : ""));
+    if (st.R >= 3) raisons.push(st.R + " retards");
+    Object.keys(CRITERES).forEach(function (k) { if (Number(ev[k]) === 1) raisons.push(CRITERES[k].toLowerCase() + " à travailler"); });
+    r.raisons = raisons;
+    return r;
+  }
+  var BADGE = { pret: ["p", "Prêt pour le Kourel 1"], bientot: ["r", "Bientôt prêt"], progres: ["n", "En progression"], donnees: ["n", "Pas encore assez de séances"] };
+  function tuile(ok, titre, valeur, neutre) {
+    return '<div class="tuile ' + (neutre ? "" : ok ? "ok" : "ko") + '"><span>' + esc(titre) + "</span><b>" + valeur + "</b></div>";
+  }
+  function formEval(m) {
+    var ev = evaluations[m.id] || {};
+    return '<div class="inline-form eval-form">' + Object.keys(CRITERES).map(function (k) {
+        return '<div class="eval-ligne"><span>' + CRITERES[k] + '</span><span class="seg" role="group" aria-label="' + CRITERES[k] + '">' + Object.keys(NIVEAUX).map(function (n) {
+          return '<button type="button" data-eval="' + esc(m.id) + "|" + k + "|" + n + '" data-niv="' + n + '" aria-pressed="' + (Number(ev[k]) === Number(n)) + '">' + NIVEAUX[n] + "</button>";
+        }).join("") + "</span></div>";
+      }).join("") +
+      '<label class="field" style="flex:1 1 100%">Commentaire du Conservatoire (facultatif)<textarea id="ev-com" data-evcom="' + esc(m.id) + '" rows="2" placeholder="Points forts, ce qu’il reste à travailler…">' + esc(ev.commentaire || "") + "</textarea></label>" +
+      '<div class="row" style="flex:1 1 100%"><button type="button" class="btn primary small" data-action="eval-fin">Terminé</button>' +
+      (ev.date ? '<span class="muted" style="font-size:12.5px">Dernière évaluation : ' + esc(court(ev.date)) + "</span>" : "") + "</div></div>";
+  }
+  function carteSuivi(r) {
+    var m = r.m, st = r.st, b = BADGE[r.niveau];
+    var nbM = r.notes.filter(function (n) { return n === 3; }).length;
+    var evTxt = r.evalue ? nbM + "/3 maîtrisé" + (nbM > 1 ? "s" : "") : "Non évalué";
+    var h = '<div class="suivi-card ' + r.niveau + '"><div class="suivi-head"><b>' + esc(m.nom) + '</b><span class="pill ' + b[0] + '">' + b[1] + "</span></div>" +
+      '<div class="tuiles">' +
+      tuile(r.ok.assid, "Assiduité", r.assid == null ? "–" : r.assid + " %", r.assid == null) +
+      tuile(r.ok.ponct, "Retards", st.R, !st.total) +
+      tuile(r.ok.suite, "Absences de suite", r.suiteMax ? "max " + r.suiteMax : "aucune", !st.total) +
+      tuile(r.ok.tari, "Taris", st.tdus ? st.trecus + "/" + st.tdus : "–", !st.tdus) +
+      tuile(r.ok.eval, "Évaluation", evTxt, !r.evalue) + "</div>" +
+      (r.ev.commentaire && evalOuvert !== m.id ? '<p class="muted" style="font-size:13px;margin-top:8px">« ' + esc(r.ev.commentaire) + " »</p>" : "") +
+      '<div class="row" style="margin-top:10px"><button type="button" class="btn small" data-action="eval-open" data-id="' + esc(m.id) + '">' + (evalOuvert === m.id ? "Fermer l’évaluation" : r.evalue ? "Modifier l’évaluation" : "Évaluer") + "</button>" +
+      (m.k2 && !m.k1 && (r.niveau === "pret" || r.niveau === "bientot") ? '<button type="button" class="btn small' + (r.niveau === "pret" ? " primary" : "") + '" data-action="promo-open" data-id="' + esc(m.id) + '">Passer au Kourel 1</button>' : "") + "</div>";
+    if (evalOuvert === m.id) h += formEval(m);
+    if (promoOuvert === m.id) {
+      h += '<div class="confirm promo"><b>Passer ' + esc(m.nom) + " au Kourel 1 ?</b>" +
+        '<span>Sa présence sera demandée aux prochaines séances du Kourel 1. Les présences passées restent dans le bilan.</span>' +
+        '<div class="row"><button type="button" class="btn primary" data-action="promo-ok" data-id="' + esc(m.id) + '" data-garder="0">Passer au Kourel 1</button>' +
+        '<button type="button" class="btn" data-action="promo-ok" data-id="' + esc(m.id) + '" data-garder="1">Kourel 1 et garder le Kourel 2</button>' +
+        '<button type="button" class="btn ghost" data-action="promo-non">Annuler</button></div></div>';
+    }
+    return h + "</div>";
+  }
+  function vueSuivi() {
+    var actifs = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) === "actif"; }).sort(triNom);
+    var ordre = { pret: 0, bientot: 1, progres: 2, donnees: 3 };
+    var k2 = actifs.filter(function (m) { return m.k2 && !m.k1; }).map(suiviMembre).sort(function (a, b) { return (ordre[a.niveau] - ordre[b.niveau]) || triNom(a.m, b.m); });
+    var nbPret = k2.filter(function (r) { return r.niveau === "pret"; }).length;
+    var acc = actifs.map(suiviMembre).filter(function (r) { return r.raisons.length; });
+    var html = ongletBilan() +
+      '<section class="panel"><h2>Prêts pour le Kourel 1 ?' + (nbPret ? ' <span class="pill p">' + nbPret + " prêt" + (nbPret > 1 ? "s" : "") + "</span>" : "") + "</h2>" +
+      '<p class="muted">Membres du Kourel 2, sur les 3 derniers mois. Critères proposés, à valider : assiduité d’au moins ' + SUIVI.assiduite + " %, " + SUIVI.retardsMax + " retards au plus, jamais " + (SUIVI.suiteMax + 1) + " absences de suite, tous les Taris envoyés, et « Maîtrisé » en prononciation, mémorisation et justesse.</p>" +
+      '<div class="list" style="margin-top:12px">' + (k2.length ? k2.map(carteSuivi).join("") : '<div class="empty">Aucun membre uniquement en Kourel 2.</div>') + "</div></section>" +
+      '<section class="panel"><h2>À accompagner' + (acc.length ? " · " + acc.length : "") + "</h2>" +
+      '<p class="muted">Membres actifs du Kourel 1 et du Kourel 2 qui ont besoin d’un coaching individuel ou d’un mot d’encouragement.</p>' +
+      '<div class="list" style="margin-top:12px">' + (acc.length ? acc.map(function (r) {
+        return '<div class="acc-row"><span class="who"><b>' + esc(r.m.nom) + '</b> <span class="tags">' + esc(tagsKourel(r.m)) + "</span></span>" +
+          '<span class="raisons">' + r.raisons.map(function (x) { return '<span class="pill r">' + esc(x) + "</span>"; }).join("") + "</span></div>";
+      }).join("") : '<div class="empty">Personne pour l’instant. Bravo à tous.</div>') + "</div></section>";
+    app.innerHTML = html;
+  }
+
+  /* ---------- Bilan ---------- */
+  function seancesFiltrees() {
+    var m = today().slice(0, 7);
+    var prec = (function () { var d = asDate(m + "-15"); d.setMonth(d.getMonth() - 1); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); })();
+    if (filtre.periode.indexOf("seance:") === 0) {
+      var sid = filtre.periode.slice(7);
+      return seances.filter(function (s) { return s.id === sid; });
+    }
+    return seances.filter(function (s) {
+      if (filtre.kourel !== "tous" && s.type !== filtre.kourel) return false;
+      if (filtre.periode === "mois") return s.date.slice(0, 7) === m;
+      if (filtre.periode === "precedent") return s.date.slice(0, 7) === prec;
+      if (/^\d{4}-\d{2}$/.test(filtre.periode)) return s.date.slice(0, 7) === filtre.periode;
+      return true;
+    });
+  }
+  function calculerBilan(liste) {
+    var stats = {};
+    liste.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).forEach(function (s) {
+      (s.participants || []).forEach(function (id) {
+        if (!requis(s, id)) return;
+        var v = (s.statuts || {})[id] || "P";
+        var st = stats[id] || (stats[id] = { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé", total: 0, P: 0, R: 0, A: 0, E: 0, suite: 0, tdus: 0, trecus: 0 });
+        st.total++; st[v]++;
+        if (aPrevenu(s, id)) st.E++;
+        if (tariConcerne(s, id)) { st.tdus++; if ((s.tariRecu || {})[id]) st.trecus++; }
+        st.suite = v === "A" ? st.suite + 1 : 0;
+      });
+    });
+    return Object.keys(stats).map(function (k) { return stats[k]; }).sort(function (a, b) { return (b.A - a.A) || (b.R - a.R) || triNom(a, b); });
+  }
+  function seanceChoisie() {
+    if (filtre.periode.indexOf("seance:") !== 0) return null;
+    var sid = filtre.periode.slice(7);
+    return seances.filter(function (s) { return s.id === sid; })[0] || null;
+  }
+  function libellePeriode() {
+    var sc = seanceChoisie();
+    if (sc) return jourLong(sc.date).replace(/ \d{4}$/, "") + " · " + (TYPES[sc.type] || "");
+    if (filtre.periode === "mois") return moisLabel(today().slice(0, 7));
+    if (filtre.periode === "precedent") { var d = asDate(today().slice(0, 7) + "-15"); d.setMonth(d.getMonth() - 1); return moisLabel(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }
+    if (/^\d{4}-\d{2}$/.test(filtre.periode)) return moisLabel(filtre.periode);
+    return "Depuis le début";
+  }
+  function ongletBilan() {
+    if (!peutModifier) return "";
+    return '<span class="seg seg-full seg-tabs" role="group" aria-label="Vue du bilan">' +
+      '<button type="button" data-bilan="presences" aria-pressed="' + (bilanMode === "presences") + '">Présences</button>' +
+      '<button type="button" data-bilan="suivi" aria-pressed="' + (bilanMode === "suivi") + '">Suivi des membres</button></span>';
+  }
+  function vueBilan() {
+    if (bilanMode === "suivi" && peutModifier) return vueSuivi();
+    var moisCourant = today().slice(0, 7);
+    var moisPrec = (function () { var d = asDate(moisCourant + "-15"); d.setMonth(d.getMonth() - 1); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); })();
+    if (filtre.periode.indexOf("seance:") === 0 && !seanceChoisie()) filtre.periode = "mois";
+    var mois = {};
+    seances.forEach(function (s) { mois[s.date.slice(0, 7)] = true; });
+    var liste = seancesFiltrees();
+    var stats = calculerBilan(liste);
+    var html = ongletBilan() + '<section class="panel"><h2>Bilan des présences</h2><p class="muted">Présence = séances où le membre est venu, à l’heure ou en retard.</p>' +
+      '<div class="filters" style="margin-top:12px">' +
+      '<label class="field" style="flex:1 1 220px">Période<select id="b-periode">' +
+      '<optgroup label="Une séance">' + seances.slice(0, 8).map(function (s) {
+        return '<option value="seance:' + esc(s.id) + '">' + esc(jourCourt(s.date)) + " · " + esc(TYPES[s.type] || "") + "</option>";
+      }).join("") + "</optgroup>" +
+      '<optgroup label="Une période"><option value="mois">Ce mois-ci</option><option value="precedent">Le mois dernier</option>' +
+      Object.keys(mois).sort().reverse().filter(function (m) { return m !== moisCourant && m !== moisPrec; }).map(function (m) { return '<option value="' + m + '">' + esc(moisLabel(m)) + "</option>"; }).join("") +
+      '<option value="tout">Depuis le début</option></optgroup></select></label>' +
+      (seanceChoisie() ? "" : '<label class="field">Répétitions<select id="b-kourel"><option value="tous">Toutes</option><option value="k1">Kourel 1</option><option value="k2">Kourel 2</option><option value="rg">Répétition générale</option></select></label>') +
+      '<button type="button" class="btn primary" id="b-apercu">' + (apercu ? "Masquer le message" : "Préparer le message WhatsApp") + "</button></div>";
+    if (!liste.length) {
+      html += '<div class="empty" style="margin-top:12px">Aucune séance sur cette période.</div></section>';
+    } else {
+      if (apercu) {
+        var msg = texteWhatsApp(liste, stats);
+        html += '<div class="wa"><p class="muted" style="margin:0 0 8px">Aperçu du message, tel qu’il s’affichera dans WhatsApp :</p>' +
+          '<div class="wa-bulle">' + waHtml(msg) + "</div>" +
+          '<div class="row" style="margin-top:10px"><button type="button" class="btn primary" id="b-copier">Copier le message</button>' +
+          '<button type="button" class="btn ghost" id="b-fermer">Fermer</button></div>' +
+          '<textarea class="copy" id="b-texte" readonly hidden aria-label="Message à copier"></textarea></div>';
+      }
+      html += '<p style="margin-top:12px"><b>' + liste.length + " séance" + (liste.length > 1 ? "s" : "") + "</b> · " + esc(libellePeriode()) + "</p>" +
+        '<div class="table-wrap"><table><thead><tr><th>Membre</th><th>Séances</th><th>Présence</th><th>Retards</th><th>Absences</th><th>Tari</th></tr></thead><tbody>' +
+        stats.map(function (st) {
+          var taux = Math.round(100 * (st.P + st.R) / st.total);
+          var mm = membres[st.id], sm = mm ? statutMembre(mm) : "actif";
+          return "<tr><td>" + esc(st.nom) + (sm !== "actif" ? ' <span class="chip">' + (sm === "pause" ? "En pause" : "Parti") + "</span>" : "") + (st.suite >= 2 ? '<span class="flag">' + st.suite + " absences de suite</span>" : "") + "</td><td>" + st.total + "</td>" +
+            '<td><span class="bar"><span style="width:' + taux + '%"></span></span>' + taux + " %</td>" +
+            '<td class="' + (st.R ? "c-r" : "") + '">' + st.R + '</td><td class="' + (st.A ? "c-a" : "") + '">' + st.A + (st.E ? '<span class="sub">dont ' + st.E + " prévenue" + (st.E > 1 ? "s" : "") + "</span>" : "") + "</td>" +
+            '<td class="' + (st.tdus && st.trecus < st.tdus ? "c-r" : "") + '">' + (st.tdus ? st.trecus + "/" + st.tdus : "–") + "</td></tr>";
+        }).join("") + "</tbody></table></div></section>";
+    }
+    app.innerHTML = html;
+    document.getElementById("b-periode").value = filtre.periode;
+    var bk = document.getElementById("b-kourel");
+    if (bk) { bk.value = filtre.kourel; bk.addEventListener("change", function (e) { filtre.kourel = e.target.value; afficher(); }); }
+    document.getElementById("b-periode").addEventListener("change", function (e) { filtre.periode = e.target.value; afficher(); });
+    document.getElementById("b-apercu").addEventListener("click", function () { apercu = !apercu; afficher(); });
+    var bc = document.getElementById("b-copier");
+    if (bc) bc.addEventListener("click", function () {
+      var txt = texteWhatsApp(liste, stats);
+      var ta = document.getElementById("b-texte");
+      try {
+        navigator.clipboard.writeText(txt).then(function () { toast("Message copié : collez-le dans le groupe WhatsApp."); }, function () { montrer(ta, txt); });
+      } catch (e) { montrer(ta, txt); }
+    });
+    var bf = document.getElementById("b-fermer");
+    if (bf) bf.addEventListener("click", function () { apercu = false; afficher(); });
+  }
+
+  /* Message WhatsApp : regroupé par situation, pluriels corrects, Taris à envoyer. */
+  function puces(L, noms) { noms.forEach(function (n) { L.push("• " + n); }); }
+  function pluriel(n, mot) { return n + " " + mot + (n > 1 ? "s" : ""); }
+  function jourCourt(iso) { var t = asDate(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }); return t.charAt(0).toUpperCase() + t.slice(1); }
+  var ABR = { k1: "K1", k2: "K2", rg: "générale" };
+  function tariPlain(td) {
+    var kh = khassidas[td.khassida];
+    var t = kh ? kh.titre : "";
+    if (kh && td.tout) t += ", khassida entier";
+    else if (kh && td.de) t += ", vers " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
+    if (td.consigne) t += (t ? " (" + td.consigne + ")" : td.consigne);
+    return t || "contenu à préciser";
+  }
+  function texteWhatsApp(liste, stats) {
+    var sc = seanceChoisie();
+    if (sc) return texteSeance(sc, stats);
+    var L = [];
+    var parDate = liste.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    L.push("📋 *BILAN DES PRÉSENCES*");
+    L.push("");
+    L.push("*" + libellePeriode() + "* · " + (filtre.kourel === "tous" ? "toutes les répétitions" : TYPES[filtre.kourel]));
+    L.push("");
+    L.push(parDate.length <= 6
+      ? parDate.map(function (s) { return jourCourt(s.date) + " (" + ABR[s.type] + ")"; }).join(" · ")
+      : pluriel(parDate.length, "répétition"));
+    L.push("");
+    var fr = function (a, b) { return a.nom.localeCompare(b.nom, "fr"); };
+    var assidus = stats.filter(function (st) { return !st.A && !st.R; }).sort(fr);
+    var retards = stats.filter(function (st) { return !st.A && st.R; }).sort(function (a, b) { return (b.R - a.R) || fr(a, b); });
+    var absents = stats.filter(function (st) { return st.A; }).sort(function (a, b) { return (b.A - a.A) || fr(a, b); });
+    if (absents.length) {
+      L.push("🔴 *Absences* (" + absents.length + ")");
+      absents.forEach(function (st) { L.push("• " + st.nom + " : " + pluriel(st.A, "absence") + " sur " + st.total + (st.E ? (st.E === st.A ? (st.A > 1 ? ", toutes prévenues" : ", prévenue") : ", dont " + st.E + " prévenue" + (st.E > 1 ? "s" : "")) : "") + (st.R ? ", " + pluriel(st.R, "retard") : "")); });
+      L.push("");
+    }
+    if (retards.length) {
+      L.push("🟡 *Retards* (" + retards.length + ")");
+      retards.forEach(function (st) { L.push("• " + st.nom + " : " + pluriel(st.R, "retard")); });
+      L.push("");
+    }
+    if (assidus.length) {
+      L.push("🟢 *Présents à toutes les répétitions* (" + assidus.length + ")");
+      puces(L, assidus.map(function (st) { return st.nom; }));
+      L.push("");
+    }
+    lignesPause(L, filtre.kourel, stats, null);
+    parDate.forEach(function (s) {
+      if (!s.tari || s.tari === "aucun") return;
+      var dz = dahiraConcerne(s.date);
+      if (dz < today()) return;
+      var manquants = tariCompte(s).manquants.map(function (id) { return membres[id] ? membres[id].nom : ""; }).filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
+      if (!manquants.length) return;
+      L.push("🎙️ *Tari à envoyer avant le dahira du " + samediLong(dz) + "*");
+      L.push(tariPlain(s.tariDetail || {}));
+      puces(L, manquants);
+      L.push("");
+    });
+    L.push("Merci à tous pour votre engagement.");
+    L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
+    return L.join("\n");
+  }
+  /* Membres en pause à afficher : pas déjà comptés dans le bilan, et déjà en pause à la date de référence. */
+  function enPause(type, stats, dateRef) {
+    var comptes = {};
+    (stats || []).forEach(function (st) { comptes[st.id] = true; });
+    return Object.keys(membres).map(function (k) { return membres[k]; })
+      .filter(function (m) {
+        if (statutMembre(m) !== "pause" || comptes[m.id]) return false;
+        if (dateRef && m.depuis && m.depuis > dateRef) return false;
+        return !type || type === "tous" || type === "rg" ? (m.k1 || m.k2) : m[type];
+      })
+      .sort(triNom).map(function (m) { return m.nom; });
+  }
+  function lignesPause(L, type, stats, dateRef) {
+    var noms = enPause(type, stats, dateRef);
+    if (!noms.length) return;
+    L.push("⏸️ *En pause, présence non requise* (" + noms.length + ")");
+    puces(L, noms);
+    L.push("");
+  }
+  function texteSeance(s, stats) {
+    var L = [];
+    var fr = function (a, b) { return a.nom.localeCompare(b.nom, "fr"); };
+    var jour = jourLong(s.date).replace(/ \d{4}$/, "");
+    L.push("📋 *" + titreRepetition(s.type) + "*");
+    L.push("");
+    L.push("*" + jour + "*" + (horaireDe(s) ? " · " + horaireDe(s) : ""));
+    L.push("");
+    var c = compter(s);
+    L.push(pluriel(c.P, "présent") + " · " + pluriel(c.R, "retard") + " · " + pluriel(c.A, "absent") + (c.E ? " (" + c.E + (c.E > 1 ? " ont" : " a") + " prévenu)" : ""));
+    L.push("");
+    var absents = stats.filter(function (st) { return st.A && !st.E; }).sort(fr);
+    var prevenus = stats.filter(function (st) { return st.E; }).sort(fr);
+    var retards = stats.filter(function (st) { return st.R; }).sort(fr);
+    var presents = stats.filter(function (st) { return st.P; }).sort(fr);
+    if (absents.length) { L.push("🔴 *Absents" + (prevenus.length ? " sans prévenir" : "") + "* (" + absents.length + ")"); puces(L, absents.map(function (st) { return st.nom; })); L.push(""); }
+    if (prevenus.length) { L.push("🔵 *Absents ayant prévenu* (" + prevenus.length + ")"); puces(L, prevenus.map(function (st) { return st.nom; })); L.push(""); }
+    if (retards.length) { L.push("🟡 *En retard* (" + retards.length + ")"); puces(L, retards.map(function (st) { return st.nom; })); L.push(""); }
+    if (presents.length) { L.push("🟢 *Présents* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom; })); L.push(""); }
+    lignesPause(L, s.type, stats, s.date);
+    if (s.tari && s.tari !== "aucun") {
+      var manquants = tariCompte(s).manquants.map(function (id) { return membres[id] ? membres[id].nom : ""; }).filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
+      if (manquants.length) {
+        L.push("🎙️ *Tari à envoyer avant le dahira du " + samediLong(dahiraConcerne(s.date)) + "*");
+        L.push(tariPlain(s.tariDetail || {}));
+        if (s.tari === "tous") L.push("→ tout le monde"); else puces(L, manquants);
+        L.push("");
+      }
+    }
+    L.push("Merci à tous pour votre engagement.");
+    L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
+    return L.join("\n");
+  }
+  function waHtml(txt) {
+    return esc(txt)
+      .replace(/\*([^*\n]+)\*/g, "<b>$1</b>")
+      .replace(/(^|\s)_([^_\n]+)_(?=\s|$)/g, "$1<i>$2</i>")
+      .replace(/\n/g, "<br>");
+  }
+  function montrer(ta, txt) { if (!ta) return; ta.hidden = false; ta.value = txt; ta.focus(); ta.select(); toast("Sélectionnez le texte affiché pour le copier."); }
+
+  /* ---------- Membres ---------- */
+  function court(iso) { return iso ? asDate(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : ""; }
+  function changerStatut(id, statut, motif, retour, depuis) {
+    var m = membres[id];
+    if (!m) return;
+    var d = depuis || today();
+    var h = (m.historique || []).concat([{ statut: statut, date: d, motif: motif || "" }]);
+    db.doc("membres/" + id).update({ statut: statut, actif: statut === "actif", depuis: d, motif: motif || "", retour: retour || "", historique: h })
+      .then(function () {
+        formOuvert = null;
+        afficher();
+        toast(m.nom + (statut === "actif" ? " est de nouveau actif." : statut === "pause" ? " est en pause." : " est marqué comme parti."));
+      }, echec);
+  }
+  function formStatut(m) {
+    if (!formOuvert || formOuvert.id !== m.id) return "";
+    var pause = formOuvert.type === "pause";
+    return '<div class="inline-form">' +
+      '<label class="field" style="flex:1 1 200px">Motif' + (pause ? "" : " (facultatif)") + '<input type="text" id="p-motif" placeholder="' + (pause ? "Études dans une autre province" : "A quitté le dahira") + '"></label>' +
+      '<label class="field">' + (pause ? "En pause depuis le" : "Parti le") + '<input type="date" id="p-depuis" value="' + today() + '"></label>' +
+      (pause ? '<label class="field">Retour prévu (facultatif)<input type="date" id="p-retour"></label>' : "") +
+      '<button type="button" class="btn ' + (pause ? "primary" : "danger") + '" data-action="ok-' + formOuvert.type + '" data-id="' + esc(m.id) + '">' + (pause ? "Mettre en pause" : "Confirmer le départ") + "</button>" +
+      '<button type="button" class="btn ghost" data-action="annuler">Annuler</button></div>';
+  }
+  function vueMembres() {
+    var tous = Object.keys(membres).map(function (k) { return membres[k]; }).sort(triNom);
+    var actifs = tous.filter(function (m) { return statutMembre(m) === "actif"; });
+    var pause = tous.filter(function (m) { return statutMembre(m) === "pause"; });
+    var partis = tous.filter(function (m) { return statutMembre(m) === "parti"; });
+    var nb = { k1: 0, k2: 0, deux: 0 };
+    actifs.forEach(function (m) { if (m.k1 && m.k2) nb.deux++; else if (m.k1) nb.k1++; else if (m.k2) nb.k2++; });
+    var html = '<section class="panel"><h2>Membres</h2><p class="muted">' + actifs.length + " actifs (" + nb.k1 + " au Kourel 1 seulement, " + nb.k2 + " au Kourel 2 seulement, " + nb.deux + " dans les deux) · " + pause.length + " en pause · " + partis.length + " partis. Seuls les membres actifs sont ajoutés aux nouvelles séances : pendant une pause, aucune absence n’est comptée.</p>";
+    if (peutModifier) {
+      html += '<form class="row" id="f-membre" style="margin-top:12px"><label class="field" style="flex:1 1 200px">Nouveau membre<input type="text" id="m-nom" placeholder="Prénom et nom" required></label>' +
+        '<button type="button" class="toggle" id="m-k1" aria-pressed="false">Kourel 1</button><button type="button" class="toggle" id="m-k2" aria-pressed="true">Kourel 2</button>' +
+        '<button class="btn primary" type="submit">Ajouter</button></form>';
+    }
+    /* Actifs */
+    html += '<h3 class="group">Actifs · ' + actifs.length + '</h3><div class="list">' + (actifs.length ? actifs.map(function (m) {
+      if (!peutModifier) return '<div class="member"><span style="flex:1">' + esc(m.nom) + '</span><span class="chip">' + esc(tagsKourel(m)) + "</span></div>";
+      return '<div class="member"><input type="text" value="' + esc(m.nom) + '" data-nom="' + esc(m.id) + '" aria-label="Nom">' +
+        '<button type="button" class="toggle" data-k="k1" data-id="' + esc(m.id) + '" aria-pressed="' + !!m.k1 + '">Kourel 1</button>' +
+        '<button type="button" class="toggle" data-k="k2" data-id="' + esc(m.id) + '" aria-pressed="' + !!m.k2 + '">Kourel 2</button>' +
+        '<span class="actions"><button type="button" class="btn ghost small" data-action="pause" data-id="' + esc(m.id) + '">Pause</button>' +
+        '<button type="button" class="btn ghost small" data-action="parti" data-id="' + esc(m.id) + '">Départ</button></span>' + formStatut(m) + "</div>";
+    }).join("") : '<div class="empty">Aucun membre actif.</div>') + "</div>";
+
+    /* En pause */
+    if (pause.length) {
+      html += '<h3 class="group">En pause · ' + pause.length + '</h3><div class="list">' + pause.map(function (m) {
+        var depasse = m.retour && m.retour < today();
+        return '<div class="member off-soft"><span class="who"><b>' + esc(m.nom) + "</b> <span class=\"chip\">" + esc(tagsKourel(m)) + "</span>" +
+          '<span class="meta">' + (peutModifier
+            ? 'En pause depuis le <input type="date" class="date-inline" data-depuis="' + esc(m.id) + '" value="' + esc(m.depuis || "") + '" aria-label="Date de début de la pause">'
+            : "En pause depuis le " + esc(court(m.depuis))) + (m.motif ? " · " + esc(m.motif) : "") +
+          (m.retour ? (depasse ? ' · <b class="c-a">retour prévu le ' + esc(court(m.retour)) + ", date dépassée</b>" : " · retour prévu le " + esc(court(m.retour))) : "") + "</span></span>" +
+          (peutModifier ? '<span class="actions"><button type="button" class="btn primary small" data-action="reactiver" data-id="' + esc(m.id) + '">Réactiver</button>' +
+            '<button type="button" class="btn ghost small" data-action="parti" data-id="' + esc(m.id) + '">Départ définitif</button></span>' + formStatut(m) : "") + "</div>";
+      }).join("") + "</div>";
+    }
+
+    /* Partis */
+    if (partis.length) {
+      html += '<h3 class="group"><button type="button" class="linkish" data-action="voir-partis">' + (voirPartis ? "▾" : "▸") + " Partis · " + partis.length + "</button></h3>";
+      if (voirPartis) {
+        html += '<div class="list">' + partis.map(function (m) {
+          return '<div class="member off"><span class="who"><b>' + esc(m.nom) + '</b><span class="meta">Parti le ' + esc(court(m.depuis)) + (m.motif ? " · " + esc(m.motif) : "") + " · historique conservé dans les bilans</span></span>" +
+            (peutModifier ? '<span class="actions"><button type="button" class="btn ghost small" data-action="reactiver" data-id="' + esc(m.id) + '">Réintégrer</button></span>' : "") + "</div>";
+        }).join("") + "</div>";
+      }
+    }
+    html += "</section>";
+    app.innerHTML = html;
+    var f = document.getElementById("f-membre");
+    if (f) {
+      ["m-k1", "m-k2"].forEach(function (id) { document.getElementById(id).addEventListener("click", function (e) { var b = e.currentTarget; b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); }); });
+      f.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var nom = document.getElementById("m-nom").value.trim();
+        if (!nom) return;
+        var k1 = document.getElementById("m-k1").getAttribute("aria-pressed") === "true";
+        var k2 = document.getElementById("m-k2").getAttribute("aria-pressed") === "true";
+        var id = slug(nom), n = 2;
+        while (membres[id]) id = slug(nom) + "-" + n++;
+        db.doc("membres/" + id).set({ nom: nom, k1: k1, k2: k2, actif: true, statut: "actif", depuis: today(), historique: [{ statut: "actif", date: today(), motif: "Arrivée" }] }).then(function () { toast(nom + " ajouté."); }, echec);
+      });
+    }
+  }
+
+  /* ---------- Mon espace ---------- */
+  function lireMoi() { try { return localStorage.getItem("presences-moi") || ""; } catch (e) { return ""; } }
+  function ecrireMoi(v) { try { localStorage.setItem("presences-moi", v); } catch (e) { /* stockage indisponible */ } }
+  var moiCourant = lireMoi();
+  function vueMoi() {
+    var liste = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) !== "parti"; }).sort(triNom);
+    var html = '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
+      '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 240px">Je suis<select id="moi"><option value="">Choisir mon nom…</option>' +
+      liste.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === moiCourant ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") +
+      "</select></label></div></section>";
+    var moi = membres[moiCourant];
+    if (moi && statutMembre(moi) === "actif") {
+      prochainsDahiras().forEach(function (dz, i) {
+        var e = etatDahira(dz), rs = e.raisons[moi.id] || [];
+        var parTari = rs.filter(function (r) { return r.tari; }).map(function (r) { return r.label; });
+        var att = rs.length > 0;
+        if (parTari.length) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : envoyez votre Tari pour entrer dans le " + esc(parTari.join(" et le ")) + ".</span></div>";
+        else if (att) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : Kourel général, réservé à ceux qui sont venus à la dernière répétition générale.</span></div>";
+        else if ((i === 0 || dahirasCfg[dz]) && !e.fusion && !(e.mode === "k2k1" ? (moi.k1 || moi.k2) : moi[e.mode])) html += '<div class="me-banner info">ℹ️ <span>Dahira du ' + esc(samediLong(dz)) + " : " + esc(MODE_PHRASE[e.mode].replace(/^./, function (c) { return c.toLowerCase(); })) + "</span></div>";
+        else if (i === 0 && (moi.k1 || moi.k2)) html += '<div class="me-banner ok">✅ <span>Dahira du ' + esc(samediLong(dz)) + " : vous pouvez entrer dans le " + esc(e.groupes.filter(function (g) { return g.ok.indexOf(moi) > -1; }).map(function (g) { return g.label; }).join(" et le ") || "kourel") + ".</span></div>";
+      });
+    }
+    if (moi) {
+      var items = [];
+      seances.forEach(function (s) {
+        if (!s.tari || s.tari === "aucun" || (s.participants || []).indexOf(moi.id) < 0 || !tariConcerne(s, moi.id)) return;
+        var recu = !!(s.tariRecu || {})[moi.id], dz = dahiraConcerne(s.date);
+        if (recu && dz < isoPlus(today(), -30)) return;
+        items.push({ s: s, recu: recu, dz: dz });
+      });
+      items.sort(function (a, b) { return (a.recu - b.recu) || (a.dz < b.dz ? -1 : 1); });
+      var attente = items.filter(function (x) { return !x.recu; }).length;
+      html += '<section class="panel"><h2>Mes Taris</h2><p class="muted">' + (attente ? attente + " Tari" + (attente > 1 ? "s" : "") + " à envoyer, sur WhatsApp ou à un membre du Conservatoire." : "Aucun Tari en attente.") + "</p>" +
+        '<div class="list" style="margin-top:10px">' + (items.length ? items.map(function (x) {
+          var t = tariTexte(x.s.tariDetail || {});
+          return '<div class="item' + (x.recu ? "" : " attente") + '"><div class="ligne"><span>' + (t || "Contenu à préciser par le Conservatoire") + '</span><span class="pill ' + (x.recu ? "p" : "r") + '">' + (x.recu ? "Tari reçu" : "À envoyer") + "</span></div>" +
+            '<span class="muted">Demandé à la séance ' + esc(TYPES[x.s.type] || "") + " du " + esc(asDate(x.s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })) +
+            (x.recu ? "" : " · à envoyer avant le dahira du " + esc(samediLong(x.dz)) + ", sinon pas d’entrée dans le kourel ce jour-là") + "</span></div>";
+        }).join("") : '<div class="empty">Rien à envoyer pour le moment.</div>') + "</div></section>";
+
+      /* Mon suivi : indicateurs, évaluation du Conservatoire, chemin vers le Kourel 1 */
+      if (statutMembre(moi) === "actif") {
+        var rs = suiviMembre(moi), sts = rs.st;
+        var NIV_CLS = { 1: "r", 2: "e", 3: "p" };
+        html += '<section class="panel"><h2>Mon suivi</h2><p class="muted">Sur les 3 derniers mois. Il vous aide à voir où vous en êtes et ce qu’il reste à travailler.</p>' +
+          '<div class="tuiles">' +
+          tuile(rs.ok.assid, "Assiduité", rs.assid == null ? "–" : rs.assid + " %", rs.assid == null) +
+          tuile(rs.ok.ponct, "Retards", sts.R, !sts.total) +
+          tuile(rs.ok.suite, "Absences de suite", rs.suiteMax ? "max " + rs.suiteMax : "aucune", !sts.total) +
+          tuile(rs.ok.tari, "Taris", sts.tdus ? sts.trecus + "/" + sts.tdus : "–", !sts.tdus) +
+          tuile(rs.ok.eval, "Évaluation", rs.evalue ? rs.notes.filter(function (n) { return n === 3; }).length + "/3 maîtrisés" : "À venir", !rs.evalue) + "</div>";
+        html += '<h3 class="group">Évaluation du Conservatoire</h3>';
+        if (rs.notes.some(function (n) { return n > 0; })) {
+          html += '<div class="eval-vue">' + Object.keys(CRITERES).map(function (k) {
+              var n = Number(rs.ev[k]) || 0;
+              return '<div class="eval-ligne"><span>' + CRITERES[k] + "</span>" + (n ? '<span class="pill ' + NIV_CLS[n] + '">' + NIVEAUX[n] + "</span>" : '<span class="pill n">Pas encore évalué</span>') + "</div>";
+            }).join("") + "</div>" +
+            (rs.ev.commentaire ? '<p class="eval-com">« ' + esc(rs.ev.commentaire) + " »</p>" : "") +
+            (rs.ev.date ? '<p class="muted" style="font-size:12.5px;margin-top:6px">Évaluation du ' + esc(court(rs.ev.date)) + "</p>" : "");
+        } else {
+          html += '<p class="muted">Pas encore d’évaluation : le Conservatoire vous évaluera prochainement.</p>';
+        }
+        if (moi.k2 && !moi.k1) {
+          var etapes = [
+            [rs.ok.assid, "Assiduité d’au moins " + SUIVI.assiduite + " %" + (rs.assid != null ? " (vous : " + rs.assid + " %)" : "")],
+            [rs.ok.ponct, SUIVI.retardsMax + " retards au plus" + (sts.total ? " (vous : " + sts.R + ")" : "")],
+            [rs.ok.suite, "Jamais " + (SUIVI.suiteMax + 1) + " absences de suite"],
+            [rs.ok.tari, "Tous vos Taris envoyés"],
+            [rs.ok.eval, "« Maîtrisé » en prononciation, mémorisation et justesse"]
+          ];
+          var faits = etapes.filter(function (e) { return e[0]; }).length;
+          html += '<h3 class="group">Mon chemin vers le Kourel 1 · ' + faits + "/" + etapes.length + "</h3>" +
+            (rs.niveau === "pret" ? '<div class="me-banner ok" style="margin-bottom:10px">✅ <span>Vous remplissez tous les critères. Le Conservatoire décidera de votre passage au Kourel 1.</span></div>' :
+             rs.niveau === "donnees" ? '<p class="muted" style="margin-bottom:8px">Encore quelques répétitions et votre parcours s’affichera pleinement.</p>' : "") +
+            '<ul class="etapes">' + etapes.map(function (e) { return '<li class="' + (e[0] ? "ok" : "") + '"><span aria-hidden="true">' + (e[0] ? "✓" : "○") + "</span>" + esc(e[1]) + "</li>"; }).join("") + "</ul>";
+        }
+        html += "</section>";
+      }
+      var mes = seances.filter(function (s) { return (s.participants || []).indexOf(moi.id) > -1; });
+      var mois = today().slice(0, 7), cm = { P: 0, R: 0, A: 0 }, ct = { P: 0, R: 0, A: 0 };
+      cm.E = 0;
+      mes.forEach(function (s) { var v = (s.statuts || {})[moi.id] || "P"; ct[v]++; if (s.date.slice(0, 7) === mois) { cm[v]++; if (aPrevenu(s, moi.id)) cm.E++; } });
+      html += '<section class="panel"><h2>Mes présences</h2><p class="muted">' + esc(moisLabel(mois)) + "</p>" +
+        '<div class="stats"><span class="pill p">' + cm.P + " présent" + (cm.P > 1 ? "s" : "") + '</span><span class="pill r">' + cm.R + " retard" + (cm.R > 1 ? "s" : "") + '</span><span class="pill a">' + cm.A + " absence" + (cm.A > 1 ? "s" : "") + (cm.E ? " (dont " + cm.E + " prévenue" + (cm.E > 1 ? "s" : "") + ")" : "") + "</span></div>" +
+        '<p class="muted" style="margin-top:10px">Depuis le début : ' + mes.length + " séance" + (mes.length > 1 ? "s" : "") + ", " + ct.R + " retard" + (ct.R > 1 ? "s" : "") + ", " + ct.A + " absence" + (ct.A > 1 ? "s" : "") + ".</p>" +
+        '<div class="list" style="margin-top:10px">' + mes.slice(0, 8).map(function (s) {
+          var v = choixDe(s, moi.id);
+          return '<div class="item"><div class="ligne"><span>' + esc(jourLong(s.date)) + ' · <span class="chip">' + esc(TYPES[s.type] || "") + '</span></span><span class="pill ' + v.toLowerCase() + '">' + (v === "E" ? "Absent · a prévenu" : STATUTS[v]) + "</span></div></div>";
+        }).join("") + "</div></section>";
+    }
+    app.innerHTML = html;
+  }
+
+  /* ---------- Khassidas : répertoire et lecture ---------- */
+  function pageKhassida(kh, vers) {
+    if (kh.page) return "#khassida/" + encodeURIComponent(kh.id) + (vers ? "/v" + Number(vers) : "");
+    return kh.lien ? kh.lien + (vers ? "#v" + Number(vers) : "") : "";
+  }
+  function vueRepertoire() {
+    var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
+    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Le répertoire du Conservatoire : texte vocalisé, phonétique, traduction et audio de référence.</p>' +
+      (kl.length ? '<div class="kh-list">' + kl.map(function (k) {
+        var href = pageKhassida(k), interne = !!k.page;
+        return '<a class="kh-card" href="' + esc(href || "#khassidas") + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ">" +
+          (k.arabe ? '<span class="kh-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
+          "<b>" + esc(k.titre) + '</b><span class="muted">' + (k.vers ? k.vers + " vers" : "") + (interne ? " · Texte et audio" : "") + "</span>" +
+          '<span class="go">' + (href ? "Ouvrir →" : "Page d’étude à venir") + "</span></a>";
+      }).join("") + "</div>" : '<div class="empty" style="margin-top:12px">Aucun khassida pour l’instant.</div>') +
+      (peutModifier ? '<p class="muted" style="margin-top:12px;font-size:13px">Pour ajouter un khassida, allez dans <a href="#reglages">Réglages</a>.</p>' : "") + "</section>";
+    app.innerHTML = html;
+  }
+  function vueLecture() {
+    var kh = lecture && khassidas[lecture.id];
+    if (!kh || !kh.page) {
+      app.innerHTML = '<div class="wrap" style="padding-block:20px"><div class="empty">Ce khassida n’a pas encore de page d’étude sur la plateforme. <a href="#khassidas">Retour aux khassidas</a></div></div>';
+      return;
+    }
+    var cle = kh.page + "|" + (lecture.vers || "");
+    var exist = app.querySelector(".lecture-frame");
+    if (exist && exist.dataset.cle === cle) { ajusterLecture(); return; }
+    app.innerHTML = '<div class="lecture-bar"><a class="btn ghost small" href="#khassidas">← Khassidas</a><b>' + esc(kh.titre) + "</b></div>" +
+      '<iframe class="lecture-frame" title="' + esc(kh.titre) + '" data-cle="' + esc(cle) + '" src="' + esc(kh.page + (lecture.vers ? "?v=" + lecture.vers + "#v" + lecture.vers : "")) + '" allow="autoplay"></iframe>';
+    ajusterLecture();
+  }
+  function ajusterLecture() {
+    var f = app.querySelector(".lecture-frame");
+    if (!f) return;
+    var haut = f.getBoundingClientRect().top + window.scrollY;
+    f.style.height = Math.max(420, window.innerHeight - haut) + "px";
+  }
+  window.addEventListener("resize", function () { if (vue === "khassida") ajusterLecture(); });
+
+  /* ---------- Khassidas (réglages) ---------- */
+  function vueKhassidas(ajouter) {
+    var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
+    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Les khassidas du répertoire. Ils servent à préciser le Tari de chaque séance.</p>' +
+      '<div class="list" style="margin-top:12px">' + (kl.length ? kl.map(function (k) {
+        return '<div class="item">' + (k.arabe ? '<span class="kh-ar" lang="ar">' + esc(k.arabe) + "</span>" : "") +
+          '<div class="ligne"><span><b>' + esc(k.titre) + "</b>" + (k.vers ? " · " + k.vers + " vers" : "") + "</span>" +
+          ((k.page || k.lien) ? '<a href="' + esc(pageKhassida(k)) + '"' + (k.page ? "" : ' target="_blank" rel="noopener"') + ">Ouvrir la page d’étude</a>" : "") + "</div></div>";
+      }).join("") : '<div class="empty">Aucun khassida pour l’instant.</div>') + "</div>";
+    if (peutModifier) {
+      html += '<form class="row" id="f-kh" style="margin-top:14px">' +
+        '<label class="field" style="flex:1 1 200px">Titre<input type="text" id="k-titre" required placeholder="Mawahibu Nafih"></label>' +
+        '<label class="field" style="flex:1 1 160px">Titre en arabe (facultatif)<input type="text" id="k-ar" dir="rtl" lang="ar"></label>' +
+        '<label class="field">Nombre de vers<input type="number" id="k-vers" min="1" style="width:100px"></label>' +
+        '<label class="field" style="flex:1 1 220px">Lien de la page (facultatif)<input type="url" id="k-lien" placeholder="https://claude.ai/artifact/…"></label>' +
+        '<button class="btn primary" type="submit">Ajouter le khassida</button></form>';
+    }
+    html += "</section>";
+    if (ajouter) app.insertAdjacentHTML("beforeend", html); else app.innerHTML = html;
+    var f = document.getElementById("f-kh");
+    if (f) f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var titre = document.getElementById("k-titre").value.trim();
+      if (!titre) return;
+      var id = slug(titre), n = 2;
+      while (khassidas[id]) id = slug(titre) + "-" + n++;
+      db.doc("khassidas/" + id).set({
+        titre: titre, arabe: document.getElementById("k-ar").value.trim(),
+        vers: parseInt(document.getElementById("k-vers").value, 10) || null, lien: document.getElementById("k-lien").value.trim()
+      }).then(function () { toast(titre + " ajouté à la liste."); }, echec);
+    });
+  }
+
+  /* ---------- Sauvegarde des données ---------- */
+  function lireDerniereSauvegarde() { try { return localStorage.getItem("presences-sauvegarde") || ""; } catch (e) { return ""; } }
+  function ecrireDerniereSauvegarde(v) { try { localStorage.setItem("presences-sauvegarde", v); } catch (e) { /* stockage indisponible */ } }
+  function sansId(o) { var c = {}; Object.keys(o).forEach(function (k) { if (k !== "id") c[k] = o[k]; }); return c; }
+  function donneesCompletes() {
+    var col = function (obj) { var r = {}; Object.keys(obj).forEach(function (k) { r[k] = sansId(obj[k]); }); return r; };
+    var se = {}; seances.forEach(function (x) { se[x.id] = sansId(x); });
+    return {
+      application: "Présences du Conservatoire · Dahira Mafatihul Bichri Touba Estrie",
+      format: 1, exporteLe: new Date().toISOString(),
+      collections: { membres: col(membres), seances: se, khassidas: col(khassidas), dahiras: dahirasCfg, programmes: programmes, evaluations: evaluations }
+    };
+  }
+  function csvPresences() {
+    var q = function (v) { v = String(v == null ? "" : v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var L = [["Date", "Répétition", "Membre", "Kourels", "Statut", "Motif (absence prévenue)", "Tari demandé", "Tari reçu"].join(";")];
+    seances.slice().sort(function (a, b) { return a.date === b.date ? (a.type < b.type ? -1 : 1) : (a.date < b.date ? -1 : 1); }).forEach(function (x) {
+      (x.participants || []).map(function (id) { return { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé" }; }).sort(triNom).forEach(function (p) {
+        var nonRequis = !requis(x, p.id), v = choixDe(x, p.id);
+        var statut = nonRequis ? "Non requis (pause)" : v === "E" ? "Absent (prévenu)" : STATUTS[v];
+        var du = !nonRequis && tariConcerne(x, p.id);
+        L.push([x.date, TYPES[x.type] || x.type, p.nom, membres[p.id] ? tagsKourel(membres[p.id]) : "", statut, v === "E" ? motifTexte(x, p.id) : "",
+          du ? "Oui" : "Non", du ? ((x.tariRecu || {})[p.id] ? "Oui" : "Non") : ""].map(q).join(";"));
+      });
+    });
+    return "﻿" + L.join("\r\n");
+  }
+  function telecharger(nom, contenu, etiquette) {
+    var api = claudeApi;
+    (api ? api.use("downloads").catch(function () { return null; }) : Promise.resolve(null)).then(function (dl) {
+      if (!dl) { var ta = document.getElementById("sv-texte"); montrer(ta, contenu); return; }
+      dl.save({ filename: nom, data: contenu }).then(function () {
+        if (etiquette === "complete") { ecrireDerniereSauvegarde(today()); afficher(); }
+        toast("Fichier enregistré : " + nom);
+      }, function (e) {
+        if (e && e.code === "declined") return;
+        if (e && e.code === "rate_limited") { toast("Une fenêtre d’enregistrement est déjà ouverte."); return; }
+        var ta2 = document.getElementById("sv-texte"); montrer(ta2, contenu);
+      });
+    });
+  }
+  function vueSauvegarde() {
+    if (!peutModifier) return;
+    var nbM = Object.keys(membres).length, nbS = seances.length, nbE = Object.keys(evaluations).length;
+    var der = lireDerniereSauvegarde();
+    var vieille = !der || der < isoPlus(today(), -30);
+    var html = '<section class="panel"><h2>Sauvegarde des données</h2>' +
+      '<p class="muted">Gardez une copie de tout ce qui est enregistré. Le même fichier servira à transférer les données sur le serveur du Conservatoire.</p>' +
+      '<div class="stats" style="margin-top:10px"><span class="pill n">' + nbM + " membre" + (nbM > 1 ? "s" : "") + '</span><span class="pill n">' + nbS + " séance" + (nbS > 1 ? "s" : "") +
+      '</span><span class="pill n">' + Object.keys(khassidas).length + " khassida" + (Object.keys(khassidas).length > 1 ? "s" : "") + '</span><span class="pill n">' + nbE + " évaluation" + (nbE > 1 ? "s" : "") + "</span></div>" +
+      (vieille ? '<div class="me-banner wait" style="margin-top:12px">💾 <span>' + (der ? "Dernière sauvegarde sur cet appareil le " + esc(court(der)) + " : pensez à en refaire une." : "Aucune sauvegarde faite depuis cet appareil.") + "</span></div>"
+               : '<div class="me-banner ok" style="margin-top:12px">✅ <span>Dernière sauvegarde sur cet appareil : ' + esc(court(der)) + ".</span></div>") +
+      '<div class="sv-choix">' +
+      '<button type="button" class="sv-btn primary" data-action="sv-complete"><b>Sauvegarde complète</b><span>Tout : membres, séances, Taris, khassidas, rappels, évaluations. Fichier .json</span></button>' +
+      '<button type="button" class="sv-btn" data-action="sv-csv"><b>Tableau des présences</b><span>Une ligne par membre et par séance, à ouvrir dans Excel. Fichier .csv</span></button></div>' +
+      '<textarea class="copy" id="sv-texte" readonly hidden aria-label="Données à copier"></textarea></section>';
+    app.insertAdjacentHTML("beforeend", html);
+  }
+
+  /* ---------- Navigation et événements ---------- */
+  function afficher() {
+    if (!db) return;
+    if (!charge.m || !charge.s) { app.innerHTML = '<div class="empty">Chargement des présences…</div>'; return; }
+    var actif = vue === "khassida" ? "khassidas" : vue;
+    document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    document.body.classList.toggle("lecture", vue === "khassida");
+    if (vue === "khassida") return vueLecture();
+    if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
+    else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else vueSeances();
+  }
+  function lireHash() {
+    var h = location.hash.replace("#", "");
+    if (h === "membres") h = "reglages";
+    var mk = /^khassida\/([^\/]+)(?:\/v(\d+))?$/.exec(h);
+    if (mk) { vue = "khassida"; lecture = { id: decodeURIComponent(mk[1]), vers: mk[2] ? Number(mk[2]) : null }; return; }
+    vue = ["seances", "bilan", "reglages", "moi", "khassidas", "dahira"].indexOf(h) > -1 ? h : "seances";
+  }
+  window.addEventListener("hashchange", function () { lireHash(); window.scrollTo(0, 0); seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null; afficher(); });
+
+  app.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
+    if (b.hasAttribute("data-back")) { seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
+    if (b.dataset.rappel) { rappelOuvert = b.dataset.rappel; afficher(); window.scrollTo(0, 0); return; }
+    if (b.dataset.action === "copier-rappel" && rappelOuvert) {
+      var txr = texteRappel(rappelOuvert), tar = document.getElementById("r-texte");
+      try { navigator.clipboard.writeText(txr).then(function () { toast("Rappel copié : collez-le dans le groupe WhatsApp."); }, function () { montrer(tar, txr); }); } catch (er) { montrer(tar, txr); }
+      return;
+    }
+    if (b.dataset.action === "sv-complete" && peutModifier) { telecharger("conservatoire-sauvegarde-" + today() + ".json", JSON.stringify(donneesCompletes(), null, 2), "complete"); return; }
+    if (b.dataset.action === "sv-csv" && peutModifier) { telecharger("conservatoire-presences-" + today() + ".csv", csvPresences(), "csv"); return; }
+    if (b.dataset.bilan) { bilanMode = b.dataset.bilan; evalOuvert = null; promoOuvert = null; afficher(); return; }
+    if (b.dataset.eval && peutModifier) {
+      var pe = b.dataset.eval.split("|"), cur = evaluations[pe[0]] || {}, nv2 = {};
+      Object.keys(CRITERES).forEach(function (k) { nv2[k] = cur[k] || 0; });
+      nv2.commentaire = cur.commentaire || "";
+      nv2[pe[1]] = Number(pe[2]); nv2.date = today();
+      db.doc("evaluations/" + pe[0]).set(nv2).catch(echec);
+      return;
+    }
+    if (peutModifier && b.dataset.action === "eval-open") { evalOuvert = evalOuvert === b.dataset.id ? null : b.dataset.id; promoOuvert = null; afficher(); return; }
+    if (peutModifier && b.dataset.action === "eval-fin") { evalOuvert = null; afficher(); toast("Évaluation enregistrée."); return; }
+    if (peutModifier && b.dataset.action === "promo-open") { promoOuvert = b.dataset.id; evalOuvert = null; afficher(); return; }
+    if (peutModifier && b.dataset.action === "promo-non") { promoOuvert = null; afficher(); return; }
+    if (peutModifier && b.dataset.action === "promo-ok") {
+      var pm2 = membres[b.dataset.id], garder = b.dataset.garder === "1";
+      if (!pm2) return;
+      var hist = (pm2.historique || []).concat([{ type: "kourel", date: today(), motif: garder ? "Ajouté au Kourel 1 (reste au Kourel 2)" : "Kourel 2 → Kourel 1" }]);
+      db.doc("membres/" + pm2.id).update({ k1: true, k2: garder, historique: hist }).then(function () {
+        promoOuvert = null; afficher(); toast(pm2.nom + " rejoint le Kourel 1. Félicitations !");
+      }, echec);
+      return;
+    }
+    if (peutModifier && b.dataset.action && b.dataset.action.indexOf("rep-") === 0) {
+      var ra = b.dataset.action, rid = b.dataset.id;
+      var lire = function (x) { var el = document.getElementById(x); return el ? el.value.trim() : ""; };
+      if (ra === "rep-edit") { editRep = editRep === rid ? null : rid; afficher(); return; }
+      if (ra === "rep-new") { editRep = "new"; afficher(); return; }
+      if (ra === "rep-fermer") { editRep = null; afficher(); return; }
+      if (ra === "rep-retablir") { enregistrerRappel(rid, { annulee: false, motifAnnulation: "" }); toast("Répétition rétablie."); return; }
+      if (ra === "rep-annuler") {
+        enregistrerRappel(rid, { annulee: true, motifAnnulation: lire("e-motif"), deplaceeVers: null });
+        editRep = null; toast("Répétition annulée. Le message d’annulation est prêt."); return;
+      }
+      if (ra === "rep-save") {
+        var nd = lire("e-date"), nt = lire("e-type"), nh = lire("e-heure");
+        if (!nd) { toast("Choisissez une date."); return; }
+        var nid = nd + "-" + nt;
+        editRep = null;
+        if (nid === rid) { enregistrerRappel(rid, { horaire: nh }); toast("Horaire enregistré."); return; }
+        if (programmes[nid] && !programmes[nid].annulee) { toast("Il y a déjà une répétition " + TYPES[nt] + " ce jour-là."); return; }
+        var ancien = progDe(rid), copie = {};
+        Object.keys(ancien).forEach(function (k) { copie[k] = ancien[k]; });
+        copie.horaire = nh; copie.extra = true; copie.annulee = false; copie.deplaceeVers = null; copie.deplaceeDe = rid; copie.envoye = false; copie.motifAnnulation = "";
+        db.doc("programmes/" + nid).set(copie).then(function () {
+          var fin = ancien.extra ? db.doc("programmes/" + rid).delete() : db.doc("programmes/" + rid).set(Object.assign({}, ancien, { annulee: true, deplaceeVers: nid }));
+          return fin;
+        }).then(function () { toast("Répétition déplacée au " + jourCourt(nd) + "."); }, echec);
+        return;
+      }
+      if (ra === "rep-add") {
+        var ad = lire("n-date"), at = lire("n-type"), ah = lire("n-heure");
+        if (!ad) { toast("Choisissez une date."); return; }
+        if (ad < today()) { toast("Choisissez une date à venir."); return; }
+        var aid = ad + "-" + at;
+        var estDefaut = prochainesRepetitions().some(function (r) { return r.id === aid; }) && !(programmes[aid] && programmes[aid].extra);
+        editRep = null;
+        if (programmes[aid] && programmes[aid].annulee) { enregistrerRappel(aid, { annulee: false, deplaceeVers: null, horaire: ah }); toast("Répétition rétablie."); return; }
+        if (estDefaut || (programmes[aid] && programmes[aid].extra)) { toast("Cette répétition est déjà prévue."); afficher(); return; }
+        db.doc("programmes/" + aid).set({ horaire: ah, lieu: lieuParDefaut(), extra: true }).then(function () { toast("Répétition ajoutée : " + jourCourt(ad) + "."); }, echec);
+        return;
+      }
+    }
+    if (b.dataset.sugg && rappelOuvert && peutModifier) {
+      var tyS = rappelOuvert.slice(11), lst = MOT_SUGG.concat(MOT_DEFAUT[tyS] && MOT_SUGG.indexOf(MOT_DEFAUT[tyS]) < 0 ? [MOT_DEFAUT[tyS]] : []);
+      if (b.dataset.sugg === "vide") { enregistrerRappel(rappelOuvert, { note: "" }); return; }
+      var choix = lst[Number(b.dataset.sugg)];
+      var lignes = progDe(rappelOuvert).note.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
+      lignes = lignes.indexOf(choix) > -1 ? lignes.filter(function (x) { return x !== choix; }) : lignes.concat([choix]);
+      enregistrerRappel(rappelOuvert, { note: lignes.join("\n") });
+      return;
+    }
+    if (b.dataset.action === "rappel-envoye" && rappelOuvert && peutModifier) { enregistrerRappel(rappelOuvert, { envoye: true }); toast("Rappel marqué comme envoyé."); return; }
+    if (b.dataset.dahira) { dahiraOuvert = b.dataset.dahira; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
+    if (b.dataset.mode && peutModifier && dahiraOuvert) {
+      var md = b.dataset.mode;
+      db.doc("dahiras/" + dahiraOuvert).set({ mode: md }).then(function () { toast(MODE_PHRASE[md]); }, echec);
+      return;
+    }
+    if (b.dataset.action === "apercu-dahira") { apercuDahira = !apercuDahira; afficher(); return; }
+    if (b.dataset.action === "copier-dahira" && dahiraOuvert) {
+      var txd = texteDahira(dahiraOuvert, etatDahira(dahiraOuvert)), tad = document.getElementById("dz-texte");
+      try { navigator.clipboard.writeText(txd).then(function () { toast("Message copié : collez-le dans le groupe WhatsApp."); }, function () { montrer(tad, txd); }); } catch (er) { montrer(tad, txd); }
+      return;
+    }
+    if (b.dataset.recu && peutModifier) {
+      var parts = b.dataset.recu.split("|"), trr = {}; trr[parts[1]] = true;
+      var nomR = membres[parts[1]] ? membres[parts[1]].nom : "Membre";
+      db.doc("seances/" + parts[0]).update({ tariRecu: trr }).then(function () {
+        var xb = dahiraOuvert ? etatDahira(dahiraOuvert).tariBloques.filter(function (x) { return x.m.id === parts[1]; })[0] : null;
+        var reste = xb ? xb.seances.filter(function (sx) { return sx.id !== parts[0]; }).length : 0;
+        toast(reste ? "Tari reçu. " + nomR + " a encore un Tari à envoyer." : "Tari reçu : " + nomR + " peut entrer dans le kourel samedi.");
+      }, echec);
+      return;
+    }
+    if (b.dataset.set && peutModifier) {
+      var sv = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
+      var pid = b.dataset.set, nv = b.dataset.v;
+      if (choixDe(sv, pid) === nv) return;
+      var patch = {}, maj = { statuts: patch };
+      patch[pid] = nv === "E" ? "A" : nv;
+      if (nv === "E") { maj.prevenus = {}; maj.prevenus[pid] = { motif: "", note: "" }; }
+      else if ((sv.prevenus || {})[pid]) { maj.prevenus = {}; maj.prevenus[pid] = null; }
+      db.doc("seances/" + seanceOuverte).update(maj).catch(echec);
+      return;
+    }
+    if (b.dataset.motif && peutModifier) {
+      var sm2 = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
+      var cur = (sm2.prevenus || {})[b.dataset.motif] || {};
+      var pm = {}; pm[b.dataset.motif] = { motif: cur.motif === b.dataset.m ? "" : b.dataset.m, note: cur.motif === b.dataset.m ? (cur.note || "") : "" };
+      db.doc("seances/" + seanceOuverte).update({ prevenus: pm }).catch(echec);
+      return;
+    }
+    if (b.hasAttribute("data-askdel")) { confirmerSuppression = true; afficher(); return; }
+    if (b.hasAttribute("data-nodel")) { confirmerSuppression = false; afficher(); return; }
+    if (b.hasAttribute("data-del")) {
+      var id = seanceOuverte;
+      db.doc("seances/" + id).delete().then(function () { seanceOuverte = null; confirmerSuppression = false; afficher(); toast("Séance supprimée."); }, echec);
+      return;
+    }
+    if (b.dataset.tari && peutModifier) { db.doc("seances/" + seanceOuverte).update({ tari: b.dataset.tari }).catch(echec); return; }
+    if (b.dataset.tarirecu && peutModifier) {
+      var sx = seances.filter(function (x) { return x.id === seanceOuverte; })[0];
+      var tr = {}; tr[b.dataset.tarirecu] = !((sx && sx.tariRecu) || {})[b.dataset.tarirecu];
+      db.doc("seances/" + seanceOuverte).update({ tariRecu: tr }).catch(echec);
+      return;
+    }
+    var act = b.dataset.action, mid = b.dataset.id;
+    if (act === "voir-partis") { voirPartis = !voirPartis; afficher(); return; }
+    if (act && peutModifier) {
+      var val = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+      if (act === "pause" || act === "parti") { formOuvert = { id: mid, type: act }; afficher(); var mo = document.getElementById("p-motif"); if (mo) mo.focus(); return; }
+      if (act === "annuler") { formOuvert = null; afficher(); return; }
+      if (act === "ajuster") { ajusterListe = !ajusterListe; afficher(); return; }
+      if (act === "edit-tari") { tariEdition = true; afficher(); return; }
+      if (act === "fin-tari") { tariEdition = false; confirmerTari = false; afficher(); return; }
+      if (act === "suppr-tari") { confirmerTari = true; afficher(); return; }
+      if (act === "non-suppr-tari") { confirmerTari = false; afficher(); return; }
+      if (act === "ok-suppr-tari") {
+        var so = seances.filter(function (x) { return x.id === seanceOuverte; })[0];
+        if (!so) return;
+        var copie = {};
+        Object.keys(so).forEach(function (k) { if (["id", "tari", "tariDetail", "tariRecu"].indexOf(k) < 0) copie[k] = so[k]; });
+        copie.tari = "aucun";
+        db.doc("seances/" + so.id).set(copie).then(function () { confirmerTari = false; tariEdition = false; afficher(); toast("Tari supprimé pour cette séance."); }, echec);
+        return;
+      }
+      if (act === "ok-pause") { changerStatut(mid, "pause", val("p-motif"), val("p-retour"), val("p-depuis")); return; }
+      if (act === "ok-parti") { changerStatut(mid, "parti", val("p-motif"), "", val("p-depuis")); return; }
+      if (act === "reactiver") { changerStatut(mid, "actif", "", ""); return; }
+      var sc = seances.filter(function (x) { return x.id === seanceOuverte; })[0];
+      if (act === "ajouter-seance" && sc) {
+        var nid = val("s-ajout");
+        if (!nid) { toast("Choisissez d’abord un membre."); return; }
+        var st = {}; st[nid] = "P";
+        db.doc("seances/" + sc.id).update({ participants: (sc.participants || []).concat([nid]), statuts: st })
+          .then(function () { toast(membres[nid].nom + " ajouté à la séance, marqué présent."); }, echec);
+        return;
+      }
+      if (act === "retirer" && sc) {
+        db.doc("seances/" + sc.id).update({ participants: (sc.participants || []).filter(function (x) { return x !== mid; }) })
+          .then(function () { toast((membres[mid] ? membres[mid].nom : "Membre") + " retiré de la séance."); }, echec);
+        return;
+      }
+    }
+    if (b.dataset.k && b.dataset.id && peutModifier) {
+      var m = membres[b.dataset.id], u = {};
+      u[b.dataset.k] = b.dataset.k === "actif" ? m.actif === false : !m[b.dataset.k];
+      db.doc("membres/" + b.dataset.id).update(u).catch(echec);
+    }
+  });
+  app.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.dataset && t.dataset.depuis && peutModifier && t.value) {
+      db.doc("membres/" + t.dataset.depuis).update({ depuis: t.value }).then(function () { toast("Date de pause modifiée : les séances à partir de cette date ne lui sont plus comptées."); }, echec);
+      return;
+    }
+    if (t.dataset && t.dataset.note && peutModifier && seanceOuverte) {
+      var pn = {}; pn[t.dataset.note] = { note: t.value.trim() };
+      db.doc("seances/" + seanceOuverte).update({ prevenus: pn }).catch(echec);
+      return;
+    }
+    if (rappelOuvert && peutModifier && /^r-(heure|lieu|kh|tout|de|a|note|taris|motif)$/.test(t.id)) {
+      var f = t.id.slice(2), v;
+      if (f === "motif") { enregistrerRappel(rappelOuvert, { motifAnnulation: t.value.trim() }); return; }
+      if (f === "heure") enregistrerRappel(rappelOuvert, { horaire: t.value.trim() });
+      else if (f === "lieu" || f === "note") { v = {}; v[f] = t.value.trim(); enregistrerRappel(rappelOuvert, v); }
+      else if (f === "kh") { var nk = khassidas[t.value]; enregistrerRappel(rappelOuvert, { khassida: t.value, tout: false, de: 1, a: nk ? (nk.vers || null) : null }); }
+      else if (f === "tout") enregistrerRappel(rappelOuvert, { tout: t.checked });
+      else if (f === "taris") enregistrerRappel(rappelOuvert, { taris: t.checked });
+      else { v = {}; v[f] = parseInt(t.value, 10) || 1; enregistrerRappel(rappelOuvert, v); }
+      return;
+    }
+    if (t.dataset && t.dataset.evcom && peutModifier) {
+      var ce = evaluations[t.dataset.evcom] || {}, nv3 = {};
+      Object.keys(CRITERES).forEach(function (k) { nv3[k] = ce[k] || 0; });
+      nv3.commentaire = t.value.trim(); nv3.date = today();
+      db.doc("evaluations/" + t.dataset.evcom).set(nv3).catch(echec);
+      return;
+    }
+    if (t.id === "n-date" && t.value) {
+      var nty = typeDuJour(t.value), sel = document.getElementById("n-type"), hh = document.getElementById("n-heure");
+      if (sel) sel.value = nty; if (hh) hh.value = HORAIRE[nty] || "";
+      return;
+    }
+    if (t.id === "s-horaire" && peutModifier && seanceOuverte) {
+      db.doc("seances/" + seanceOuverte).update({ horaire: t.value.trim() }).then(function () { toast("Horaire enregistré."); }, echec);
+      return;
+    }
+    if (t.id === "moi") { moiCourant = t.value; ecrireMoi(moiCourant); afficher(); return; }
+    if (["t-kh", "t-de", "t-a", "t-cons", "t-tout"].indexOf(t.id) > -1 && peutModifier && seanceOuverte) {
+      var kid = document.getElementById("t-kh").value;
+      var nb = khassidas[kid] ? (khassidas[kid].vers || null) : null;
+      var elDe = document.getElementById("t-de"), elA = document.getElementById("t-a"), elTout = document.getElementById("t-tout");
+      var tout = elTout ? elTout.checked : false;
+      var de = elDe ? parseInt(elDe.value, 10) || 1 : 1;
+      var a = elA ? parseInt(elA.value, 10) || nb : nb;
+      if (t.id === "t-kh") { tout = false; de = 1; a = nb; }
+      if (tout) { de = 1; a = nb; }
+      if (a && de > a) a = de;
+      db.doc("seances/" + seanceOuverte).update({ tariDetail: { khassida: kid, tout: tout, de: de, a: a, consigne: document.getElementById("t-cons").value.trim() } }).catch(echec);
+      return;
+    }
+    if (t.dataset && t.dataset.nom && peutModifier) {
+      var nom = t.value.trim();
+      if (nom && membres[t.dataset.nom] && nom !== membres[t.dataset.nom].nom) db.doc("membres/" + t.dataset.nom).update({ nom: nom }).then(function () { toast("Nom modifié."); }, echec);
+    }
+  });
+
+  /* ---------- Démarrage ---------- */
+  lireHash();
+  var claudeApi = window.claude && typeof window.claude.use === "function" ? window.claude : null;
+  Promise.all([
+    claudeApi ? claudeApi.use("db").catch(function () { return null; }) : Promise.resolve(null),
+    claudeApi ? claudeApi.use("user").catch(function () { return null; }) : Promise.resolve(null)
+  ]).then(function (r) {
+    db = r[0];
+    var user = r[1];
+    if (!db) {
+      document.getElementById("role").textContent = "Hors ligne";
+      app.innerHTML = '<div class="empty">Les présences ne sont visibles que connecté à claude.ai, avec un accès à cette page.</div>';
+      return;
+    }
+    (user ? user.canEdit().catch(function () { return false; }) : Promise.resolve(false)).then(function (ok) {
+      peutModifier = !!ok;
+      document.getElementById("role").textContent = peutModifier ? "Administrateur" : "Consultation seule";
+      afficher();
+    });
+    db.collection("membres").onSnapshot(function (snap) {
+      membres = {};
+      snap.docs.forEach(function (d) { var v = d.data(); membres[d.id] = Object.assign({ id: d.id }, v); });
+      charge.m = true; afficher();
+    }, function () { toast("Les membres n’ont pas pu être chargés. Rechargez la page."); });
+    db.collection("evaluations").onSnapshot(function (snap) {
+      evaluations = {};
+      snap.docs.forEach(function (d) { evaluations[d.id] = d.data(); });
+      afficher();
+    }, function () { /* pas encore d'évaluation */ });
+    db.collection("programmes").onSnapshot(function (snap) {
+      programmes = {};
+      snap.docs.forEach(function (d) { programmes[d.id] = d.data(); });
+      afficher();
+    }, function () { /* pas de programme enregistré */ });
+    db.collection("dahiras").onSnapshot(function (snap) {
+      dahirasCfg = {};
+      snap.docs.forEach(function (d) { dahirasCfg[d.id] = d.data(); });
+      afficher();
+    }, function () { /* sans réglage : Kourel 2 puis Kourel 1 */ });
+    db.collection("khassidas").onSnapshot(function (snap) {
+      khassidas = {};
+      snap.docs.forEach(function (d) { khassidas[d.id] = Object.assign({ id: d.id }, d.data()); });
+      afficher();
+    }, function () { toast("La liste des khassidas n’a pas pu être chargée."); });
+    db.collection("seances").onSnapshot(function (snap) {
+      seances = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); })
+        .sort(function (a, b) { return a.date === b.date ? (a.type < b.type ? -1 : 1) : (a.date < b.date ? 1 : -1); });
+      charge.s = true; afficher();
+    }, function () { toast("Les séances n’ont pas pu être chargées. Rechargez la page."); });
+  });
+})();
+</script>

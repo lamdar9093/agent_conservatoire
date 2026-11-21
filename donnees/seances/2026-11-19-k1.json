@@ -1,0 +1,39 @@
+{
+  "creeLe": "2026-11-21T13:37:21.026Z",
+  "date": "2026-11-19",
+  "horaire": "18h - 21h",
+  "participants": [
+    "abdou-lahad",
+    "ablaye-ndiaye",
+    "babacar-toure-lo",
+    "issakha",
+    "khalil-gueye",
+    "lamine-dieng",
+    "medoune",
+    "mohamed-camara",
+    "mouhamed-sarr",
+    "moustapha-mbacke-diop",
+    "papa-madior-top",
+    "seydina-ousmane",
+    "xaadim-sylla"
+  ],
+  "prevenus": {
+    "babacar-toure-lo": null
+  },
+  "statuts": {
+    "abdou-lahad": "P",
+    "ablaye-ndiaye": "P",
+    "babacar-toure-lo": "A",
+    "issakha": "P",
+    "khalil-gueye": "P",
+    "lamine-dieng": "R",
+    "medoune": "A",
+    "mohamed-camara": "P",
+    "mouhamed-sarr": "P",
+    "moustapha-mbacke-diop": "P",
+    "papa-madior-top": "A",
+    "seydina-ousmane": "P",
+    "xaadim-sylla": "P"
+  },
+  "type": "k1"
+}

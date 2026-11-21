@@ -1,0 +1,15 @@
+{
+  "actif": true,
+  "depuis": "2026-11-21",
+  "historique": [
+    {
+      "date": "2026-11-21",
+      "motif": "Arrivée",
+      "statut": "actif"
+    }
+  ],
+  "k1": true,
+  "k2": false,
+  "nom": "Babacar Touré Lo",
+  "statut": "actif"
+}

@@ -1,0 +1,17 @@
+{
+  "actif": false,
+  "depuis": "2026-11-08",
+  "historique": [
+    {
+      "date": "2026-11-21",
+      "motif": "Dans une autre ville",
+      "statut": "pause"
+    }
+  ],
+  "k1": true,
+  "k2": true,
+  "motif": "Dans une autre ville",
+  "nom": "Babacar Sarr",
+  "retour": "",
+  "statut": "pause"
+}

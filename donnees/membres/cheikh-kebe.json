@@ -1,0 +1,17 @@
+{
+  "actif": false,
+  "depuis": "2026-11-08",
+  "historique": [
+    {
+      "date": "2026-11-21",
+      "motif": "En déplacement",
+      "statut": "pause"
+    }
+  ],
+  "k1": true,
+  "k2": true,
+  "motif": "En déplacement",
+  "nom": "Cheikh Kébé",
+  "retour": "",
+  "statut": "pause"
+}
