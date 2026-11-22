@@ -72,6 +72,7 @@ export function creerComptes(stock) {
       const chiffres = String(identifiant || "").replace(/\D/g, "");
       let membre = membres.find((m) => m.id === brut) || membres.find((m) => simple(m.data.nom) === brut);
       if (!membre && chiffres.length >= 7) membre = membres.find((m) => m.data.telephone && String(m.data.telephone).replace(/\D/g, "").endsWith(chiffres.slice(-10)));
+      if (membre && membre.data.statut === "parti") return { erreur: "inconnu" };
       const compte = membre ? await fiche(membre.id) : null;
       if (!compte) {
         // Demande d'inscription pas encore validée : on le dit, si le mot de passe est le bon.

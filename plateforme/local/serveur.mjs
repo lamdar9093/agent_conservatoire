@@ -101,6 +101,17 @@ function filtrerPourMembre(col, docs, moi) {
   return docs;
 }
 
+/* Départ définitif : l'accès du membre est supprimé (déconnecté partout, demande en cours effacée).
+   S'il revient, il refait une demande avec le lien du groupe. */
+async function apresMembre(col, id) {
+  if (col !== "membres" || !id) return;
+  const m = await stock.lireDoc("membres", id);
+  if (!m || m.statut !== "parti") return;
+  await comptes.revoquer(id); // refusé s'il s'agit du dernier administrateur
+  await comptes.refuser(id);
+  prevenir("_comptes");
+}
+
 async function api(req, res, parts, sess) {
   /* --- Connexion (sans session) --- */
   if (parts[0] === "connexion" && req.method === "POST") {
@@ -218,10 +229,10 @@ async function api(req, res, parts, sess) {
     return json(res, 200, { docs });
   }
   if (!sess.admin) return json(res, 403, { code: "invalid_argument", message: "Seul l’administrateur peut modifier." });
-  if (req.method === "PUT") { await stock.ecrireDoc(col, id, await lireCorps(req)); prevenir(col); return json(res, 200, { ok: true }); }
+  if (req.method === "PUT") { await stock.ecrireDoc(col, id, await lireCorps(req)); prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true }); }
   if (req.method === "PATCH") {
     if (!(await stock.fusionnerDoc(col, id, await lireCorps(req)))) return json(res, 404, { code: "not_found" });
-    prevenir(col); return json(res, 200, { ok: true });
+    prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true });
   }
   if (req.method === "DELETE") { await stock.supprimerDoc(col, id); prevenir(col); return json(res, 200, { ok: true }); }
   return json(res, 405, { code: "invalid_argument" });

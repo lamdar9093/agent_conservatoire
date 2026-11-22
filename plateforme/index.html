@@ -1426,7 +1426,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       .then(function () {
         formOuvert = null;
         afficher();
-        toast(m.nom + (statut === "actif" ? " est de nouveau actif." : statut === "pause" ? " est en pause." : " est marqué comme parti."));
+        toast(m.nom + (statut === "actif" ? " est de nouveau actif." : statut === "pause" ? " est en pause." : " est marqué comme parti." + (comptesApi ? " Son accès à la plateforme est supprimé." : "")));
+        if (statut === "parti") chargerComptes();
       }, echec);
   }
   function formStatut(m) {
@@ -1437,7 +1438,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       '<label class="field">' + (pause ? "En pause depuis le" : "Parti le") + '<input type="date" id="p-depuis" value="' + today() + '"></label>' +
       (pause ? '<label class="field">Retour prévu (facultatif)<input type="date" id="p-retour"></label>' : "") +
       '<button type="button" class="btn ' + (pause ? "primary" : "danger") + '" data-action="ok-' + formOuvert.type + '" data-id="' + esc(m.id) + '">' + (pause ? "Mettre en pause" : "Confirmer le départ") + "</button>" +
-      '<button type="button" class="btn ghost" data-action="annuler">Annuler</button></div>';
+      '<button type="button" class="btn ghost" data-action="annuler">Annuler</button>' +
+      (pause ? "" : '<p class="muted" style="flex:1 1 100%;margin:0;font-size:12.5px">Ses présences et son historique restent dans les bilans. Son accès à la plateforme est supprimé : s’il revient, « Réintégrer », puis il refait une demande avec le lien du groupe.</p>') + "</div>";
   }
   function vueMembres() {
     var tous = Object.keys(membres).map(function (k) { return membres[k]; }).sort(triNom);
