@@ -865,8 +865,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     }).join("") + "</div>";
     var nb = e.tariBloques.length;
     if (nb) html += '<div class="me-banner wait" style="margin-top:10px">⏳ <span>' + nb + " membre" + (nb > 1 ? "s attendent encore leur" : " attend encore son") + " Tari : voir plus bas.</span></div>";
-    html += '<div class="row" style="margin-top:14px"><button type="button" class="btn primary" data-action="apercu-dahira">' + (apercuDahira ? "Masquer le message" : "Préparer le message WhatsApp") + "</button></div>";
-    if (apercuDahira) {
+    if (peutModifier) html += '<div class="row" style="margin-top:14px"><button type="button" class="btn primary" data-action="apercu-dahira">' + (apercuDahira ? "Masquer le message" : "Préparer le message WhatsApp") + "</button></div>";
+    if (apercuDahira && peutModifier) {
       html += '<div class="wa"><p class="muted" style="margin:0 0 8px">Aperçu du message, tel qu’il s’affichera dans WhatsApp :</p>' +
         '<div class="wa-bulle">' + waHtml(texteDahira(dz, e)) + "</div>" +
         '<div class="row" style="margin-top:10px"><button type="button" class="btn primary" data-action="copier-dahira">Copier le message</button>' +

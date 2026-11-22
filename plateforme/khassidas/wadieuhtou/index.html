@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>[hidden] { display: none !important; } html, body { margin: 0; }</style>
+<style>[hidden] { display: none !important; } html, body { margin: 0; }body.calage-admin-seul [data-action="calage"], body.calage-admin-seul [data-action="publier"], body.calage-admin-seul [data-action="copier"] { display: none !important; }
+</style>
 <title>Wadieuhtou lilahi hamdane</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1518,3 +1519,12 @@ body.chrome-cache .mini-play { opacity: 1; transform: none; pointer-events: auto
 </script>
 
 </html>
+<script>
+/* Plateforme en ligne (avec comptes) : seul un administrateur refait ou enregistre le calage. Sur claude.ai, rien ne change. */
+(function () {
+  if (!/^https?:$/.test(location.protocol)) return;
+  fetch("/api/moi", { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
+    if (m && m.connecte && !m.admin) document.body.classList.add("calage-admin-seul");
+  }, function () { /* hors plateforme en ligne */ });
+})();
+</script>

@@ -128,6 +128,9 @@ async function api(req, res, parts, sess) {
     if (tropDInscriptions(req)) return json(res, 429, { code: "rate_limited", message: "Trop de demandes depuis cet appareil. Réessayez dans une heure." });
     const m = membres.find((x) => x.id === corps.membre);
     if (!m) return json(res, 400, { code: "membre", message: "Choisissez votre nom dans la liste." });
+    // Un compte administrateur ne se réinitialise jamais par le lien du groupe (personne ne peut demander à sa place).
+    const existant = (await comptes.liste())[m.id];
+    if (existant && existant.admin) return json(res, 403, { code: "admin", message: "Pour ce compte, le mot de passe se change uniquement auprès du Conservatoire." });
     const tel = chiffres(corps.telephone);
     if (tel.length < 10 || tel.length > 15) return json(res, 400, { code: "telephone", message: "Saisissez votre numéro WhatsApp complet (10 chiffres au moins)." });
     if (typeof corps.motDePasse !== "string" || corps.motDePasse.length < 8) return json(res, 400, { code: "court", message: "Choisissez un mot de passe d’au moins 8 caractères." });
