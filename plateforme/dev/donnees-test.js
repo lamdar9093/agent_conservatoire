@@ -12,6 +12,11 @@
   seance("k2b","2026-11-06","k2",k2,{"cheikh-bane":"A","boucar":"A","mountakha":"A"},{tari:"absents",tariRecu:{"boucar":true},tariDetail:{khassida:"w",de:1,a:2}});
   seance("k2c","2026-10-30","k2",k2,{"cheikh-bane":"A","mountakha":"A"});
   store.evaluations={"mountakha":{prononciation:3,memorisation:3,justesse:3,commentaire:"Très régulier, belle voix posée.",date:"2026-11-15"},"boucar":{prononciation:3,memorisation:2,justesse:3,date:"2026-11-15"},"cheikh-bane":{prononciation:1,memorisation:2,justesse:2,date:"2026-11-10"}};
+  store.seances["a"].tariEtat={"babacar-sarr":"recu"};
+  store.seances["a"].tariIndividuel={"mohamed-camara":true};
+  store.seances["a"].discipline={"lamine-dieng":{tenue:true}};
+  store.seances["k2a"].discipline={"boucar":{tenue:true}};
+  store.seances["b"].discipline={"boucar":{tenue:true},"mountakha":{coiffure:true}};
   function snap(c){return {docs:Object.keys(store[c]||{}).map(function(id){return {id:id,data:function(){return store[c][id];}};})};}
   var db={doc:function(){return {set:function(){return Promise.resolve();},update:function(){return Promise.resolve();}};},collection:function(c){return {onSnapshot:function(f){(subs[c]=subs[c]||[]).push(f);setTimeout(function(){f(snap(c));},10);return function(){};}};}};
   window.claude={use:function(n){return Promise.resolve(n==="db"?db:n==="user"?{canEdit:function(){return Promise.resolve(true);}}:null);}};

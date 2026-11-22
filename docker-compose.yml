@@ -1,0 +1,31 @@
+# Production : https://conservatoire.mthbichri.ca
+# Les variables viennent du fichier .env à côté de ce fichier (voir env.example).
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: conservatoire-app
+    container_name: conservatoire-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      # Base PostgreSQL (Neon) : obligatoire, le conteneur ne garde aucune donnée.
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL manquant dans .env}
+      # Adresse publique : liens d'inscription et messages WhatsApp, cookie Secure.
+      PUBLIC_URL: ${PUBLIC_URL:-https://conservatoire.mthbichri.ca}
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+      - "traefik.http.routers.conservatoire.rule=Host(`conservatoire.mthbichri.ca`)"
+      - "traefik.http.routers.conservatoire.entrypoints=websecure"
+      - "traefik.http.routers.conservatoire.tls.certresolver=letsencrypt"
+      - "traefik.http.services.conservatoire.loadbalancer.server.port=8080"
+
+networks:
+  traefik-net:
+    external: true
+    name: traefik-net

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Connexion · Conservatoire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Harmattan:wght@700&display=swap">
+<style>
+:root {
+  --paper: #f7f8f5; --surface: #ffffff; --ink: #151a18; --ink-soft: #59615d; --rule: #dfe2dc;
+  --accent: #0b6a4c; --accent-ink: #ffffff; --accent-soft: #e0eee7; --bad: #b3261e; --bad-soft: #fbe5e3; --good: #1d7a45;
+  --shadow: 0 1px 2px rgba(18, 28, 24, 0.06), 0 8px 28px rgba(18, 28, 24, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --paper: #0f1312; --surface: #161b19; --ink: #eaece7; --ink-soft: #a2aaa6; --rule: #29302d; --accent: #6cc7a0; --accent-ink: #0b1a14; --accent-soft: #15302a; --bad: #f28b82; --bad-soft: #3a1714; --good: #6fd39a; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.42); color-scheme: dark; }
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.5; display: grid; place-items: center; min-height: 100vh; padding: 24px 16px; }
+.carte { width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--rule); border-radius: 16px; padding: 28px 24px; box-shadow: var(--shadow); }
+.marque { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.logo { width: 46px; height: 46px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: "Harmattan", serif; font-size: 19px; font-weight: 700; flex: none; }
+.marque b { display: block; font-size: 19px; font-weight: 600; }
+.marque small { display: block; font-size: 12px; color: var(--ink-soft); }
+h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+p { margin: 0; }
+.muted { color: var(--ink-soft); font-size: 14px; }
+form { display: grid; gap: 14px; margin-top: 18px; }
+label { display: grid; gap: 5px; font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+.champ { position: relative; }
+input { width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 13px; }
+input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.voir { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 8px; cursor: pointer; }
+.principal { font: inherit; text-align: center; font-weight: 600; font-size: 16px; border: 0; border-radius: 10px; padding: 13px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+button.principal:disabled { opacity: .6; cursor: default; }
+.erreur { padding: 10px 12px; border-radius: 10px; background: var(--bad-soft); color: var(--bad); font-size: 14px; }
+.aide { margin-top: 18px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.jauge { height: 4px; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.jauge span { display: block; height: 100%; width: 0; background: var(--bad); transition: width .2s, background .2s; }
+.lien { color: var(--accent); font-weight: 600; text-decoration: none; font-size: 14px; }
+.erreur.info { background: var(--accent-soft); color: var(--accent); }
+.etape { display: grid; gap: 6px; }
+.lab { font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+.noms { display: grid; max-height: 248px; overflow-y: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); overscroll-behavior: contain; }
+.noms button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: left; font: inherit; font-size: 15px; color: var(--ink); background: transparent; border: 0; border-top: 1px solid var(--rule); padding: 11px 13px; cursor: pointer; min-height: 46px; }
+.noms button:first-child { border-top: 0; }
+.noms button:hover, .noms button:focus-visible { background: var(--accent-soft); outline: none; }
+.noms small, .choisi small { font-size: 12px; color: var(--ink-soft); }
+.noms .vide { padding: 14px 13px; color: var(--ink-soft); font-size: 14px; }
+.choisi { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border: 1.5px solid var(--accent); border-radius: 10px; background: var(--accent-soft); }
+.choisi b { display: block; font-size: 16px; }
+.choisi button { border: 0; background: transparent; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 4px; cursor: pointer; flex: none; }
+.note { font-size: 13px; color: var(--ink-soft); padding: 9px 12px; border-radius: 10px; background: var(--paper); border: 1px dashed var(--rule); }
+.succes { text-align: center; display: grid; gap: 10px; justify-items: center; }
+.succes .rond { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 30px; font-weight: 700; }
+.succes .principal { width: 100%; margin-top: 8px; text-decoration: none; display: block; }
+</style>
+</head>
+<body>
+<main class="carte">
+  <div class="marque"><span class="logo" lang="ar" aria-hidden="true">مفاتح</span><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></div>
+
+  <section id="v-connexion" hidden>
+    <h1>Connexion</h1>
+    <p class="muted">Avec votre nom (ou votre numéro) et votre mot de passe.</p>
+    <form id="f-connexion" novalidate>
+      <label>Nom, identifiant ou numéro WhatsApp<input id="c-id" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label>Mot de passe<span class="champ"><input id="c-mdp" type="password" autocomplete="current-password" required><button type="button" class="voir" data-voir="c-mdp">Afficher</button></span></label>
+      <div class="erreur" id="c-err" role="alert" hidden></div>
+      <button class="principal" type="submit">Se connecter</button>
+    </form>
+    <p class="aide" id="aide-sans-lien">Pas encore d’accès, ou mot de passe oublié ? Ouvrez le <b>lien d’inscription</b> partagé dans le groupe WhatsApp du Kourel.</p>
+    <p class="aide" id="aide-lien" hidden>Pas encore d’accès, ou mot de passe oublié ?<br><a class="lien" id="lien-inscription" href="#">Faire une demande d’accès</a></p>
+  </section>
+
+  <section id="v-inscription" hidden>
+    <h1 id="t-inscription">Créer mon accès</h1>
+    <p class="muted">Réservé aux membres du Kourel. Le Conservatoire valide chaque demande avant la première connexion.</p>
+    <form id="f-inscription" novalidate>
+      <div class="etape">
+        <span class="lab" id="lab-nom">1. Votre nom</span>
+        <div class="choisi" id="choix" hidden><span><small>Je suis</small><b id="choix-nom"></b></span><button type="button" id="choix-changer">Changer</button></div>
+        <div id="recherche" class="etape">
+          <input id="i-cherche" placeholder="Tapez votre prénom ou votre nom" autocomplete="off" autocapitalize="words" spellcheck="false" aria-labelledby="lab-nom">
+          <div class="noms" id="noms" aria-label="Membres du Kourel"></div>
+        </div>
+      </div>
+      <p class="note" id="i-note" hidden></p>
+      <label>2. Votre numéro WhatsApp<input id="i-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="819 555 1234"></label>
+      <label>3. Choisissez votre mot de passe (8 caractères au moins)<span class="champ"><input id="i-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" data-voir="i-mdp">Afficher</button></span></label>
+      <div class="jauge" aria-hidden="true"><span id="i-jauge"></span></div>
+      <label>Confirmez le mot de passe<input id="i-confirme" type="password" autocomplete="new-password"></label>
+      <div class="erreur" id="i-err" role="alert" hidden></div>
+      <button class="principal" type="submit" id="i-envoyer">Envoyer ma demande</button>
+    </form>
+    <p class="aide">Déjà validé ? <a class="lien" href="/connexion.html">Se connecter</a></p>
+  </section>
+
+  <section id="v-envoyee" hidden>
+    <div class="succes">
+      <span class="rond" aria-hidden="true">✓</span>
+      <h1>Demande envoyée</h1>
+      <p class="muted" id="m-envoyee"></p>
+      <a class="principal" id="vers-connexion" href="/connexion.html">Aller à la connexion</a>
+    </div>
+  </section>
+
+  <section id="v-lien" hidden>
+    <h1>Lien plus valable</h1>
+    <p class="muted" id="m-lien">Ce lien d’inscription n’est plus valable. Demandez le nouveau lien au Conservatoire, dans le groupe WhatsApp du Kourel.</p>
+    <p class="aide"><a class="lien" href="/connexion.html">Aller à la connexion</a></p>
+  </section>
+
+  <section id="v-changer" hidden>
+    <h1 id="t-changer">Choisissez votre mot de passe</h1>
+    <p class="muted" id="m-changer">Bienvenue ! Choisissez votre propre mot de passe : il remplace le mot de passe temporaire.</p>
+    <form id="f-changer" novalidate>
+      <label id="l-actuel" hidden>Mot de passe actuel<span class="champ"><input id="p-actuel" type="password" autocomplete="current-password"><button type="button" class="voir" data-voir="p-actuel">Afficher</button></span></label>
+      <label>Nouveau mot de passe (8 caractères au moins)<span class="champ"><input id="p-nouveau" type="password" autocomplete="new-password" required><button type="button" class="voir" data-voir="p-nouveau">Afficher</button></span></label>
+      <div class="jauge" aria-hidden="true"><span id="jauge"></span></div>
+      <label>Confirmez le nouveau mot de passe<input id="p-confirme" type="password" autocomplete="new-password" required></label>
+      <div class="erreur" id="p-err" role="alert" hidden></div>
+      <button class="principal" type="submit">Enregistrer mon mot de passe</button>
+    </form>
+    <p class="aide" id="retour" hidden><a class="lien" href="/#moi">← Retour à mon espace</a></p>
+  </section>
+
+  <section id="v-aucun" hidden>
+    <h1>Aucun compte pour l’instant</h1>
+    <p class="muted">Créez le premier administrateur dans le terminal :</p>
+    <pre style="background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:12px;overflow-x:auto">npm run admin -- "Prénom Nom"</pre>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var q = new URLSearchParams(location.search);
+  function $(id) { return document.getElementById(id); }
+  function montrer(v) { ["v-connexion", "v-changer", "v-aucun", "v-inscription", "v-envoyee", "v-lien"].forEach(function (x) { $(x).hidden = x !== v; }); }
+  function erreur(el, msg) { el.textContent = msg; el.hidden = !msg; }
+  function appel(chemin, corps) {
+    return fetch("/api/" + chemin, { method: corps ? "POST" : "GET", headers: corps ? { "Content-Type": "application/json" } : {}, body: corps ? JSON.stringify(corps) : undefined, credentials: "same-origin" })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._ok = r.ok; return j; }); });
+  }
+  function suite() { var s = q.get("suite") || "/"; location.replace(/^\/[^\/]/.test(s) || s === "/" ? s : "/"); }
+  document.querySelectorAll("[data-voir]").forEach(function (b) {
+    b.addEventListener("click", function () { var i = $(b.dataset.voir); var v = i.type === "password"; i.type = v ? "text" : "password"; b.textContent = v ? "Masquer" : "Afficher"; });
+  });
+  function jauge(champ, barre) {
+    $(champ).addEventListener("input", function (e) {
+      var v = e.target.value, n = (v.length >= 8) + (v.length >= 12) + (/[0-9]/.test(v)) + (/[^A-Za-z0-9]/.test(v)) + (/[A-Z]/.test(v) && /[a-z]/.test(v));
+      var j = $(barre); j.style.width = Math.min(100, n * 20) + "%"; j.style.background = n >= 4 ? "var(--good)" : n >= 2 ? "var(--accent)" : "var(--bad)";
+    });
+  }
+  jauge("p-nouveau", "jauge");
+  jauge("i-mdp", "i-jauge");
+  function lireCode() { try { return localStorage.getItem("conservatoire-inscription") || ""; } catch (e) { return ""; } }
+  function ecrireCode(c) { try { if (c) localStorage.setItem("conservatoire-inscription", c); else localStorage.removeItem("conservatoire-inscription"); } catch (e) { /* stockage indisponible */ } }
+
+  /* ---------- Inscription : choisir son nom, son numéro et son mot de passe ---------- */
+  var code = "", membresInscription = [], choisi = null;
+  function simple(t) { return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var ETATS = { compte: "a déjà un accès", demande: "demande en cours" };
+  function listerNoms() {
+    var q = simple($("i-cherche").value).trim();
+    var l = membresInscription.filter(function (m) { return !q || simple(m.nom).split(/\s+/).some(function (w) { return w.indexOf(q) === 0; }) || simple(m.nom).indexOf(q) === 0; });
+    $("noms").innerHTML = l.length ? l.map(function (m) {
+      return '<button type="button" data-membre="' + esc(m.id) + '"><span>' + esc(m.nom) + "</span>" + (ETATS[m.etat] ? "<small>" + ETATS[m.etat] + "</small>" : "") + "</button>";
+    }).join("") : '<div class="vide">Aucun nom ne correspond. Vérifiez l’orthographe, ou demandez au Conservatoire de vous ajouter.</div>';
+  }
+  function choisir(m) {
+    choisi = m;
+    $("choix").hidden = !m; $("recherche").hidden = !!m;
+    var note = "";
+    if (m) {
+      $("choix-nom").textContent = m.nom;
+      if (m.etat === "compte") note = "Vous avez déjà un accès. Cette demande vous donnera un nouveau mot de passe, une fois validée par le Conservatoire. D’ici là, l’ancien reste valable.";
+      if (m.etat === "demande") note = "Une demande est déjà en cours pour ce nom. Celle-ci la remplacera.";
+    }
+    $("i-note").textContent = note; $("i-note").hidden = !note;
+    $("t-inscription").textContent = m && m.etat === "compte" ? "Nouveau mot de passe" : "Créer mon accès";
+    $("i-envoyer").textContent = m && m.etat === "compte" ? "Demander ce nouveau mot de passe" : "Envoyer ma demande";
+  }
+  function vueInscription(c) {
+    code = c;
+    appel("inscription?c=" + encodeURIComponent(c)).then(function (r) {
+      if (!r._ok) { ecrireCode(""); if (r.message) $("m-lien").textContent = r.message; return montrer("v-lien"); }
+      ecrireCode(c);
+      membresInscription = r.membres || [];
+      montrer("v-inscription");
+      listerNoms();
+      $("i-cherche").focus();
+    }, function () { montrer("v-lien"); $("m-lien").textContent = "Le serveur ne répond pas. Réessayez dans un instant."; });
+  }
+  $("i-cherche").addEventListener("input", listerNoms);
+  $("i-cherche").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); var b = $("noms").querySelector("button"); if (b && $("noms").querySelectorAll("button").length === 1) b.click(); }
+  });
+  $("noms").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-membre]"); if (!b) return;
+    var m = membresInscription.filter(function (x) { return x.id === b.dataset.membre; })[0];
+    choisir(m); erreur($("i-err"), "");
+    $("i-tel").focus();
+  });
+  $("choix-changer").addEventListener("click", function () { choisir(null); $("i-cherche").value = ""; listerNoms(); $("i-cherche").focus(); });
+  $("f-inscription").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = $("i-envoyer"), tel = $("i-tel").value.trim(), mdp = $("i-mdp").value;
+    if (!choisi) { erreur($("i-err"), "Choisissez d’abord votre nom dans la liste."); return $("i-cherche").focus(); }
+    if (tel.replace(/\D/g, "").length < 10) { erreur($("i-err"), "Saisissez votre numéro WhatsApp complet (10 chiffres au moins)."); return $("i-tel").focus(); }
+    if (mdp.length < 8) { erreur($("i-err"), "Choisissez un mot de passe d’au moins 8 caractères."); return $("i-mdp").focus(); }
+    if (mdp !== $("i-confirme").value) { erreur($("i-err"), "Les deux mots de passe ne sont pas identiques."); return $("i-confirme").focus(); }
+    btn.disabled = true; erreur($("i-err"), "");
+    appel("inscription", { c: code, membre: choisi.id, telephone: tel, motDePasse: mdp }).then(function (r) {
+      btn.disabled = false;
+      if (!r._ok) { if (r.code === "lien") { ecrireCode(""); montrer("v-lien"); } return erreur($("i-err"), r.message || "Envoi impossible."); }
+      var prenom = (r.nom || "").split(" ")[0];
+      $("m-envoyee").textContent = "Merci " + prenom + " ! Le Conservatoire va valider votre demande et vous prévenir sur WhatsApp. Vous vous connecterez ensuite avec votre nom et le mot de passe que vous venez de choisir.";
+      $("vers-connexion").href = "/connexion.html?u=" + encodeURIComponent(r.nom || r.identifiant);
+      montrer("v-envoyee");
+    }, function () { btn.disabled = false; erreur($("i-err"), "Le serveur ne répond pas. Réessayez."); });
+  });
+
+  function vueChanger(temporaire) {
+    montrer("v-changer");
+    $("l-actuel").hidden = temporaire;
+    $("retour").hidden = temporaire;
+    if (!temporaire) { $("t-changer").textContent = "Changer mon mot de passe"; $("m-changer").textContent = "Pour votre sécurité, saisissez d’abord votre mot de passe actuel."; }
+    (temporaire ? $("p-nouveau") : $("p-actuel")).focus();
+  }
+
+  appel("moi").then(function (moi) {
+    if (moi.connecte && moi.doitChanger) return vueChanger(true);
+    if (moi.connecte && q.get("changer")) return vueChanger(false);
+    if (q.get("inscription")) return vueInscription(q.get("inscription"));
+    if (moi.connecte) return suite();
+    if (moi.aucunCompte) return montrer("v-aucun");
+    montrer("v-connexion");
+    if (lireCode()) { $("aide-sans-lien").hidden = true; $("aide-lien").hidden = false; $("lien-inscription").href = "/connexion.html?inscription=" + encodeURIComponent(lireCode()); }
+    if (q.get("u")) { $("c-id").value = q.get("u"); $("c-mdp").focus(); } else $("c-id").focus();
+  }, function () { montrer("v-connexion"); });
+
+  $("f-connexion").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = e.target.querySelector("button.principal"), id = $("c-id").value.trim(), mdp = $("c-mdp").value;
+    if (!id || !mdp) return erreur($("c-err"), "Saisissez votre identifiant et votre mot de passe.");
+    btn.disabled = true; erreur($("c-err"), "");
+    appel("connexion", { identifiant: id, motDePasse: mdp }).then(function (r) {
+      btn.disabled = false;
+      $("c-err").classList.toggle("info", r.code === "attente");
+      if (!r._ok) return erreur($("c-err"), r.message || "Connexion impossible.");
+      if (r.doitChanger) vueChanger(true); else suite();
+    }, function () { btn.disabled = false; erreur($("c-err"), "Le serveur ne répond pas. Réessayez."); });
+  });
+
+  $("f-changer").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = e.target.querySelector("button.principal"), n = $("p-nouveau").value;
+    if (n.length < 8) return erreur($("p-err"), "Choisissez au moins 8 caractères.");
+    if (n !== $("p-confirme").value) return erreur($("p-err"), "Les deux mots de passe ne sont pas identiques.");
+    btn.disabled = true; erreur($("p-err"), "");
+    appel("mot-de-passe", { actuel: $("p-actuel").value, nouveau: n }).then(function (r) {
+      btn.disabled = false;
+      if (!r._ok) return erreur($("p-err"), r.message || "Enregistrement impossible.");
+      location.replace("/#moi");
+    }, function () { btn.disabled = false; erreur($("p-err"), "Le serveur ne répond pas. Réessayez."); });
+  });
+})();
+</script>
+</body>
+</html>

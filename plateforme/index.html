@@ -75,7 +75,7 @@ button, input, select { font: inherit; color: inherit; }
   .tabs { display: none; }
   .top .wrap { padding-block: 10px; }
   .gear { display: inline-flex; }
-  .bottom-nav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; background: var(--surface); border-top: 1px solid var(--rule); padding: 6px max(6px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .bottom-nav { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; background: var(--surface); border-top: 1px solid var(--rule); padding: 6px max(6px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)); }
   .bottom-nav a { display: grid; justify-items: center; gap: 3px; padding: 5px 2px; border-radius: 10px; text-decoration: none; color: var(--ink-soft); font-size: 11.5px; font-weight: 500; }
   .bottom-nav a .ico { width: 22px; height: 22px; }
   .bottom-nav a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
@@ -91,7 +91,12 @@ button, input, select { font: inherit; color: inherit; }
 .kh-card .muted { font-size: 13px; }
 .kh-card .go { color: var(--accent); font-weight: 600; font-size: 13.5px; margin-top: 4px; }
 body.lecture main { padding-top: 0; gap: 0; max-width: none; padding-left: 0; padding-right: 0; }
-.lecture-bar { display: flex; align-items: center; gap: 10px; padding: 8px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--rule); background: var(--surface); }
+body.lecture .top { display: none; }
+html:has(body.lecture), body.lecture { overflow: hidden; height: 100%; }
+body.lecture main { padding: 0 !important; }
+body.lecture::before { background: var(--surface); }
+.lecture-bar { display: flex; align-items: center; gap: 10px; padding: 6px max(12px, env(safe-area-inset-left, 0px)); padding-top: calc(6px + env(safe-area-inset-top, 0px)); border-bottom: 1px solid var(--rule); background: var(--surface); }
+.lecture-bar .logo-mini { flex: none; width: 28px; height: 28px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: "Harmattan", serif; font-size: 12px; font-weight: 700; text-decoration: none; }
 .lecture-bar b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lecture-frame { display: block; width: 100%; border: 0; background: var(--paper); }
 
@@ -105,6 +110,7 @@ main > * { min-width: 0; }
 .field textarea { padding: 9px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; resize: vertical; min-height: 64px; }
 .field input, .field select { padding: 9px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); min-width: 0; }
 .btn { border: 1px solid var(--rule); background: var(--surface); color: var(--ink); padding: 9px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .btn.danger { color: var(--bad); border-color: var(--bad); background: transparent; }
 .btn.ghost { background: transparent; }
@@ -239,6 +245,8 @@ h3.group .linkish { text-decoration: none; text-transform: uppercase; letter-spa
 .wait-row .what { flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--ink-soft); }
 .wait-row .what b { color: var(--ink); }
 .wait-row .btn { flex: none; background: var(--surface); }
+.wait-row a { color: var(--accent); font-weight: 600; }
+.wait-row .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .name-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; margin-top: 10px; }
 .name-grid span { padding: 8px 10px; border-radius: 8px; background: var(--paper); border: 1px solid var(--rule); font-weight: 500; overflow-wrap: anywhere; }
 .name-grid em { font-style: normal; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
@@ -308,13 +316,63 @@ h3.group .linkish { text-decoration: none; text-transform: uppercase; letter-spa
 .sv-btn.primary b { color: var(--accent); }
 .sv-btn:hover { border-color: var(--accent); }
 @media (max-width: 560px) { .sv-choix { grid-template-columns: 1fr; } }
+.tari-etat { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.tari-etat .lbl, .disc .lbl { font-size: 12.5px; color: var(--ink-soft); }
+.tari-etat .seg button[aria-pressed="true"][data-te="attendu"] { background: var(--warn); color: var(--surface); }
+.tari-etat .seg button[aria-pressed="true"][data-te="recu"] { background: var(--info); color: var(--surface); }
+.tari-etat .seg button[aria-pressed="true"][data-te="maitrise"] { background: var(--good); color: var(--surface); }
+.linkish.petit { font-size: 12.5px; text-decoration: none; color: var(--accent); }
+.disc { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.plus-btn { margin-left: 6px; width: 28px; height: 22px; border-radius: 11px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-soft); cursor: pointer; font-weight: 700; line-height: 1; vertical-align: middle; }
+.plus-btn[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.disc .toggle.indiv[aria-pressed="true"] { border-color: var(--info); background: var(--info-soft); color: var(--info); }
+.disc .toggle[aria-pressed="true"] { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+.disc-pills { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; }
+.disc-pills .pill { font-size: 12px; }
+@media (max-width: 560px) { .tari-etat .seg { display: flex; width: 100%; } .tari-etat .seg button { flex: 1; padding: 8px 4px; } }
+.chartes h3 { margin: 18px 0 6px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.chartes p { margin: 8px 0 0 !important; font-family: var(--font-text); line-height: 1.6; }
+.chartes ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 8px; font-family: var(--font-text); line-height: 1.55; }
+.chartes-app { margin-top: 18px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); }
+.chartes-app ul { font-family: var(--font-ui); font-size: 14px; }
+.chartes-lien { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; }
+.chartes-lien:hover { border-color: var(--accent); }
+.chartes-lien > span:nth-child(2) { flex: 1; display: grid; }
+.chartes-lien small { color: var(--ink-soft); font-size: 12.5px; }
+body.vue-membre .tabs a[data-view="seances"], body.vue-membre .tabs a[data-view="bilan"], body.vue-membre .tabs a[data-view="reglages"],
+body.vue-membre .bottom-nav a[data-view="seances"], body.vue-membre .bottom-nav a[data-view="bilan"], body.vue-membre .gear { display: none !important; }
+.panel.compte { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.acces-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.acces-row .who { flex: 1 1 220px; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.acces-row .who .pill, .acces-row .who .chip { font-size: 11.5px; }
+.acces-row .tel { flex: 0 1 170px; min-width: 0; padding: 7px 9px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; }
+.acces-row .actions { display: flex; gap: 6px; }
+.acces-envoi { flex: 1 1 100%; display: grid; gap: 10px; padding: 12px; border-radius: 10px; background: var(--accent-soft); }
+.acces-envoi .mdp { display: block; font-family: ui-monospace, Menlo, monospace; font-size: 24px; letter-spacing: 0.08em; color: var(--accent); margin: 2px 0; }
+.acces-lien { display: grid; gap: 10px; margin-top: 12px; padding: 14px; border-radius: 12px; background: var(--accent-soft); }
+.acces-lien .titre { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent); }
+.acces-lien code { display: block; font-family: ui-monospace, Menlo, monospace; font-size: 13px; word-break: break-all; background: var(--surface); color: var(--ink); padding: 9px 11px; border-radius: 8px; border: 1px solid var(--rule); }
+.acces-lien .row { align-items: center; }
+h3.group .compte { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; border-radius: 10px; background: var(--bad); color: #fff; font-size: 11.5px; letter-spacing: 0; vertical-align: 1px; }
+.acces-row.demande { border-color: var(--warn); border-left-width: 4px; background: var(--surface); }
+.acces-row .meta { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--ink-soft); }
+.acces-row .meta a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.acces-row .meta .ok { color: var(--good); }
+.acces-row .meta .alerte { color: var(--bad); font-weight: 500; }
+.acces-row.valide { border-color: var(--good); background: var(--good-soft); }
+.acces-row.valide .who { color: var(--good); }
+.pastille { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--bad); color: #fff; font-size: 11px; font-weight: 700; line-height: 1; }
+.gear { position: relative; }
+.gear .pastille { position: absolute; top: -3px; right: -4px; }
+@media (max-width: 560px) { .acces-row.demande .actions .btn, .acces-row.valide .actions a { flex: 1; } .acces-lien .row .btn { flex: 1 1 auto; } }
+@media (max-width: 560px) { .acces-row .tel { flex: 1 1 100%; } .acces-row .actions { flex: 1 1 100%; } .acces-row .actions .btn:first-child { flex: 1; } }
 textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: 13px/1.5 ui-monospace, Menlo, monospace; }
 </style>
 
 <header class="top">
   <div class="wrap">
     <div class="brand">
-      <a class="brand-name" href="#seances"><span class="logo" lang="ar" aria-hidden="true">مفاتح</span><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></a>
+      <a class="brand-name" href="#khassidas"><span class="logo" lang="ar" aria-hidden="true">مفاتح</span><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></a>
       <span class="brand-side"><span class="role" id="role">Chargement…</span><a class="gear" href="#reglages" data-view="reglages" aria-label="Réglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/></svg></a></span>
     </div>
     <nav class="tabs" aria-label="Sections">
@@ -359,10 +417,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   }
   var app = document.getElementById("app");
   var db = null, peutModifier = false;
-  var membres = {}, seances = [], charge = { m: false, s: false };
+  var membres = {}, seances = [], charge = { m: false, s: false, r: false };
+  var utilisateur = null, monCompte = null, comptesApi = null, comptesEtat = null, accesOuvert = null;
   var vue = "seances", seanceOuverte = null, confirmerSuppression = false;
   var lecture = null;
-  var dahiraOuvert = null, apercuDahira = false, rappelOuvert = null, programmes = {}, editRep = null;
+  var dahiraOuvert = null, apercuDahira = false, rappelOuvert = null, programmes = {}, editRep = null, discOuvert = null;
   var filtre = { periode: "mois", kourel: "tous" };
   var bilanMode = "presences", evalOuvert = null, promoOuvert = null, evaluations = {};
   var apercu = false;
@@ -374,23 +433,63 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   function dahiraConcerne(iso) { var mi = (asDate(iso).getDay() + 6) % 7; return isoPlus(iso, 5 - mi + 7); }
   function tariConcerne(s, id) {
     var t = s.tari || "aucun";
-    if (t === "tous") return true;
-    if (t === "absents") return ((s.statuts || {})[id] || "P") === "A";
-    return false;
+    if (t === "aucun") return false;
+    if (t === "tous" || (s.tariIndividuel || {})[id]) return true;
+    return ((s.statuts || {})[id] || "P") === "A";
   }
+  /* Chartes : le Tari (fichier audio) se renvoie jusqu'à maîtrise. États : attendu → reçu, à retravailler → maîtrisé.
+     Échéance : avant la répétition suivante. Passé ce délai, tant qu'il n'est pas maîtrisé, pas de dahira ni de prestation. */
+  var ETATS_TARI = { attendu: "Attendu", recu: "À retravailler", maitrise: "Maîtrisé" };
+  function etatTari(s, id) {
+    var e = (s.tariEtat || {})[id];
+    if (e && ETATS_TARI[e]) return e;
+    return (s.tariRecu || {})[id] ? "maitrise" : "attendu";
+  }
+  function echeanceTari(s) {
+    var d = s.date, ty = s.type, cands = [];
+    seances.forEach(function (x) { if (x.date > d && (ty === "rg" || x.type === ty)) cands.push(x.date); });
+    Object.keys(programmes || {}).forEach(function (pid) {
+      var pr = programmes[pid], pd = pid.slice(0, 10), pt = pid.slice(11);
+      if (pr.extra && !pr.annulee && pd > d && (ty === "rg" || pt === ty)) cands.push(pd);
+    });
+    var def = ty === "rg" ? isoPlus(d, ((4 - asDate(d).getDay() + 7) % 7) || 7) : isoPlus(d, 7), pdef = (programmes || {})[def + "-" + (ty === "rg" ? typeDuJour(def) : ty)];
+    if (!(pdef && pdef.annulee)) cands.push(def);
+    cands.sort();
+    return cands[0] || def;
+  }
+  function jourEcheance(iso) { var t = asDate(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); return t; }
   function requis(s, id) {
     var m = membres[id];
     if (!m || statutMembre(m) === "actif") return true;
     return m.depuis ? s.date < m.depuis : false;
   }
   function tariCompte(s) {
-    var c = { dus: 0, recus: 0, manquants: [] };
+    var c = { dus: 0, recus: 0, retravail: 0, manquants: [] };
     (s.participants || []).forEach(function (id) {
       if (!requis(s, id) || !tariConcerne(s, id)) return;
       c.dus++;
-      if ((s.tariRecu || {})[id]) c.recus++; else c.manquants.push(id);
+      var e = etatTari(s, id);
+      if (e === "maitrise") c.recus++; else { c.manquants.push(id); if (e === "recu") c.retravail++; }
     });
     return c;
+  }
+  function nomsTari(s, ids) {
+    return ids.map(function (id) { return membres[id] ? membres[id].nom + (etatTari(s, id) === "recu" ? " (à retravailler)" : "") : ""; })
+      .filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
+  }
+  /* Discipline (chartes) : tenue non conforme = avertissement, récidive dans le mois = écarté ; coiffure non conforme = écarté. */
+  function marquesDe(s, id) { return (s.discipline || {})[id] || {}; }
+  function tenueRang(s, id) {
+    var mois = s.date.slice(0, 7), n = 0;
+    seances.filter(function (x) { return x.date.slice(0, 7) === mois && (x.date < s.date || (x.date === s.date && x.type <= s.type)); })
+      .forEach(function (x) { if (marquesDe(x, id).tenue) n++; });
+    return n;
+  }
+  function consequences(s, id) {
+    var mq = marquesDe(s, id), out = [];
+    if (mq.tenue) out.push(tenueRang(s, id) >= 2 ? { cls: "a", txt: "Écarté : tenue (récidive du mois)", ecarte: true } : { cls: "r", txt: "Avertissement : tenue" });
+    if (mq.coiffure) out.push({ cls: "a", txt: "Écarté : coiffure non conforme", ecarte: true });
+    return out;
   }
   var khassidas = {}, dahirasCfg = {};
   function tariTexte(td, avecLien) {
@@ -573,10 +672,22 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var v = choixDe(s, p.id);
         var tariHtml = "";
         if (requis(s, p.id) && tariConcerne(s, p.id)) {
-          var recu = !!(s.tariRecu || {})[p.id];
+          var et = etatTari(s, p.id), indiv = !!(s.tariIndividuel || {})[p.id] && (s.tari || "aucun") !== "tous" && v !== "A" && v !== "E";
           tariHtml = peutModifier
-            ? '<button type="button" class="toggle tari' + (recu ? " ok" : "") + '" data-tarirecu="' + esc(p.id) + '" aria-pressed="' + recu + '">' + (recu ? "Tari reçu" : "Tari attendu") + "</button>"
-            : '<span class="pill ' + (recu ? "p" : "r") + '">' + (recu ? "Tari reçu" : "Tari attendu") + "</span>";
+            ? '<div class="tari-etat"><span class="lbl">' + (indiv ? "Partie à retravailler" : "Tari") + '</span><span class="seg" role="group" aria-label="Tari de ' + esc(p.nom) + '">' + Object.keys(ETATS_TARI).map(function (k) {
+                return '<button type="button" data-tarietat="' + esc(p.id) + "|" + k + '" data-te="' + k + '" aria-pressed="' + (et === k) + '">' + ETATS_TARI[k] + "</button>";
+              }).join("") + "</span>" + (indiv ? '<button type="button" class="linkish" data-indiv="' + esc(p.id) + '">Retirer</button>' : "") + "</div>"
+            : '<span class="pill ' + (et === "maitrise" ? "p" : "r") + '">Tari : ' + ETATS_TARI[et].toLowerCase() + "</span>";
+        }
+        var disc = "";
+        if (requis(s, p.id) && v !== "A" && v !== "E") {
+          var mq = marquesDe(s, p.id), cs = consequences(s, p.id);
+          disc = (cs.length ? '<div class="disc-pills">' + cs.map(function (c) { return '<span class="pill ' + c.cls + '">' + esc(c.txt) + "</span>"; }).join("") + "</div>" : "") +
+            (peutModifier && discOuvert === p.id ? '<div class="disc">' +
+              ((s.tari || "aucun") === "absents" ? '<button type="button" class="toggle indiv" data-indiv="' + esc(p.id) + '" aria-pressed="' + !!(s.tariIndividuel || {})[p.id] + '">Partie à retravailler (Tari)</button>' : "") +
+              '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|tenue" aria-pressed="' + !!mq.tenue + '">Tenue non conforme</button>' +
+              '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|coiffure" aria-pressed="' + !!mq.coiffure + '">Coiffure non conforme</button>' +
+              "</div>" : "");
         }
         var ctrl = !requis(s, p.id)
           ? '<span class="pill">Présence non requise</span>'
@@ -597,7 +708,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         }
         var etat = p.m && statutMembre(p.m) !== "actif" ? " · " + (statutMembre(p.m) === "pause" ? "en pause" : "parti") : "";
         return '<div class="person' + (v === "E" ? " prev" : "") + '"><span class="name">' + esc(p.nom) + (p.m ? ' <span class="tags">' + esc(tagsKourel(p.m) + etat) + "</span>" : "") +
-          (peutModifier && ajusterListe ? ' <button type="button" class="linkish" data-action="retirer" data-id="' + esc(p.id) + '">Retirer</button>' : "") + "</span>" + ctrl + motifs + tariHtml + "</div>";
+          (peutModifier && ajusterListe ? ' <button type="button" class="linkish" data-action="retirer" data-id="' + esc(p.id) + '">Retirer</button>' : "") +
+          (peutModifier && requis(s, p.id) && v !== "A" && v !== "E" ? ' <button type="button" class="plus-btn" data-action="' + (discOuvert === p.id ? "disc-fermer" : "disc-ouvrir") + '" data-id="' + esc(p.id) + '" aria-label="Tari individuel, tenue, coiffure" aria-expanded="' + (discOuvert === p.id) + '">⋯</button>' : "") +
+          "</span>" + ctrl + motifs + tariHtml + disc + "</div>";
       }).join("") + "</div>";
     if (peutModifier) {
       html += '<div style="margin-top:10px"><button type="button" class="btn ghost small" data-action="ajuster">' + (ajusterListe ? "Terminer l’ajustement" : "Ajuster la liste : ajouter ou retirer quelqu’un") + "</button></div>";
@@ -626,7 +739,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     } else {
       var tt = tariTexte(s.tariDetail || {});
       html += '<p style="margin-top:6px">' + (tt ? "À envoyer : " + tt : "Contenu à préciser.") + "</p>" +
-        '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " reçu" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + " · avant le dahira du " + esc(samediLong(dahiraConcerne(s.date))) + "</p>";
+        '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " maîtrisé" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + (tc.retravail ? " · " + tc.retravail + " à retravailler" : "") + " · à maîtriser avant la répétition du " + esc(jourEcheance(echeanceTari(s))) + "</p>";
     }
     html += "</div>";
     if (peutModifier) {
@@ -664,12 +777,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return seances.filter(function (s) { return s.type === "rg" && s.date < dz; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0] || null;
   }
   function etatDahira(dz) {
-    var sd = seances.filter(function (s) { return s.tari && s.tari !== "aucun" && dahiraConcerne(s.date) === dz; });
+    var sd = seances.filter(function (s) { return s.tari && s.tari !== "aucun" && s.date < dz && echeanceTari(s) < dz; });
     var attente = {}, recus = {};
     sd.forEach(function (s) {
       (s.participants || []).forEach(function (id) {
         if (!requis(s, id) || !tariConcerne(s, id)) return;
-        if ((s.tariRecu || {})[id]) recus[id] = true; else (attente[id] = attente[id] || []).push(s);
+        if (etatTari(s, id) === "maitrise") recus[id] = true; else (attente[id] = attente[id] || []).push(s);
       });
     });
     var mode = modeDahira(dz), fusion = mode === "general";
@@ -712,7 +825,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     tariBloques.forEach(function (x) { x.seances.forEach(function (s) { if (tariSeances.indexOf(s) < 0) tariSeances.push(s); }); });
     tariSeances.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
     var horsRG = fusion ? groupes[0].bloques.filter(function (b) { return b.horsRG; }).map(function (b) { return b.m; }) : [];
-    return { mode: mode, fusion: fusion, rg: rg, recus: recus, groupes: groupes, tariBloques: tariBloques, tariSeances: tariSeances, horsRG: horsRG, raisons: raisons, tariDemandes: sd.length };
+    return { mode: mode, fusion: fusion, rg: rg, recus: recus, groupes: groupes, tariBloques: tariBloques, tariSeances: tariSeances, horsRG: horsRG, raisons: raisons, tariDemandes: Object.keys(attente).length };
   }
   function dimancheLong(iso) { return "dimanche " + asDate(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }); }
   function seanceCourte(s) { return (TYPES[s.type] || "") + " du " + asDate(s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
@@ -732,7 +845,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         (e.tariBloques.length ? '<span class="pill r">' + e.tariBloques.length + " Tari en attente</span>" : "") + "</span></span>" +
         '<span class="dz-go" aria-hidden="true">›</span></button>';
     });
-    html += '<section class="panel"><h2>Prochains dahiras</h2><p class="muted">Qui preste, quel kourel, et les Taris encore attendus.</p><div class="list" style="margin-top:12px">' + cartes + "</div></section>";
+    html += '<section class="panel"><h2>Prochains dahiras</h2><p class="muted">Qui preste, quel kourel, et les Taris encore attendus, selon les <a href="#chartes">chartes du kourel</a>.</p><div class="list" style="margin-top:12px">' + cartes + "</div></section>";
     app.innerHTML = html;
   }
   function vueDahira(dz) {
@@ -763,20 +876,23 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     html += "</section>";
     if (nb) {
       html += '<section class="panel"><h2>Tari en attente · ' + nb + "</h2>" +
-        '<p class="muted">' + (peutModifier ? "Dès qu’un Tari arrive, touchez « Tari reçu » : le membre rejoint son kourel." : "Ces membres doivent encore envoyer leur Tari.") + "</p>" +
+        '<p class="muted">' + (peutModifier ? "Selon les chartes, seul un Tari « Maîtrisé » permet de rejoindre le kourel. Reçu mais pas encore au point : « À retravailler »." : "Ces membres doivent encore envoyer ou maîtriser leur Tari.") + "</p>" +
         '<div class="list" style="margin-top:12px">' + e.tariBloques.map(function (x) {
           return '<div class="wait-card"><div><b>' + esc(x.m.nom) + '</b> <span class="muted" style="font-size:13px">· ne peut pas entrer dans le ' + esc(x.kourels.join(" ni dans le ")) + "</span></div>" +
             x.seances.map(function (s) {
               var t = tariTexte(s.tariDetail || {});
-              return '<div class="wait-row"><span class="what">' + (t || "Contenu à préciser") + "<br>Demandé à la " + (s.type === "rg" ? "répétition générale du " + esc(dimancheLong(s.date)) : "répétition du " + esc(seanceCourte(s))) + "</span>" +
-                (peutModifier ? '<button type="button" class="btn small" data-recu="' + esc(s.id) + "|" + esc(x.m.id) + '">Tari reçu</button>' : "") + "</div>";
+              var et2 = etatTari(s, x.m.id);
+              return '<div class="wait-row"><span class="what">' + (t || "Contenu à préciser") + "<br>Demandé à la " + (s.type === "rg" ? "répétition générale du " + esc(dimancheLong(s.date)) : "répétition du " + esc(seanceCourte(s))) +
+                ' · <span class="pill ' + (et2 === "recu" ? "e" : "r") + '">' + ETATS_TARI[et2] + "</span></span>" +
+                (peutModifier ? (et2 === "attendu" ? '<button type="button" class="btn small" data-tetat="' + esc(s.id) + "|" + esc(x.m.id) + '|recu">Reçu, à retravailler</button>' : "") +
+                  '<button type="button" class="btn small primary" data-tetat="' + esc(s.id) + "|" + esc(x.m.id) + '|maitrise">Maîtrisé ✓</button>' : "") + "</div>";
             }).join("") + "</div>";
         }).join("") + "</div></section>";
     }
     e.groupes.forEach(function (g) {
       html += '<section class="panel"><h2>' + (g.ordre ? esc(g.ordre) + " · " : "") + esc(g.label) + ' <span class="muted" style="font-weight:500">· ' + g.ok.length + " / " + g.total + "</span></h2>" +
         (g.total ? '<div class="name-grid">' + g.ok.map(function (m) {
-          return "<span>" + esc(m.nom) + (e.recus[m.id] ? " <em>· Tari reçu</em>" : "") + "</span>";
+          return "<span>" + esc(m.nom) + (e.recus[m.id] ? " <em>· Tari maîtrisé</em>" : "") + "</span>";
         }).join("") + g.bloques.map(function (b) {
           return '<span class="off">' + esc(b.m.nom) + " <em>· " + (b.taris.length ? "Tari en attente" : "absent à la répétition générale") + "</em></span>";
         }).join("") + "</div>" : '<p class="muted" style="margin-top:8px">Aucun membre actif.</p>') + "</section>";
@@ -856,16 +972,16 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     };
   }
   function samediApres(iso) { var mi = (asDate(iso).getDay() + 6) % 7; return isoPlus(iso, mi <= 5 ? 5 - mi : 6); }
-  /* Taris encore attendus pour le dahira qui suit la répétition, pour les membres de ce kourel. */
+  /* Taris pas encore maîtrisés, demandés avant cette répétition, pour les membres de ce kourel (échéance : cette répétition, ou dépassée). */
   function tarisPourRappel(date, type) {
-    var dz = samediApres(date), out = [];
-    seances.filter(function (s) { return s.tari && s.tari !== "aucun" && dahiraConcerne(s.date) === dz && (type === "rg" || s.type === type); })
+    var out = [];
+    seances.filter(function (s) { return s.tari && s.tari !== "aucun" && s.date < date && (type === "rg" || s.type === type); })
       .sort(function (a, b) { return a.date < b.date ? -1 : 1; })
       .forEach(function (s) {
-        var noms = tariCompte(s).manquants.map(function (id) { return membres[id] ? membres[id].nom : ""; }).filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
-        if (noms.length) out.push({ s: s, noms: noms });
+        var noms = nomsTari(s, tariCompte(s).manquants);
+        if (noms.length) out.push({ s: s, noms: noms, retard: echeanceTari(s) < date });
       });
-    return { dz: dz, liste: out };
+    return { liste: out };
   }
   function texteRappel(id) {
     var date = id.slice(0, 10), ty = id.slice(11), p = progDe(id), kh = khassidas[p.khassida];
@@ -900,7 +1016,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (p.taris) {
       var tr = tarisPourRappel(date, ty);
       tr.liste.forEach(function (x) {
-        L.push("⏳ *Tari à envoyer avant le dahira du " + samediLong(tr.dz) + "*");
+        L.push(x.retard ? "⏳ *Tari en retard (demandé le " + jourEcheance(x.s.date) + ")*" : "⏳ *Tari à maîtriser avant cette répétition*");
         L.push(tariPlain(x.s.tariDetail || {}));
         puces(L, x.noms);
         L.push("");
@@ -949,6 +1065,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       '<textarea class="copy" id="r-texte" readonly hidden aria-label="Message à copier"></textarea></div></section>';
     app.innerHTML = html;
   }
+  function majEtatTari(sid, mid, etat) {
+    var te = {}, tr = {}; te[mid] = etat; tr[mid] = etat === "maitrise";
+    return db.doc("seances/" + sid).update({ tariEtat: te, tariRecu: tr });
+  }
   function enregistrerRappel(id, patch) {
     var p = progDe(id);
     Object.keys(patch).forEach(function (k) { p[k] = patch[k]; });
@@ -996,7 +1116,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var raisons = [];
     if (st.suite >= 2) raisons.push(st.suite + " absences de suite");
     if (st.total >= SUIVI.minSeances && r.assid < 60) raisons.push("assiduité " + r.assid + " %");
-    if (st.tdus - st.trecus > 0) raisons.push((st.tdus - st.trecus) + " Tari" + (st.tdus - st.trecus > 1 ? "s" : "") + " non envoyé" + (st.tdus - st.trecus > 1 ? "s" : ""));
+    if (st.tdus - st.trecus > 0) raisons.push((st.tdus - st.trecus) + " Tari" + (st.tdus - st.trecus > 1 ? "s" : "") + " non maîtrisé" + (st.tdus - st.trecus > 1 ? "s" : ""));
+    if (st.ecarte) raisons.push("écarté " + st.ecarte + " fois (chartes)");
+    else if (st.avert) raisons.push(st.avert + " avertissement" + (st.avert > 1 ? "s" : "") + " tenue");
     if (st.R >= 3) raisons.push(st.R + " retards");
     Object.keys(CRITERES).forEach(function (k) { if (Number(ev[k]) === 1) raisons.push(CRITERES[k].toLowerCase() + " à travailler"); });
     r.raisons = raisons;
@@ -1085,7 +1207,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var st = stats[id] || (stats[id] = { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé", total: 0, P: 0, R: 0, A: 0, E: 0, suite: 0, tdus: 0, trecus: 0 });
         st.total++; st[v]++;
         if (aPrevenu(s, id)) st.E++;
-        if (tariConcerne(s, id)) { st.tdus++; if ((s.tariRecu || {})[id]) st.trecus++; }
+        if (tariConcerne(s, id)) { st.tdus++; if (etatTari(s, id) === "maitrise") st.trecus++; }
+        var cq = consequences(s, id);
+        st.avert = (st.avert || 0) + cq.filter(function (c) { return !c.ecarte; }).length;
+        st.ecarte = (st.ecarte || 0) + cq.filter(function (c) { return c.ecarte; }).length;
         st.suite = v === "A" ? st.suite + 1 : 0;
       });
     });
@@ -1218,11 +1343,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     lignesPause(L, filtre.kourel, stats, null);
     parDate.forEach(function (s) {
       if (!s.tari || s.tari === "aucun") return;
-      var dz = dahiraConcerne(s.date);
-      if (dz < today()) return;
-      var manquants = tariCompte(s).manquants.map(function (id) { return membres[id] ? membres[id].nom : ""; }).filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
+      var manquants = nomsTari(s, tariCompte(s).manquants);
       if (!manquants.length) return;
-      L.push("🎙️ *Tari à envoyer avant le dahira du " + samediLong(dz) + "*");
+      L.push("🎙️ *Tari à maîtriser avant la répétition du " + jourEcheance(echeanceTari(s)) + "*");
       L.push(tariPlain(s.tariDetail || {}));
       puces(L, manquants);
       L.push("");
@@ -1271,11 +1394,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (presents.length) { L.push("🟢 *Présents* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom; })); L.push(""); }
     lignesPause(L, s.type, stats, s.date);
     if (s.tari && s.tari !== "aucun") {
-      var manquants = tariCompte(s).manquants.map(function (id) { return membres[id] ? membres[id].nom : ""; }).filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
+      var manquants = nomsTari(s, tariCompte(s).manquants);
       if (manquants.length) {
-        L.push("🎙️ *Tari à envoyer avant le dahira du " + samediLong(dahiraConcerne(s.date)) + "*");
+        L.push("🎙️ *Tari à maîtriser avant la répétition du " + jourEcheance(echeanceTari(s)) + "*");
         L.push(tariPlain(s.tariDetail || {}));
-        if (s.tari === "tous") L.push("→ tout le monde"); else puces(L, manquants);
+        if (s.tari === "tous" && !tariCompte(s).recus && !tariCompte(s).retravail) L.push("→ tout le monde"); else puces(L, manquants);
+        L.push("_Sans Tari maîtrisé à temps : pas de dahira ni de prestation (chartes du kourel)._");
         L.push("");
       }
     }
@@ -1380,23 +1504,163 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     }
   }
 
+  /* ---------- Accès des membres : mot de passe temporaire envoyé sur WhatsApp ---------- */
+  function chiffresTel(t) {
+    var d = String(t || "").replace(/\D/g, "");
+    if (d.length === 10) d = "1" + d; // numéro canadien sans indicatif
+    return d;
+  }
+  function dateCourte(ms) { return ms ? new Date(ms).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : ""; }
+  function messageAcces(m, r) {
+    var prenom = (m.nom || "").split(" ")[0];
+    return "Assalamou aleykoum " + prenom + " 🤲\n\n" +
+      "Voici votre accès à la plateforme du *Conservatoire* (Dahira MBTE) : khassidas, Taris, présences et suivi.\n\n" +
+      "🔗 " + r.lien + "\n" +
+      "👤 Identifiant : *" + r.identifiant + "*\n" +
+      "🔑 Mot de passe temporaire : *" + r.motDePasse + "*\n\n" +
+      "À la première connexion, vous choisirez votre propre mot de passe. Ce mot de passe temporaire est valable jusqu’au " + dateCourte(r.expire) + ".\n\n" +
+      "Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie";
+  }
+  function messageInvitation(lien) {
+    return "Assalamou aleykoum 🤲\n\n" +
+      "La plateforme du *Conservatoire* est ouverte : khassidas, Taris, présences et suivi de chacun.\n\n" +
+      "👉 Créez votre accès ici : " + lien + "\n\n" +
+      "1️⃣ Choisissez votre nom dans la liste\n" +
+      "2️⃣ Tapez votre numéro WhatsApp\n" +
+      "3️⃣ Choisissez votre mot de passe\n\n" +
+      "Le Conservatoire valide chaque demande, puis vous vous connectez avec votre nom et votre mot de passe. Mot de passe oublié ? Même lien.\n\n" +
+      "Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie";
+  }
+  function messageValide(m, v) {
+    var prenom = (m.nom || "").split(" ")[0];
+    return "Assalamou aleykoum " + prenom + " 🤲\n\n" +
+      (v.reinitialisation ? "Votre nouveau mot de passe pour la plateforme du *Conservatoire* est validé ✅" : "Votre accès à la plateforme du *Conservatoire* est validé ✅") + "\n\n" +
+      "🔗 " + v.lien + "\n" +
+      "👤 Connectez-vous avec votre nom (ou votre numéro) et le mot de passe que vous avez choisi.\n\n" +
+      "Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie";
+  }
+  function ilYa(ms) {
+    var min = Math.round((Date.now() - ms) / 60000);
+    if (min < 1) return "à l’instant";
+    if (min < 60) return "il y a " + min + " min";
+    if (min < 24 * 60) return "il y a " + Math.round(min / 60) + " h";
+    return "le " + dateCourte(ms);
+  }
+  function memeNumero(a, b) { a = chiffresTel(a); b = chiffresTel(b); return a.slice(-10) === b.slice(-10); }
+  var accesValides = [], invitationConfirmer = false;
+  function majPastille() {
+    var n = comptesEtat && comptesEtat.demandes ? Object.keys(comptesEtat.demandes).length : 0;
+    document.querySelectorAll('a[data-view="reglages"]').forEach(function (a) {
+      var p = a.querySelector(".pastille");
+      if (!n) { if (p) p.remove(); return; }
+      if (!p) { p = document.createElement("span"); p.className = "pastille"; a.appendChild(p); }
+      p.textContent = n;
+      p.setAttribute("aria-label", n + (n > 1 ? " demandes d’accès" : " demande d’accès"));
+    });
+  }
+  function chargerComptes() {
+    if (!comptesApi) return;
+    comptesApi.liste().then(function (r) { comptesEtat = r; majPastille(); if (vue === "reglages") afficher(); }, function () { comptesEtat = { comptes: {}, erreur: true }; });
+  }
+  window.addEventListener("conservatoire-comptes", function () { chargerComptes(); });
+  function vueDemandes(cs) {
+    var ds = comptesEtat.demandes || {}, ids = Object.keys(ds).filter(function (id) { return membres[id]; })
+      .sort(function (a, b) { return ds[a].creeLe - ds[b].creeLe; });
+    var html = "";
+    if (accesValides.length) html += accesValides.map(function (v) {
+      var m = membres[v.id] || { nom: v.id }, num = chiffresTel(v.telephone);
+      return '<div class="acces-row valide"><span class="who"><b>✓ ' + esc(m.nom) + "</b> " + (v.reinitialisation ? "a son nouveau mot de passe." : "a maintenant accès à la plateforme.") + "</span>" +
+        '<span class="actions">' + (v.prevenu ? '<span class="pill p">Prévenu</span>'
+          : '<a class="btn primary small" target="_blank" rel="noopener" data-prevenir="' + esc(v.id) + '" href="https://wa.me/' + num + "?text=" + encodeURIComponent(messageValide(m, v)) + '">📲 Le prévenir sur WhatsApp</a>') +
+        '<button type="button" class="btn ghost small" data-valide-fermer="' + esc(v.id) + '" aria-label="Fermer">✕</button></span></div>';
+    }).join("");
+    if (ids.length) {
+      html += '<h3 class="group">Demandes à valider<span class="compte">' + ids.length + "</span></h3>";
+      html += ids.map(function (id) {
+        var d = ds[id], m = membres[id], fiche = m.telephone || "";
+        var verif = !fiche ? "" : memeNumero(fiche, d.telephone) ? '<span class="ok">✓ Même numéro que sa fiche</span>' : '<span class="alerte">⚠️ Différent du numéro de sa fiche (' + esc(fiche) + ")</span>";
+        return '<div class="acces-row demande"><span class="who"><b>' + esc(m.nom) + "</b>" + (d.reinitialisation ? ' <span class="pill e">Nouveau mot de passe</span>' : ' <span class="pill r">Première inscription</span>') + "</span>" +
+          '<span class="actions"><button type="button" class="btn primary small" data-acces-valider="' + esc(id) + '">✓ Valider</button>' +
+          '<button type="button" class="btn ghost small" data-acces-refuser="' + esc(id) + '">Refuser</button></span>' +
+          '<span class="meta"><a href="https://wa.me/' + chiffresTel(d.telephone) + '" target="_blank" rel="noopener">📱 ' + esc(d.telephone) + "</a>" + verif + "<span>" + esc(ilYa(d.creeLe)) + "</span>" +
+          (d.nb > 1 ? '<span class="alerte">⚠️ ' + d.nb + " demandes envoyées pour ce nom : vérifiez le numéro</span>" : "") + "</span></div>";
+      }).join("");
+    }
+    return html;
+  }
+  function vueAcces() {
+    if (!comptesEtat) { chargerComptes(); comptesEtat = { comptes: {}, chargement: true }; }
+    var cs = comptesEtat.comptes || {};
+    var liste = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) !== "parti"; }).sort(triNom);
+    var inv = comptesEtat.invitation;
+    var avec = liste.filter(function (m) { return cs[m.id]; }).length, actifs = liste.filter(function (m) { return cs[m.id] && !cs[m.id].temporaire; }).length;
+    var html = '<section class="panel" id="acces"><h2>Accès des membres</h2>' +
+      '<p class="muted">Partagez le lien d’inscription dans le groupe WhatsApp : chaque membre choisit son nom, son numéro et son mot de passe. Vous validez ensuite chaque demande ici. Mot de passe oublié : le membre refait une demande avec le même lien.</p>' +
+      (inv ? '<div class="acces-lien"><span class="titre">🔗 Lien d’inscription</span><code>' + esc(inv.lien) + "</code>" +
+        (invitationConfirmer
+          ? '<p class="muted" style="font-size:13px">L’ancien lien ne marchera plus. Les demandes déjà envoyées restent.</p><div class="row"><button type="button" class="btn danger small" data-action="invitation-nouveau">Oui, créer un nouveau lien</button><button type="button" class="btn ghost small" data-action="invitation-annuler">Annuler</button></div>'
+          : '<div class="row"><a class="btn primary" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(messageInvitation(inv.lien)) + '">📲 Partager dans le groupe</a>' +
+            '<button type="button" class="btn small" data-action="invitation-copier">Copier le message</button>' +
+            '<button type="button" class="btn ghost small" data-action="invitation-confirmer">Nouveau lien</button></div>') + "</div>" : "") +
+      (comptesEtat.adresse && !comptesEtat.adressePublique && /localhost|127\.0\.0\.1/.test(comptesEtat.adresse)
+        ? '<div class="me-banner wait" style="margin-top:12px">⚠️ <span>Les liens partagés pointent vers <b>' + esc(comptesEtat.adresse) + "</b> : ils ne marcheront pour les membres qu’une fois la plateforme en ligne (réglage PUBLIC_URL sur le VPS).</span></div>" : "") +
+      vueDemandes(cs) +
+      '<h3 class="group">Tous les membres</h3>' +
+      '<div class="stats" style="margin-top:0"><span class="pill p">' + actifs + " avec accès" + '</span>' + (avec - actifs ? '<span class="pill r">' + (avec - actifs) + " mot" + (avec - actifs > 1 ? "s" : "") + " de passe temporaire" + (avec - actifs > 1 ? "s" : "") + "</span>" : "") + "<span class=\"pill n\">" + (liste.length - avec) + " sans accès</span></div>" +
+      '<p class="muted" style="font-size:12.5px;margin-top:8px">En secours, vous pouvez aussi créer un mot de passe temporaire pour un membre et le lui envoyer sur WhatsApp.</p>' +
+      '<div class="list" style="margin-top:12px">' + liste.map(function (m) {
+        var c = cs[m.id], tel = m.telephone || "";
+        var etat = !c ? '<span class="pill n">Pas d’accès</span>'
+          : c.temporaire ? (c.expireTemp && c.expireTemp < Date.now() ? '<span class="pill a">Mot de passe expiré</span>' : '<span class="pill r">' + (c.envoyeLe ? "Envoyé le " + dateCourte(c.envoyeLe) : "Pas encore envoyé") + "</span>")
+          : '<span class="pill p">' + (c.derniereConnexion ? "Connecté · " + dateCourte(c.derniereConnexion) : "Accès validé") + "</span>";
+        if (comptesEtat.demandes && comptesEtat.demandes[m.id]) etat += ' <span class="pill r">Demande à valider</span>';
+        var h = '<div class="acces-row"><span class="who"><b>' + esc(m.nom) + "</b> " + etat + (c && c.admin ? ' <span class="chip">Admin</span>' : "") + "</span>" +
+          '<input type="tel" class="tel" data-tel="' + esc(m.id) + '" value="' + esc(tel) + '" placeholder="+1 819 555 1234" aria-label="WhatsApp de ' + esc(m.nom) + '">' +
+          '<span class="actions"><button type="button" class="btn small ' + (c ? "" : "primary") + '" data-acces="' + esc(m.id) + '">' + (c ? "Nouveau mot de passe" : "Créer l’accès") + "</button>" +
+          (c ? '<button type="button" class="btn ghost small" data-acces-plus="' + esc(m.id) + '" aria-label="Plus d’options">⋯</button>' : "") + "</span>";
+        if (accesOuvert && accesOuvert.id === m.id && accesOuvert.r) {
+          var r = accesOuvert.r, msg = messageAcces(m, r), num = chiffresTel(tel);
+          h += '<div class="acces-envoi"><div><span class="muted">Mot de passe temporaire</span><b class="mdp">' + esc(r.motDePasse) + '</b><span class="muted">valable jusqu’au ' + esc(dateCourte(r.expire)) + "</span></div>" +
+            '<div class="row"><a class="btn primary" target="_blank" rel="noopener" data-envoye="' + esc(m.id) + '" href="https://wa.me/' + (num || "") + "?text=" + encodeURIComponent(msg) + '">📲 Envoyer sur WhatsApp' + (num ? "" : " (choisir le contact)") + "</a>" +
+            '<button type="button" class="btn small" data-copier-acces="' + esc(m.id) + '">Copier le message</button>' +
+            '<button type="button" class="btn ghost small" data-action="acces-fermer">Fermer</button></div>' +
+            (num ? "" : '<p class="muted" style="font-size:12.5px">Ajoutez son numéro WhatsApp à gauche pour ouvrir directement sa conversation.</p>') +
+            '<p class="muted" style="font-size:12.5px">Ce mot de passe ne sera plus affiché après fermeture : envoyez-le maintenant.</p></div>';
+        }
+        if (accesOuvert && accesOuvert.id === m.id && accesOuvert.plus && c) {
+          h += '<div class="acces-envoi"><div class="row">' +
+            '<button type="button" class="btn small" data-acces-admin="' + esc(m.id) + '" data-v="' + (c.admin ? "0" : "1") + '">' + (c.admin ? "Retirer les droits d’administrateur" : "Donner les droits d’administrateur") + "</button>" +
+            (accesOuvert.confirmer ? '<button type="button" class="btn danger small" data-acces-revoquer="' + esc(m.id) + '">Oui, supprimer l’accès</button><button type="button" class="btn ghost small" data-action="acces-fermer">Annuler</button>'
+              : '<button type="button" class="btn danger small" data-acces-confirmer="' + esc(m.id) + '">Supprimer l’accès</button>') + "</div>" +
+            (accesOuvert.confirmer ? '<p class="muted" style="font-size:12.5px">Le membre sera déconnecté partout et ne pourra plus se connecter. Ses présences et Taris restent.</p>' : "") + "</div>";
+        }
+        return h + "</div>";
+      }).join("") + "</div>" +
+      '<textarea class="copy" id="acces-texte" readonly hidden aria-label="Message à copier"></textarea></section>';
+    app.insertAdjacentHTML("afterbegin", html);
+  }
+
   /* ---------- Mon espace ---------- */
   function lireMoi() { try { return localStorage.getItem("presences-moi") || ""; } catch (e) { return ""; } }
   function ecrireMoi(v) { try { localStorage.setItem("presences-moi", v); } catch (e) { /* stockage indisponible */ } }
   var moiCourant = lireMoi();
   function vueMoi() {
     var liste = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) !== "parti"; }).sort(triNom);
-    var html = '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
-      '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 240px">Je suis<select id="moi"><option value="">Choisir mon nom…</option>' +
-      liste.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === moiCourant ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") +
-      "</select></label></div></section>";
+    var html = '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
+      (monCompte
+        ? '<section class="panel compte"><div><h2>' + esc((membres[monCompte.membre] || {}).nom || monCompte.nom || "Mon espace") + '</h2><p class="muted">' + (monCompte.admin ? "Administrateur" : "Membre") + " · " + esc(tagsKourel(membres[monCompte.membre] || {})) + "</p></div>" +
+          '<div class="row"><a class="btn small" href="/connexion.html?changer=1">Changer mon mot de passe</a><button type="button" class="btn ghost small" data-action="deconnexion">Se déconnecter</button></div></section>'
+        : '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
+          '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 240px">Je suis<select id="moi"><option value="">Choisir mon nom…</option>' +
+          liste.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === moiCourant ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") +
+          "</select></label></div></section>");
     var moi = membres[moiCourant];
     if (moi && statutMembre(moi) === "actif") {
       prochainsDahiras().forEach(function (dz, i) {
         var e = etatDahira(dz), rs = e.raisons[moi.id] || [];
         var parTari = rs.filter(function (r) { return r.tari; }).map(function (r) { return r.label; });
         var att = rs.length > 0;
-        if (parTari.length) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : envoyez votre Tari pour entrer dans le " + esc(parTari.join(" et le ")) + ".</span></div>";
+        if (parTari.length) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : votre Tari doit être maîtrisé pour entrer dans le " + esc(parTari.join(" et le ")) + ".</span></div>";
         else if (att) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : Kourel général, réservé à ceux qui sont venus à la dernière répétition générale.</span></div>";
         else if ((i === 0 || dahirasCfg[dz]) && !e.fusion && !(e.mode === "k2k1" ? (moi.k1 || moi.k2) : moi[e.mode])) html += '<div class="me-banner info">ℹ️ <span>Dahira du ' + esc(samediLong(dz)) + " : " + esc(MODE_PHRASE[e.mode].replace(/^./, function (c) { return c.toLowerCase(); })) + "</span></div>";
         else if (i === 0 && (moi.k1 || moi.k2)) html += '<div class="me-banner ok">✅ <span>Dahira du ' + esc(samediLong(dz)) + " : vous pouvez entrer dans le " + esc(e.groupes.filter(function (g) { return g.ok.indexOf(moi) > -1; }).map(function (g) { return g.label; }).join(" et le ") || "kourel") + ".</span></div>";
@@ -1406,18 +1670,21 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       var items = [];
       seances.forEach(function (s) {
         if (!s.tari || s.tari === "aucun" || (s.participants || []).indexOf(moi.id) < 0 || !tariConcerne(s, moi.id)) return;
-        var recu = !!(s.tariRecu || {})[moi.id], dz = dahiraConcerne(s.date);
-        if (recu && dz < isoPlus(today(), -30)) return;
-        items.push({ s: s, recu: recu, dz: dz });
+        var et = etatTari(s, moi.id), recu = et === "maitrise", ech = echeanceTari(s);
+        if (recu && ech < isoPlus(today(), -30)) return;
+        items.push({ s: s, recu: recu, et: et, ech: ech });
       });
-      items.sort(function (a, b) { return (a.recu - b.recu) || (a.dz < b.dz ? -1 : 1); });
+      items.sort(function (a, b) { return (a.recu - b.recu) || (a.ech < b.ech ? -1 : 1); });
       var attente = items.filter(function (x) { return !x.recu; }).length;
-      html += '<section class="panel"><h2>Mes Taris</h2><p class="muted">' + (attente ? attente + " Tari" + (attente > 1 ? "s" : "") + " à envoyer, sur WhatsApp ou à un membre du Conservatoire." : "Aucun Tari en attente.") + "</p>" +
+      html += '<section class="panel"><h2>Mes Taris</h2><p class="muted">' + (attente ? attente + " Tari" + (attente > 1 ? "s" : "") + " à envoyer ou à retravailler, sur WhatsApp ou à un membre du Conservatoire." : "Aucun Tari en attente.") + "</p>" +
         '<div class="list" style="margin-top:10px">' + (items.length ? items.map(function (x) {
           var t = tariTexte(x.s.tariDetail || {});
-          return '<div class="item' + (x.recu ? "" : " attente") + '"><div class="ligne"><span>' + (t || "Contenu à préciser par le Conservatoire") + '</span><span class="pill ' + (x.recu ? "p" : "r") + '">' + (x.recu ? "Tari reçu" : "À envoyer") + "</span></div>" +
+          var lab = x.recu ? "Maîtrisé" : x.et === "recu" ? "À retravailler" : "À envoyer";
+          var depasse = !x.recu && x.ech < today();
+          return '<div class="item' + (x.recu ? "" : " attente") + '"><div class="ligne"><span>' + (t || "Contenu à préciser par le Conservatoire") + '</span><span class="pill ' + (x.recu ? "p" : x.et === "recu" ? "e" : "r") + '">' + lab + "</span></div>" +
             '<span class="muted">Demandé à la séance ' + esc(TYPES[x.s.type] || "") + " du " + esc(asDate(x.s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })) +
-            (x.recu ? "" : " · à envoyer avant le dahira du " + esc(samediLong(x.dz)) + ", sinon pas d’entrée dans le kourel ce jour-là") + "</span></div>";
+            (x.recu ? "" : depasse ? " · échéance dépassée : pas de dahira ni de prestation tant qu’il n’est pas maîtrisé"
+              : " · à maîtriser avant la répétition du " + esc(jourEcheance(x.ech)) + (x.et === "recu" ? " : renvoyez-le jusqu’à maîtrise" : "")) + "</span></div>";
         }).join("") : '<div class="empty">Rien à envoyer pour le moment.</div>') + "</div></section>";
 
       /* Mon suivi : indicateurs, évaluation du Conservatoire, chemin vers le Kourel 1 */
@@ -1473,6 +1740,18 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     app.innerHTML = html;
   }
 
+  /* ---------- Chartes et sanctions du kourel (texte de la commission de discipline) ---------- */
+  var CHARTES_HTML = '<p>La commission de discipline tient à rappeler que ces règles et sanctions ne visent, en aucun cas, à exclure une personne du kourel ou à la contraindre à faire l’impossible. Nous tenons juste à rappeler l’importance et la responsabilité qui découle de psalmodier les écrits du Cheikh. D’où cette nécessité d’établir la charte des règles et sanctions du kourel pour une meilleure organisation.</p><p>Nous prions d’obtenir l’agrément d’ALLAH SAW par le biais de Serigne Touba.</p><h3>Chartes</h3><ul><li>Les membres du kourel sont tenus de porter exclusivement des tenues traditionnelles de type <b>baay-lahat, segne souhaibou, thiourki ndiarem</b>, ou toute autre tenue du même genre. Cette exigence s’applique <b>en tout temps</b>, aussi bien lors des répétitions que lors des évènements (Magal, Gamou, prestations sur invitation ou toute autre activité officielle).</li><li>Les membres du kourel doivent éviter de manipuler leurs cellulaires pendant toute la durée de déclamation des Xassidas sauf urgence.</li><li>Les membres du kourel doivent avoir une coiffure correcte et uniformisée.</li><li>Les membres du kourel n’ont pas le droit de porter des colliers, chaînes, bracelets, montres et chapelets lors des prestations et des événements. Cette interdiction s’applique également lors des répétitions.</li><li>Les séances de répétition ont lieu tous les vendredis de 18h à 21h. Tout changement d’horaire doit être voté par les membres du kourel.</li><li>Il est de la responsabilité du dieuwrigne du kourel d’animer les séances de répétitions.</li><li>Seuls les membres du conservatoire ont la charge de faire des « leerals » et il est de la responsabilité des autres membres de s’abstenir de toute perturbation.</li><li>Les membres du kourel ont l’obligation d’écouter et de travailler les enregistrements audios mis à leur disposition par le conservatoire. En cas d’absence à une séance de répétition, la personne concernée est tenue d’envoyer son fichier audio aux membres du conservatoire ainsi qu’aux personnes désignées par le Jeuwrigne du conservatoire. L’envoi peut se faire du vendredi de la répétition manquée jusqu’au samedi suivant. Toutefois il est de la responsabilité du membre absent de répéter et d’envoyer son audio autant de fois que nécessaire jusqu’à la maîtrise complète du « leral ».</li><li>Les membres du kourel se doivent d’être assidus aux séances de répétitions et dahiras.</li><li>Les membres du kourel doivent veiller à bien se tenir et adopter une position assise correcte lors des déclamations de Xassidas.</li><li>Les membres du kourel sont priés de signaler à l’avance leur absence ou retard lors des séances de répétition ou aux dahiras. Pour les séances de répétition, il suffit de signaler son retard à un membre du comité de discipline pour pouvoir intégrer le kourel sur autorisation de ce dernier. Pour les séances aux dahiras, 30 minutes de retard seront acceptées si la séance commence à 18h, et aucun retard ne sera toléré si elle commence à 19h. En cas de dépassement de ces délais aux dahiras, même si le retard a été signalé à l’avance, la personne ne pourra pas intégrer le kourel.</li><li>En cas de retard, éviter d’intégrer le kourel sauf sur autorisation du dieuwrigne du kourel.</li><li>Il est de la responsabilité du chargé de la commission de discipline de recadrer les débats lors des séances de répétition ou aux dahiras. À lui de veiller également à la manière dont sont assis les membres du kourel.</li><li>Trois mois avant le magal, on n’intègre plus personne dans le kourel à l’exception d’un nouvel arrivant dont les potentiels ont été évalués par les membres du conservatoire. Pour les anciens membres qui se joignent au kourel que pour les événements, aucune tolérance ne sera acceptée.</li></ul><h3>Sanctions</h3><ul><li>L’irrespect relatif à l’habillement établi par la commission discipline entraine un avertissement. Si cela se reproduit, la personne ne participera pas à cette séance de répétition ou au dahira.</li><li>Tout membre du kourel ayant une coiffure non conforme aux exigences préétablies par la commission discipline ne pourra pas participer aux séances de répétition, aux dahiras, ni à toutes les prestations ou événements officiels du kourel.</li><li>Les membres du kourel sont tenus de maîtriser ce qui a été retenu lors des répétitions. Au cas contraire, ils peuvent continuer à répéter mais ne pourront être acceptés au kourel qu’après avoir maîtrisé ladite partie.</li><li>Tout membre du kourel absent à une répétition qui n’a pas envoyé son fichier audio ou qui n’a pas maîtrisé le leeral avant la répétition suivante ne pourra pas participer aux dahiras ni à toutes les prestations ou événements officiels du kourel, tels que Magal, Gamou, Kazu Rajab, etc.</li></ul>';
+  function vueChartes() {
+    app.innerHTML = '<section class="panel chartes"><h2>Chartes et sanctions du kourel</h2><p class="muted">Texte de la commission de discipline du Conservatoire.</p>' + CHARTES_HTML +
+      '<div class="chartes-app"><b>Comment la plateforme les applique</b><ul>' +
+      "<li>Absent à une répétition : le Tari (fichier audio) est à maîtriser avant la répétition suivante. Sinon, pas de dahira ni de prestation tant qu’il n’est pas maîtrisé.</li>" +
+      "<li>Un Tari passe par trois états : attendu, reçu à retravailler, maîtrisé. Seul « maîtrisé » permet de rejoindre le kourel.</li>" +
+      "<li>Présent mais partie non maîtrisée : le Conservatoire peut demander un Tari individuel, avec la même règle.</li>" +
+      "<li>Tenue non conforme : avertissement ; récidive dans le même mois : pas de participation à la séance. Coiffure non conforme : pas de participation.</li>" +
+      "</ul></div></section>";
+  }
+
   /* ---------- Khassidas : répertoire et lecture ---------- */
   function pageKhassida(kh, vers) {
     if (kh.page) return "#khassida/" + encodeURIComponent(kh.id) + (vers ? "/v" + Number(vers) : "");
@@ -1500,7 +1779,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var cle = kh.page + "|" + (lecture.vers || "");
     var exist = app.querySelector(".lecture-frame");
     if (exist && exist.dataset.cle === cle) { ajusterLecture(); return; }
-    app.innerHTML = '<div class="lecture-bar"><a class="btn ghost small" href="#khassidas">← Khassidas</a><b>' + esc(kh.titre) + "</b></div>" +
+    app.innerHTML = '<div class="lecture-bar"><a class="logo-mini" href="#seances" lang="ar" aria-label="Accueil du Conservatoire">مفاتح</a><a class="btn ghost small" href="#khassidas">← Khassidas</a><b>' + esc(kh.titre) + "</b></div>" +
       '<iframe class="lecture-frame" title="' + esc(kh.titre) + '" data-cle="' + esc(cle) + '" src="' + esc(kh.page + (lecture.vers ? "?v=" + lecture.vers + "#v" + lecture.vers : "")) + '" allow="autoplay"></iframe>';
     ajusterLecture();
   }
@@ -1560,14 +1839,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   }
   function csvPresences() {
     var q = function (v) { v = String(v == null ? "" : v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var L = [["Date", "Répétition", "Membre", "Kourels", "Statut", "Motif (absence prévenue)", "Tari demandé", "Tari reçu"].join(";")];
+    var L = [["Date", "Répétition", "Membre", "Kourels", "Statut", "Motif (absence prévenue)", "Tari demandé", "État du Tari", "Chartes"].join(";")];
     seances.slice().sort(function (a, b) { return a.date === b.date ? (a.type < b.type ? -1 : 1) : (a.date < b.date ? -1 : 1); }).forEach(function (x) {
       (x.participants || []).map(function (id) { return { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé" }; }).sort(triNom).forEach(function (p) {
         var nonRequis = !requis(x, p.id), v = choixDe(x, p.id);
         var statut = nonRequis ? "Non requis (pause)" : v === "E" ? "Absent (prévenu)" : STATUTS[v];
         var du = !nonRequis && tariConcerne(x, p.id);
         L.push([x.date, TYPES[x.type] || x.type, p.nom, membres[p.id] ? tagsKourel(membres[p.id]) : "", statut, v === "E" ? motifTexte(x, p.id) : "",
-          du ? "Oui" : "Non", du ? ((x.tariRecu || {})[p.id] ? "Oui" : "Non") : ""].map(q).join(";"));
+          du ? "Oui" : "Non", du ? ETATS_TARI[etatTari(x, p.id)] : "", consequences(x, p.id).map(function (c) { return c.txt; }).join(", ")].map(q).join(";"));
       });
     });
     return "﻿" + L.join("\r\n");
@@ -1607,20 +1886,23 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   /* ---------- Navigation et événements ---------- */
   function afficher() {
     if (!db) return;
-    if (!charge.m || !charge.s) { app.innerHTML = '<div class="empty">Chargement des présences…</div>'; return; }
-    var actif = vue === "khassida" ? "khassidas" : vue;
+    if (!charge.m || !charge.s || !charge.r) { app.innerHTML = '<div class="empty">Chargement…</div>'; return; }
+    /* Un membre (non administrateur) ne voit ni les séances de tous, ni le bilan, ni les réglages. */
+    if (!peutModifier && ["seances", "bilan", "reglages"].indexOf(vue) > -1) vue = "moi";
+    var actif = vue === "khassida" ? "khassidas" : vue === "chartes" ? "moi" : vue;
     document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     document.body.classList.toggle("lecture", vue === "khassida");
     if (vue === "khassida") return vueLecture();
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
-    else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else vueSeances();
+    else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else vueSeances();
+    if (vue === "reglages" && comptesApi) vueAcces();
   }
   function lireHash() {
     var h = location.hash.replace("#", "");
     if (h === "membres") h = "reglages";
     var mk = /^khassida\/([^\/]+)(?:\/v(\d+))?$/.exec(h);
     if (mk) { vue = "khassida"; lecture = { id: decodeURIComponent(mk[1]), vers: mk[2] ? Number(mk[2]) : null }; return; }
-    vue = ["seances", "bilan", "reglages", "moi", "khassidas", "dahira"].indexOf(h) > -1 ? h : "seances";
+    vue = ["seances", "bilan", "reglages", "moi", "khassidas", "dahira", "chartes"].indexOf(h) > -1 ? h : "seances";
   }
   window.addEventListener("hashchange", function () { lireHash(); window.scrollTo(0, 0); seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null; afficher(); });
 
@@ -1637,6 +1919,68 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     }
     if (b.dataset.action === "sv-complete" && peutModifier) { telecharger("conservatoire-sauvegarde-" + today() + ".json", JSON.stringify(donneesCompletes(), null, 2), "complete"); return; }
     if (b.dataset.action === "sv-csv" && peutModifier) { telecharger("conservatoire-presences-" + today() + ".csv", csvPresences(), "csv"); return; }
+    if (b.dataset.action === "deconnexion" && utilisateur && utilisateur.deconnexion) { utilisateur.deconnexion(); return; }
+    if (b.dataset.acces && comptesApi) {
+      var ida = b.dataset.acces, ma = membres[ida];
+      b.disabled = true;
+      comptesApi.temporaire(ida).then(function (r) {
+        accesOuvert = { id: ida, r: r };
+        chargerComptes();
+        afficher();
+        toast("Mot de passe temporaire créé pour " + (ma ? ma.nom : "le membre") + ".");
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Création impossible."); });
+      return;
+    }
+    if (b.dataset.accesValider && comptesApi) {
+      var idv = b.dataset.accesValider, dv = (comptesEtat.demandes || {})[idv] || {};
+      b.disabled = true;
+      comptesApi.valider(idv).then(function (r) {
+        accesValides = accesValides.filter(function (x) { return x.id !== idv; });
+        accesValides.unshift({ id: idv, telephone: r.telephone, lien: r.lien, reinitialisation: dv.reinitialisation });
+        if (comptesEtat.demandes) delete comptesEtat.demandes[idv];
+        majPastille(); afficher(); chargerComptes();
+        toast("Accès validé pour " + (membres[idv] ? membres[idv].nom : "le membre") + ".");
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Validation impossible."); });
+      return;
+    }
+    if (b.dataset.accesRefuser && comptesApi) {
+      var idr = b.dataset.accesRefuser;
+      b.disabled = true;
+      comptesApi.refuser(idr).then(function () {
+        if (comptesEtat.demandes) delete comptesEtat.demandes[idr];
+        majPastille(); afficher(); chargerComptes();
+        toast("Demande refusée. " + (membres[idr] ? membres[idr].nom.split(" ")[0] : "Le membre") + " pourra en refaire une.");
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Refus impossible."); });
+      return;
+    }
+    if (b.dataset.valideFermer) { accesValides = accesValides.filter(function (x) { return x.id !== b.dataset.valideFermer; }); afficher(); return; }
+    if (b.dataset.action === "invitation-confirmer") { invitationConfirmer = true; afficher(); return; }
+    if (b.dataset.action === "invitation-annuler") { invitationConfirmer = false; afficher(); return; }
+    if (b.dataset.action === "invitation-nouveau" && comptesApi) {
+      comptesApi.invitation().then(function (r) { invitationConfirmer = false; comptesEtat.invitation = r; afficher(); toast("Nouveau lien créé. Partagez-le dans le groupe."); }, function (e) { toast(e && e.message ? e.message : "Création impossible."); });
+      return;
+    }
+    if (b.dataset.action === "invitation-copier" && comptesEtat && comptesEtat.invitation) {
+      var txi = messageInvitation(comptesEtat.invitation.lien), tai = document.getElementById("acces-texte");
+      try { navigator.clipboard.writeText(txi).then(function () { toast("Message copié : collez-le dans le groupe WhatsApp."); }, function () { montrer(tai, txi); }); } catch (er) { montrer(tai, txi); }
+      return;
+    }
+    if (b.dataset.accesPlus) { accesOuvert = accesOuvert && accesOuvert.id === b.dataset.accesPlus && accesOuvert.plus ? null : { id: b.dataset.accesPlus, plus: true }; afficher(); return; }
+    if (b.dataset.accesConfirmer) { accesOuvert = { id: b.dataset.accesConfirmer, plus: true, confirmer: true }; afficher(); return; }
+    if (b.dataset.action === "acces-fermer") { accesOuvert = null; afficher(); return; }
+    if (b.dataset.accesAdmin && comptesApi) {
+      comptesApi.admin(b.dataset.accesAdmin, b.dataset.v === "1").then(function () { accesOuvert = null; chargerComptes(); toast("Droits mis à jour."); }, function (e) { toast(e && e.message ? e.message : "Modification impossible."); });
+      return;
+    }
+    if (b.dataset.accesRevoquer && comptesApi) {
+      comptesApi.revoquer(b.dataset.accesRevoquer).then(function () { accesOuvert = null; chargerComptes(); toast("Accès supprimé."); }, function (e) { toast(e && e.message ? e.message : "Suppression impossible."); });
+      return;
+    }
+    if (b.dataset.copierAcces && accesOuvert && accesOuvert.r) {
+      var mc = membres[b.dataset.copierAcces], txc = messageAcces(mc || {}, accesOuvert.r), tac = document.getElementById("acces-texte");
+      try { navigator.clipboard.writeText(txc).then(function () { toast("Message copié."); if (comptesApi) comptesApi.envoye(b.dataset.copierAcces).then(chargerComptes); }, function () { montrer(tac, txc); }); } catch (er) { montrer(tac, txc); }
+      return;
+    }
     if (b.dataset.bilan) { bilanMode = b.dataset.bilan; evalOuvert = null; promoOuvert = null; afficher(); return; }
     if (b.dataset.eval && peutModifier) {
       var pe = b.dataset.eval.split("|"), cur = evaluations[pe[0]] || {}, nv2 = {};
@@ -1721,13 +2065,39 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       try { navigator.clipboard.writeText(txd).then(function () { toast("Message copié : collez-le dans le groupe WhatsApp."); }, function () { montrer(tad, txd); }); } catch (er) { montrer(tad, txd); }
       return;
     }
-    if (b.dataset.recu && peutModifier) {
-      var parts = b.dataset.recu.split("|"), trr = {}; trr[parts[1]] = true;
-      var nomR = membres[parts[1]] ? membres[parts[1]].nom : "Membre";
-      db.doc("seances/" + parts[0]).update({ tariRecu: trr }).then(function () {
+    if (b.dataset.tetat && peutModifier) {
+      var parts = b.dataset.tetat.split("|"), nomR = membres[parts[1]] ? membres[parts[1]].nom : "Membre";
+      majEtatTari(parts[0], parts[1], parts[2]).then(function () {
+        if (parts[2] !== "maitrise") { toast("Tari reçu : " + nomR + " doit le retravailler et le renvoyer jusqu’à maîtrise."); return; }
         var xb = dahiraOuvert ? etatDahira(dahiraOuvert).tariBloques.filter(function (x) { return x.m.id === parts[1]; })[0] : null;
         var reste = xb ? xb.seances.filter(function (sx) { return sx.id !== parts[0]; }).length : 0;
-        toast(reste ? "Tari reçu. " + nomR + " a encore un Tari à envoyer." : "Tari reçu : " + nomR + " peut entrer dans le kourel samedi.");
+        toast(reste ? "Tari maîtrisé. " + nomR + " a encore un Tari à maîtriser." : "Tari maîtrisé : " + nomR + " peut rejoindre son kourel.");
+      }, echec);
+      return;
+    }
+    if (b.dataset.tarietat && peutModifier && seanceOuverte) {
+      var pt = b.dataset.tarietat.split("|");
+      majEtatTari(seanceOuverte, pt[0], pt[1]).catch(echec);
+      return;
+    }
+    if (b.dataset.indiv && peutModifier && seanceOuverte) {
+      var si = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {}, iv = {};
+      iv[b.dataset.indiv] = !(si.tariIndividuel || {})[b.dataset.indiv];
+      db.doc("seances/" + seanceOuverte).update({ tariIndividuel: iv }).then(function () {
+        if (iv[b.dataset.indiv]) toast("Partie à retravailler : " + (membres[b.dataset.indiv] ? membres[b.dataset.indiv].nom : "le membre") + " doit envoyer son Tari jusqu’à maîtrise.");
+      }, echec);
+      return;
+    }
+    if (b.dataset.action === "disc-ouvrir" && peutModifier) { discOuvert = b.dataset.id; afficher(); return; }
+    if (b.dataset.action === "disc-fermer") { discOuvert = null; afficher(); return; }
+    if (b.dataset.disc && peutModifier && seanceOuverte) {
+      var pd = b.dataset.disc.split("|"), sd2 = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
+      var cur = marquesDe(sd2, pd[0]), mj = {}; mj[pd[0]] = {}; mj[pd[0]][pd[1]] = !cur[pd[1]];
+      db.doc("seances/" + seanceOuverte).update({ discipline: mj }).then(function () {
+        if (!mj[pd[0]][pd[1]]) return;
+        var sNow = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || sd2;
+        var cq = consequences(sNow, pd[0]).filter(function (c) { return c.ecarte; });
+        toast(cq.length ? "Selon les chartes : " + (membres[pd[0]] ? membres[pd[0]].nom : "le membre") + " ne participe pas à cette séance." : "Avertissement enregistré (tenue). Une récidive ce mois-ci écarte de la séance.");
       }, echec);
       return;
     }
@@ -1757,12 +2127,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       return;
     }
     if (b.dataset.tari && peutModifier) { db.doc("seances/" + seanceOuverte).update({ tari: b.dataset.tari }).catch(echec); return; }
-    if (b.dataset.tarirecu && peutModifier) {
-      var sx = seances.filter(function (x) { return x.id === seanceOuverte; })[0];
-      var tr = {}; tr[b.dataset.tarirecu] = !((sx && sx.tariRecu) || {})[b.dataset.tarirecu];
-      db.doc("seances/" + seanceOuverte).update({ tariRecu: tr }).catch(echec);
-      return;
-    }
+
     var act = b.dataset.action, mid = b.dataset.id;
     if (act === "voir-partis") { voirPartis = !voirPartis; afficher(); return; }
     if (act && peutModifier) {
@@ -1778,7 +2143,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var so = seances.filter(function (x) { return x.id === seanceOuverte; })[0];
         if (!so) return;
         var copie = {};
-        Object.keys(so).forEach(function (k) { if (["id", "tari", "tariDetail", "tariRecu"].indexOf(k) < 0) copie[k] = so[k]; });
+        Object.keys(so).forEach(function (k) { if (["id", "tari", "tariDetail", "tariRecu", "tariEtat", "tariIndividuel"].indexOf(k) < 0) copie[k] = so[k]; });
         copie.tari = "aucun";
         db.doc("seances/" + so.id).set(copie).then(function () { confirmerTari = false; tariEdition = false; afficher(); toast("Tari supprimé pour cette séance."); }, echec);
         return;
@@ -1807,6 +2172,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("membres/" + b.dataset.id).update(u).catch(echec);
     }
   });
+  app.addEventListener("click", function (e) {
+    var a = e.target.closest("a[data-envoye]");
+    if (a && comptesApi) comptesApi.envoye(a.dataset.envoye).then(chargerComptes, function () {});
+    var pv = e.target.closest("a[data-prevenir]");
+    if (pv) { accesValides.forEach(function (x) { if (x.id === pv.dataset.prevenir) x.prevenu = true; }); setTimeout(afficher, 300); }
+  });
   app.addEventListener("change", function (e) {
     var t = e.target;
     if (t.dataset && t.dataset.depuis && peutModifier && t.value) {
@@ -1827,6 +2198,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       else if (f === "tout") enregistrerRappel(rappelOuvert, { tout: t.checked });
       else if (f === "taris") enregistrerRappel(rappelOuvert, { taris: t.checked });
       else { v = {}; v[f] = parseInt(t.value, 10) || 1; enregistrerRappel(rappelOuvert, v); }
+      return;
+    }
+    if (t.dataset && t.dataset.tel && peutModifier) {
+      db.doc("membres/" + t.dataset.tel).update({ telephone: t.value.trim() }).then(function () { toast("Numéro enregistré."); }, echec);
       return;
     }
     if (t.dataset && t.dataset.evcom && peutModifier) {
@@ -1879,9 +2254,20 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       app.innerHTML = '<div class="empty">Les présences ne sont visibles que connecté à claude.ai, avec un accès à cette page.</div>';
       return;
     }
-    (user ? user.canEdit().catch(function () { return false; }) : Promise.resolve(false)).then(function (ok) {
-      peutModifier = !!ok;
-      document.getElementById("role").textContent = peutModifier ? "Administrateur" : "Consultation seule";
+    utilisateur = user;
+    Promise.all([
+      user ? user.canEdit().catch(function () { return false; }) : Promise.resolve(false),
+      user && typeof user.compte === "function" ? user.compte().catch(function () { return null; }) : Promise.resolve(null),
+      claudeApi.use("comptes").catch(function () { return null; })
+    ]).then(function (rr) {
+      peutModifier = !!rr[0];
+      monCompte = rr[1];
+      comptesApi = rr[2];
+      if (comptesApi) chargerComptes();
+      if (monCompte) { moiCourant = monCompte.membre; }
+      document.getElementById("role").textContent = peutModifier ? "Administrateur" : monCompte ? (monCompte.nom || "Membre") : "Consultation seule";
+      document.body.classList.toggle("vue-membre", !peutModifier);
+      charge.r = true;
       afficher();
     });
     db.collection("membres").onSnapshot(function (snap) {

@@ -1,0 +1,16 @@
+# Seuls package.json, package-lock.json et plateforme/ entrent dans l'image.
+.git
+.github
+.env
+.env.*
+node_modules
+.DS_Store
+donnees
+plateforme/dev
+*.md
+*.mp3
+*.pdf
+Dockerfile
+docker-compose*.yml
+.dockerignore
+env.example

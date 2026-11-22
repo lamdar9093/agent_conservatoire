@@ -1,0 +1,38 @@
+name: Déploiement en production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Déployer sur le VPS (SSH)
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VPS_HOST_PROD }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+        port: ${{ secrets.SSH_PORT_PROD }}
+        script: |
+          set -e
+          cd /var/www/conservatoire
+          git pull origin main
+          # On construit d'abord : l'ancienne version reste en ligne pendant la construction.
+          docker compose build
+          docker compose up -d
+          docker image prune -f
+          # Vérifie que la nouvelle version répond (contrôle de santé Docker).
+          for i in $(seq 1 20); do
+            etat=$(docker inspect -f '{{.State.Health.Status}}' conservatoire-app)
+            if [ "$etat" = "healthy" ]; then echo "Plateforme en ligne"; exit 0; fi
+            sleep 3
+          done
+          docker compose logs --tail=60 app
+          exit 1

@@ -1457,5 +1457,64 @@ dialog.ms::backdrop { background: var(--scrim); }
   }
 })();
 </script>
+<!-- Lecture immersive : la frise et le lecteur se cachent pendant la lecture et reviennent au besoin. -->
+<style>
+.strip, .player { transition: transform 0.28s ease, box-shadow 0.28s ease; will-change: transform; }
+body.chrome-cache .strip { transform: translateY(-105%); }
+body.chrome-cache .player { transform: translateY(105%); box-shadow: none; }
+.mini-progress { position: fixed; left: 0; right: 0; bottom: 0; height: 3px; z-index: 36; pointer-events: none; opacity: 0; transition: opacity 0.2s ease; background: var(--rule); }
+.mini-progress span { display: block; height: 100%; width: 0; background: var(--accent); }
+body.chrome-cache .mini-progress { opacity: 1; }
+.mini-play { position: fixed; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 37; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); display: grid; place-items: center; cursor: pointer; opacity: 0; transform: scale(0.8); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
+.mini-play svg { width: 20px; height: 20px; }
+body.chrome-cache .mini-play { opacity: 1; transform: none; pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) { .strip, .player, .mini-play { transition: none; } }
+</style>
+<div class="mini-progress" aria-hidden="true"><span></span></div>
+<button type="button" class="mini-play" id="mini-play" aria-label="Afficher le lecteur"></button>
+<script>
+(function () {
+  "use strict";
+  var body = document.body, audio = document.getElementById("audio");
+  var barre = document.querySelector(".mini-progress span"), mini = document.getElementById("mini-play");
+  var ICONE_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+  var ICONE_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
+  var cache = false, dernierY = window.scrollY;
+  function bloque() {
+    var panneau = document.getElementById("calage-panel"), scene = document.getElementById("scene-view");
+    return (panneau && !panneau.hidden) || (scene && !scene.hidden) || (document.activeElement && document.getElementById("player").contains(document.activeElement));
+  }
+  function montrer() { if (cache) { cache = false; body.classList.remove("chrome-cache"); } }
+  function cacher() { if (!cache && !bloque()) { cache = true; body.classList.add("chrome-cache"); } }
+  function majMini() { mini.innerHTML = audio.paused ? ICONE_PLAY : ICONE_PAUSE; mini.setAttribute("aria-label", audio.paused ? "Lire" : "Pause"); }
+  /* Défilement : vers le bas on cache, vers le haut on montre ; tout en haut, toujours visible. */
+  window.addEventListener("scroll", function () {
+    var y = window.scrollY, d = y - dernierY;
+    if (y < 80) montrer();
+    else if (d > 6) cacher();
+    else if (d < -6) montrer();
+    dernierY = y;
+  }, { passive: true });
+  /* Souris près du bord haut ou bas : on montre. */
+  window.addEventListener("mousemove", function (e) {
+    if (e.clientY > window.innerHeight - 120 || e.clientY < 80) montrer();
+  }, { passive: true });
+  /* Toucher le texte (hors bouton ou lien) : on montre. */
+  document.addEventListener("click", function (e) {
+    if (cache && !e.target.closest("button, a, input, select, textarea")) montrer();
+  });
+  document.addEventListener("focusin", function (e) { if (document.getElementById("player").contains(e.target)) montrer(); });
+  /* Le petit bouton rond lit ou met en pause sans rouvrir le lecteur. */
+  mini.addEventListener("click", function () { if (audio.paused) document.getElementById("play").click(); else audio.pause(); });
+  audio.addEventListener("play", majMini);
+  audio.addEventListener("pause", majMini);
+  audio.addEventListener("ended", function () { majMini(); montrer(); });
+  audio.addEventListener("timeupdate", function () {
+    var d = audio.duration || 1;
+    barre.style.width = Math.min(100, 100 * audio.currentTime / d) + "%";
+  });
+  majMini();
+})();
+</script>
 
 </html>
