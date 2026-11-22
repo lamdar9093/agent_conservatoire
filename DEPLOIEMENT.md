@@ -21,9 +21,9 @@ Chez le fournisseur du domaine `mthbichri.ca`, créez un enregistrement **A** : 
 
 ### 2. Le code sur le VPS
 ```bash
-sudo mkdir -p /var/www/conservatoire && sudo chown $USER /var/www/conservatoire
-git clone https://github.com/lamdar9093/agent_conservatoire.git /var/www/conservatoire
-cd /var/www/conservatoire
+sudo mkdir -p /var/www/agent_conservatoire && sudo chown $USER /var/www/agent_conservatoire
+git clone https://github.com/lamdar9093/agent_conservatoire.git /var/www/agent_conservatoire
+cd /var/www/agent_conservatoire
 ```
 Si le dépôt est privé, il faut que le VPS puisse le lire. Ajoutez une *deploy key* : générez une clé avec `ssh-keygen -t ed25519` sur le VPS, collez la clé publique dans GitHub → Settings → Deploy keys, puis clonez avec `git@github.com:lamdar9093/agent_conservatoire.git`.
 

@@ -22,7 +22,7 @@ jobs:
         port: ${{ secrets.SSH_PORT_PROD }}
         script: |
           set -e
-          cd /var/www/conservatoire
+          cd /var/www/agent_conservatoire
           git pull origin main
           # On construit d'abord : l'ancienne version reste en ligne pendant la construction.
           docker compose build
