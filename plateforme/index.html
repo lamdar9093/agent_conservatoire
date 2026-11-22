@@ -1530,7 +1530,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       "1️⃣ Choisissez votre nom dans la liste\n" +
       "2️⃣ Tapez votre numéro WhatsApp\n" +
       "3️⃣ Choisissez votre mot de passe\n\n" +
-      "Le Conservatoire valide chaque demande, puis vous vous connectez avec votre nom et votre mot de passe. Mot de passe oublié ? Même lien.\n\n" +
+      "Le Conservatoire valide chaque demande. Ensuite, pour vous connecter : *votre numéro WhatsApp* et *votre mot de passe*. Mot de passe oublié ? Même lien.\n\n" +
       "Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie";
   }
   function messageValide(m, v) {
@@ -1538,7 +1538,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return "Assalamou aleykoum " + prenom + " 🤲\n\n" +
       (v.reinitialisation ? "Votre nouveau mot de passe pour la plateforme du *Conservatoire* est validé ✅" : "Votre accès à la plateforme du *Conservatoire* est validé ✅") + "\n\n" +
       "🔗 " + v.lien + "\n" +
-      "👤 Connectez-vous avec votre nom (ou votre numéro) et le mot de passe que vous avez choisi.\n\n" +
+      (v.telephone ? "👤 Identifiant : *" + v.telephone + "* (votre numéro WhatsApp)\n" : "") +
+      "🔑 Mot de passe : celui que vous avez choisi à l’inscription\n\n" +
+      "Le lien ouvre la page de connexion avec votre numéro déjà rempli.\n\n" +
       "Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie";
   }
   function ilYa(ms) {

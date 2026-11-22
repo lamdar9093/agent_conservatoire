@@ -71,7 +71,22 @@ export function creerComptes(stock) {
       const brut = simple(identifiant);
       const chiffres = String(identifiant || "").replace(/\D/g, "");
       let membre = membres.find((m) => m.id === brut) || membres.find((m) => simple(m.data.nom) === brut);
-      if (!membre && chiffres.length >= 7) membre = membres.find((m) => m.data.telephone && String(m.data.telephone).replace(/\D/g, "").endsWith(chiffres.slice(-10)));
+      const memeTel = (t) => t && chiffres.length >= 7 && String(t).replace(/\D/g, "").slice(-10) === chiffres.slice(-10);
+      if (!membre && chiffres.length >= 7) {
+        // Numéro WhatsApp : celui de la fiche, ou celui d'une demande pas encore validée.
+        membre = membres.find((m) => memeTel(m.data.telephone));
+        if (!membre) {
+          const d = (await stock.lireCollection("_demandes")).find((x) => memeTel(x.data.telephone));
+          if (d) membre = membres.find((m) => m.id === d.id);
+        }
+      }
+      if (!membre && brut && chiffres.length < 7) {
+        // Nom incomplet (« Boucar », « dieng lamine ») : accepté s'il ne désigne qu'un seul membre.
+        const mots = brut.split("-");
+        const possibles = membres.filter((m) => { const n = simple(m.data.nom).split("-"); return m.data.statut !== "parti" && mots.every((w) => n.some((x) => x.startsWith(w))); });
+        if (possibles.length > 1) return { erreur: "ambigu" };
+        membre = possibles[0];
+      }
       if (membre && membre.data.statut === "parti") return { erreur: "inconnu" };
       const compte = membre ? await fiche(membre.id) : null;
       if (!compte) {

@@ -119,9 +119,10 @@ async function api(req, res, parts, sess) {
     const corps = await lireCorps(req);
     const r = await comptes.connecter(corps.identifiant, corps.motDePasse, await stock.lireCollection("membres"));
     if (r.erreur === "attente") return json(res, 403, { code: "attente", message: "Votre demande d’accès est bien reçue : elle attend la validation du Conservatoire. Vous serez prévenu sur WhatsApp." });
+    if (r.erreur === "ambigu") return json(res, 401, { code: "ambigu", message: "Plusieurs membres ont ce nom : tapez votre numéro WhatsApp, ou votre prénom et votre nom." });
     if (r.erreur) noterEchec(req); else echecs.delete(ipDe(req));
     if (r.erreur === "expire") return json(res, 401, { code: "expire", message: "Ce mot de passe temporaire a expiré. Demandez-en un nouveau au Conservatoire." });
-    if (r.erreur === "inconnu") return json(res, 401, { code: "identifiants", message: "Aucun accès à ce nom ou ce numéro. Pas encore inscrit ? Ouvrez le lien d’inscription partagé dans le groupe WhatsApp du Kourel." });
+    if (r.erreur === "inconnu") return json(res, 401, { code: "identifiants", message: "Aucun accès à ce numéro ou ce nom. Tapez le numéro WhatsApp donné à l’inscription. Pas encore inscrit ? Ouvrez le lien d’inscription partagé dans le groupe WhatsApp du Kourel." });
     if (r.erreur) return json(res, 401, { code: "identifiants", message: "Mot de passe incorrect." });
     return json(res, 200, { ok: true, doitChanger: r.temporaire }, { "Set-Cookie": cookieSession(req, r.jeton, DUREE_SESSION / 1000) });
   }
@@ -147,7 +148,7 @@ async function api(req, res, parts, sess) {
     if (typeof corps.motDePasse !== "string" || corps.motDePasse.length < 8) return json(res, 400, { code: "court", message: "Choisissez un mot de passe d’au moins 8 caractères." });
     await comptes.demander(m.id, String(corps.telephone).trim().slice(0, 30), corps.motDePasse);
     prevenir("_comptes");
-    return json(res, 200, { ok: true, identifiant: m.id, nom: m.data.nom });
+    return json(res, 200, { ok: true, identifiant: m.id, nom: m.data.nom, telephone: String(corps.telephone).trim() });
   }
   if (parts[0] === "moi") {
     if (!sess) return json(res, 200, { connecte: false, aucunCompte: await comptes.aucunCompte() });
@@ -203,7 +204,8 @@ async function api(req, res, parts, sess) {
       // Le numéro saisi par le membre est enregistré sur sa fiche.
       if (r.telephone) { await stock.fusionnerDoc("membres", membre, { telephone: r.telephone }); prevenir("membres"); }
       prevenir("_comptes");
-      return json(res, 200, { ok: true, telephone: r.telephone, lien: adresse(req) + "/connexion.html?u=" + encodeURIComponent(membre) });
+      // Lien de connexion avec le numéro déjà rempli.
+      return json(res, 200, { ok: true, telephone: r.telephone, lien: adresse(req) + "/connexion.html?u=" + encodeURIComponent(r.telephone || membre) });
     }
     if (action === "refuser" && req.method === "POST") { await comptes.refuser(membre); prevenir("_comptes"); return json(res, 200, { ok: true }); }
     if (action === "envoye" && req.method === "POST") { await comptes.marquerEnvoye(membre); return json(res, 200, { ok: true }); }

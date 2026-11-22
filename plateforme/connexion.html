@@ -57,6 +57,8 @@ button.principal:disabled { opacity: .6; cursor: default; }
 .succes { text-align: center; display: grid; gap: 10px; justify-items: center; }
 .succes .rond { width: 60px; height: 60px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 30px; font-weight: 700; }
 .succes .principal { width: 100%; margin-top: 8px; text-decoration: none; display: block; }
+.identite { display: grid; gap: 2px; width: 100%; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--ink-soft); font-size: 13.5px; }
+.identite b { font-size: 20px; color: var(--accent); letter-spacing: 0.02em; }
 </style>
 </head>
 <body>
@@ -65,9 +67,9 @@ button.principal:disabled { opacity: .6; cursor: default; }
 
   <section id="v-connexion" hidden>
     <h1>Connexion</h1>
-    <p class="muted">Avec votre nom (ou votre numéro) et votre mot de passe.</p>
+    <p class="muted">Avec votre numéro WhatsApp et votre mot de passe.</p>
     <form id="f-connexion" novalidate>
-      <label>Nom, identifiant ou numéro WhatsApp<input id="c-id" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label>Numéro WhatsApp (ou votre nom)<input id="c-id" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="819 555 1234" required></label>
       <label>Mot de passe<span class="champ"><input id="c-mdp" type="password" autocomplete="current-password" required><button type="button" class="voir" data-voir="c-mdp">Afficher</button></span></label>
       <div class="erreur" id="c-err" role="alert" hidden></div>
       <button class="principal" type="submit">Se connecter</button>
@@ -89,7 +91,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
         </div>
       </div>
       <p class="note" id="i-note" hidden></p>
-      <label>2. Votre numéro WhatsApp<input id="i-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="819 555 1234"></label>
+      <label>2. Votre numéro WhatsApp : il vous servira pour vous connecter<input id="i-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="819 555 1234"></label>
       <label>3. Choisissez votre mot de passe (8 caractères au moins)<span class="champ"><input id="i-mdp" type="password" autocomplete="new-password"><button type="button" class="voir" data-voir="i-mdp">Afficher</button></span></label>
       <div class="jauge" aria-hidden="true"><span id="i-jauge"></span></div>
       <label>Confirmez le mot de passe<input id="i-confirme" type="password" autocomplete="new-password"></label>
@@ -104,6 +106,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
       <span class="rond" aria-hidden="true">✓</span>
       <h1>Demande envoyée</h1>
       <p class="muted" id="m-envoyee"></p>
+      <div class="identite"><span>Pour vous connecter, tapez</span><b id="e-tel"></b><span>et le mot de passe que vous venez de choisir.</span></div>
       <a class="principal" id="vers-connexion" href="/connexion.html">Aller à la connexion</a>
     </div>
   </section>
@@ -219,8 +222,9 @@ button.principal:disabled { opacity: .6; cursor: default; }
       btn.disabled = false;
       if (!r._ok) { if (r.code === "lien") { ecrireCode(""); montrer("v-lien"); } return erreur($("i-err"), r.message || "Envoi impossible."); }
       var prenom = (r.nom || "").split(" ")[0];
-      $("m-envoyee").textContent = "Merci " + prenom + " ! Le Conservatoire va valider votre demande et vous prévenir sur WhatsApp. Vous vous connecterez ensuite avec votre nom et le mot de passe que vous venez de choisir.";
-      $("vers-connexion").href = "/connexion.html?u=" + encodeURIComponent(r.nom || r.identifiant);
+      $("m-envoyee").textContent = "Merci " + prenom + " ! Le Conservatoire va valider votre demande et vous prévenir sur WhatsApp.";
+      $("e-tel").textContent = r.telephone || tel;
+      $("vers-connexion").href = "/connexion.html?u=" + encodeURIComponent(r.telephone || tel);
       montrer("v-envoyee");
     }, function () { btn.disabled = false; erreur($("i-err"), "Le serveur ne répond pas. Réessayez."); });
   });
