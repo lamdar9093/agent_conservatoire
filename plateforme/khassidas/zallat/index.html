@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>[hidden] { display: none !important; } html, body { margin: 0; }body.calage-admin-seul [data-action="calage"], body.calage-admin-seul [data-action="publier"], body.calage-admin-seul [data-action="copier"] { display: none !important; }
+<style>[hidden] { display: none !important; } html, body { margin: 0; }#calage-status { display: none; } body.calage-ouvert #calage-status, body.en-calage #calage-status { display: block; } .calage-ouvrir { margin-top: 10px; border: 0; background: none; padding: 4px 0; font: inherit; font-size: 12.5px; color: inherit; opacity: 0.6; text-decoration: underline; cursor: pointer; } .calage-ouvrir:hover { opacity: 1; }body.calage-admin-seul [data-action="calage"], body.calage-admin-seul [data-action="publier"], body.calage-admin-seul [data-action="copier"] { display: none !important; }
 </style>
 <title>Zallat (Dhallat li-’izzati rabbin)</title>
 <link rel="icon" href="/marque/favicon.ico" sizes="any">
@@ -569,6 +569,7 @@ dialog.ms::backdrop { background: var(--scrim); }
     <li>mètre basît</li>
     <li>rime en « -arâ »</li>
     <li>audio 2 min 59</li>
+    <li>ère Serigne Cissé</li>
   </ul>
   <section class="context" aria-labelledby="ctx-title">
     <h2 class="section-title" id="ctx-title">Contexte</h2>
@@ -593,6 +594,7 @@ dialog.ms::backdrop { background: var(--scrim); }
 
 <footer class="foot wrap">
   <p>Cellule Conservatoire du Dahira Mafatihul Bichri Touba Estrie.</p>
+  <button type="button" class="calage-ouvrir" id="calage-ouvrir" hidden>Réglage du calage texte et audio</button>
 </footer>
 
 <div class="scene" id="scene-view" hidden>
@@ -930,6 +932,7 @@ dialog.ms::backdrop { background: var(--scrim); }
   }
 
   function startCalage() {
+    document.body.classList.add("en-calage");
     state.calage = { idx: 2, debut: 2, fin: SEGMENTS[SEGMENTS.length - 1].type === "vers" ? SEGMENTS.length : SEGMENTS.length - 1, temps: { ouverture: null, v1: 0 } };
     state.loop = false;
     setActive(null);
@@ -974,6 +977,7 @@ dialog.ms::backdrop { background: var(--scrim); }
   }
   function finishCalage() {
     var c = state.calage;
+    document.body.classList.remove("en-calage");
     state.calage = null;
     var prev = document.querySelectorAll(".card.is-next");
     for (var i = 0; i < prev.length; i++) prev[i].classList.remove("is-next");
@@ -1483,6 +1487,23 @@ body.chrome-cache .mini-play { opacity: 1; transform: none; pointer-events: auto
   if (!/^https?:$/.test(location.protocol)) return;
   fetch("/api/moi", { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
     if (m && m.connecte && !m.admin) document.body.classList.add("calage-admin-seul");
+    /* Un membre d'un seul kourel ne voit que les consignes de son kourel (pas de bouton pour l'autre).
+       Membres des deux kourels, Conservatoire et admin gardent le choix. */
+    if (m && m.connecte && m.role === "membre" && m.k1 !== m.k2) {
+      var bk = document.getElementById(m.k1 ? "btn-k1" : "btn-k2");
+      if (bk.getAttribute("aria-pressed") !== "true") bk.click();
+      bk.parentNode.hidden = true;
+    }
+    /* Le réglage du calage est un outil de l'admin : caché pour tous, l'admin l'ouvre depuis le bas de la page. */
+    if (m && m.connecte && m.admin) {
+      var bo = document.getElementById("calage-ouvrir");
+      bo.hidden = false;
+      bo.addEventListener("click", function () {
+        var ouvert = document.body.classList.toggle("calage-ouvert");
+        bo.textContent = ouvert ? "Masquer le réglage du calage" : "Réglage du calage texte et audio";
+        if (ouvert) document.getElementById("calage-status").scrollIntoView({ block: "center" });
+      });
+    }
   }, function () { /* hors plateforme en ligne */ });
 })();
 </script>

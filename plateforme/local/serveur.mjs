@@ -238,7 +238,7 @@ async function api(req, res, parts, sess) {
   if (parts[0] === "moi") {
     if (!sess) return json(res, 200, { connecte: false, aucunCompte: await comptes.aucunCompte() });
     const m = await stock.lireDoc("membres", sess.membre), c = (await stock.lireDoc("_comptes", sess.membre)) || {};
-    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire, tourVu: !!c.tourVu });
+    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire, tourVu: !!c.tourVu, k1: !!(m && m.k1), k2: !!(m && m.k2) });
   }
   if (parts[0] === "deconnexion" && req.method === "POST") {
     if (sess) await comptes.deconnecter(sess.id);

@@ -1973,7 +1973,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       '<a class="khc-lien" href="' + esc(href || "#khassidas") + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ' aria-label="Ouvrir ' + esc(k.titre) + '"></a>' +
       (k.arabe ? '<span class="khc-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
       '<b class="khc-titre">' + esc(k.titre) + "</b>" +
-      '<span class="khc-meta">' + (k.vers ? k.vers + " beuyites" : "") + (interne ? (k.vers ? " · " : "") + "texte et audio" : "") + "</span>" +
+      '<span class="khc-meta">' + [k.vers ? k.vers + " beuyites" : "", k.ere ? "ère " + esc(k.ere) : (interne ? "texte et audio" : "")].filter(Boolean).join(" · ") + "</span>" +
       '<span class="khc-pied">' +
         (k.enRepetition ? '<span class="kh-rep-pill">En répétition</span>' : '<span class="khc-go">' + (href ? "Ouvrir →" : "Page à venir") + "</span>") +
         (peutSuivi ? '<button type="button" class="khc-rep" data-kh-rep="' + esc(k.id) + '" aria-pressed="' + !!k.enRepetition + '" title="' + (k.enRepetition ? "Retirer de la répétition" : "Marquer en cours de répétition") + '">' +
@@ -2030,10 +2030,15 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   /* ---------- Khassidas (réglages) ---------- */
   function vueKhassidas(ajouter) {
     var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
-    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Les khassidas du répertoire. Ils servent à préciser le Tari de chaque séance. Un membre ne voit que les khassidas de son kourel, plus ceux prévus pour une répétition générale à venir et ceux de ses Taris.</p>' +
+    /* Ères proposées : celles déjà utilisées, plus celles annoncées par le Conservatoire. */
+    var eres = ["Serigne Cissé", "Serigne Mayib", "Serigne Massamba", "Baye Moustapha Diop"];
+    kl.forEach(function (k) { if (k.ere && eres.indexOf(k.ere) < 0) eres.push(k.ere); });
+    var html = '<datalist id="eres-connues">' + eres.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("") + "</datalist>" +
+      '<section class="panel"><h2>Khassidas</h2><p class="muted">Les khassidas du répertoire. Ils servent à préciser le Tari de chaque séance. Un membre ne voit que les khassidas de son kourel, plus ceux prévus pour une répétition générale à venir et ceux de ses Taris.</p>' +
       '<div class="list" style="margin-top:12px">' + (kl.length ? kl.map(function (k) {
         return '<div class="item">' + (k.arabe ? '<span class="kh-ar" lang="ar">' + esc(k.arabe) + "</span>" : "") +
           '<div class="ligne"><span><b>' + esc(k.titre) + "</b>" + (k.vers ? " · " + k.vers + " beuyites" : "") + "</span>" +
+          (peutModifier ? '<label class="field kh-kourel-choix">Ère<input type="text" list="eres-connues" data-kh-ere="' + esc(k.id) + '" value="' + esc(k.ere || "") + '" placeholder="Serigne Cissé" style="width:170px"></label>' : "") +
           (peutModifier ? '<label class="field kh-kourel-choix">Kourel<select data-kh-kourel="' + esc(k.id) + '">' +
             [["", "Tous les membres"], ["k1", "Kourel 1"], ["k2", "Kourel 2"], ["k1k2", "Kourels 1 et 2"]].map(function (o) { return '<option value="' + o[0] + '"' + ((k.kourel || "") === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
             "</select></label>" : "") +
@@ -2044,6 +2049,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         '<label class="field" style="flex:1 1 200px">Titre<input type="text" id="k-titre" required placeholder="Mawahibu Nafih"></label>' +
         '<label class="field" style="flex:1 1 160px">Titre en arabe (facultatif)<input type="text" id="k-ar" dir="rtl" lang="ar"></label>' +
         '<label class="field">Nombre de beuyites<input type="number" id="k-vers" min="1" style="width:100px"></label>' +
+        '<label class="field">Ère<input type="text" id="k-ere" list="eres-connues" placeholder="Serigne Cissé" style="width:170px"></label>' +
         '<label class="field">Kourel<select id="k-kourel"><option value="">Tous les membres</option><option value="k1">Kourel 1</option><option value="k2">Kourel 2</option><option value="k1k2">Kourels 1 et 2</option></select></label>' +
         '<label class="field" style="flex:1 1 220px">Lien de la page (facultatif)<input type="url" id="k-lien" placeholder="https://claude.ai/artifact/…"></label>' +
         '<button class="btn primary" type="submit">Ajouter le khassida</button></form>';
@@ -2060,7 +2066,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("khassidas/" + id).set({
         titre: titre, arabe: document.getElementById("k-ar").value.trim(),
         vers: parseInt(document.getElementById("k-vers").value, 10) || null, lien: document.getElementById("k-lien").value.trim(),
-        kourel: document.getElementById("k-kourel").value
+        kourel: document.getElementById("k-kourel").value, ere: document.getElementById("k-ere").value.trim()
       }).then(function () { toast(titre + " ajouté à la liste."); }, echec);
     });
   }
@@ -2512,6 +2518,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       else if (f === "tout") enregistrerRappel(rappelOuvert, { tout: t.checked });
       else if (f === "taris") enregistrerRappel(rappelOuvert, { taris: t.checked });
       else { v = {}; v[f] = parseInt(t.value, 10) || 1; enregistrerRappel(rappelOuvert, v); }
+      return;
+    }
+    if (t.dataset && t.dataset.khEre !== undefined && peutModifier) {
+      db.doc("khassidas/" + t.dataset.khEre).update({ ere: t.value.trim() }).then(function () { toast(t.value.trim() ? "Ère enregistrée : " + t.value.trim() + "." : "Ère retirée."); }, echec);
       return;
     }
     if (t.dataset && t.dataset.khKourel && peutModifier) {
