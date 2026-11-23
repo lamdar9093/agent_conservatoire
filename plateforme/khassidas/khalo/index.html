@@ -575,8 +575,8 @@ dialog.ms::backdrop { background: var(--scrim); }
   </section>
   <section class="controls" aria-label="Réglages d’affichage">
     <div class="seg-group" role="group" aria-label="Consignes du Kourel">
-      <button type="button" id="btn-k1" aria-pressed="false">Kourel 1 · avancés</button>
-      <button type="button" id="btn-k2" aria-pressed="true">Kourel 2 · débutants</button>
+      <button type="button" id="btn-k1" aria-pressed="false">Kourel 1</button>
+      <button type="button" id="btn-k2" aria-pressed="true">Kourel 2</button>
     </div>
     <div class="toggles" role="group" aria-label="Afficher">
       <button type="button" class="toggle" id="t-ar" aria-pressed="true">Arabe</button>
@@ -730,13 +730,12 @@ dialog.ms::backdrop { background: var(--scrim); }
   var PAGES = { 1: "Bismillah et beuyite 1 à 4", 2: "Beuyite 5 à 9", 3: "Beuyite 10 et clôture" };
   var GROUPES = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]];
   var CONSIGNES = {
-    k1: { titre: "Consignes · Kourel 1 (avancés)", items: [
+    k1: { titre: "Consignes · Kourel 1", items: [
       "Mètre basît sur les 10 beuyites : gardez la même carrure d’un beuyite à l’autre.",
       "Rime en « -îni » sur tout le poème : posez le « î » long de la fin de chaque beuyite sans le couper.",
-      "Enchaînez les deux hémistiches d’un beuyite d’un seul souffle ; respirez entre les beuyites, en décalé si besoin.",
-      "Dans l’enregistrement, Zallat suit directement : sa page est à part."
+      "Enchaînez les deux hémistiches d’un beuyite d’un seul souffle ; respirez entre les beuyites, en décalé si besoin."
     ] },
-    k2: { titre: "Consignes · Kourel 2 (débutants et intermédiaires)", items: [
+    k2: { titre: "Consignes · Kourel 2", items: [
       "Écoutez d’abord à vitesse 0,75× en suivant la phonétique.",
       "Apprenez beuyite par beuyite avec la boucle, puis enchaînez deux beuyites.",
       "Lettres à soigner dans ce khassida : " + AR("ع ح خ ض ط ق ث ذ") + ". Le « î » long de la rime revient à chaque beuyite : tenez-le."

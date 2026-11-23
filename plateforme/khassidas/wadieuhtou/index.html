@@ -574,8 +574,8 @@ dialog.ms::backdrop { background: var(--scrim); }
   </section>
   <section class="controls" aria-label="Réglages d’affichage">
     <div class="seg-group" role="group" aria-label="Consignes du Kourel">
-      <button type="button" id="btn-k1" aria-pressed="false">Kourel 1 · avancés</button>
-      <button type="button" id="btn-k2" aria-pressed="true">Kourel 2 · débutants</button>
+      <button type="button" id="btn-k1" aria-pressed="false">Kourel 1</button>
+      <button type="button" id="btn-k2" aria-pressed="true">Kourel 2</button>
     </div>
     <div class="toggles" role="group" aria-label="Afficher">
       <button type="button" class="toggle" id="t-ar" aria-pressed="true">Arabe</button>
@@ -775,13 +775,13 @@ dialog.ms::backdrop { background: var(--scrim); }
   var PAGES = { 2: "Prière d’ouverture", 3: "Beuyite 1 à 5", 4: "Beuyite 6 à 10", 5: "Beuyite 11 à 15", 6: "Beuyite 16 et clôture" };
   var GROUPES = [[1, 2, 3, 4, 5], [6, 7, 8, 9], [10, 11, 12], [13, 14, 15, 16]];
   var CONSIGNES = {
-    k1: { titre: "Consignes · Kourel 1 (avancés)", items: [
+    k1: { titre: "Consignes · Kourel 1", items: [
       "Mètre basît sur les 16 beuyites : gardez la même carrure d’un beuyite à l’autre.",
       "Rime en « -ni » sur tout le poème : posez la voyelle finale de chaque beuyite sans la couper.",
       "Enchaînez les deux hémistiches d’un beuyite d’un seul souffle ; respirez entre les beuyites, en décalé si besoin.",
       "Chaque beuyite porte une lettre du verset " + AR("﴿وَإِنَّكَ لَعَلَى خُلُقٍ عَظِيمٍ﴾") + " : la frise en haut de page vous situe."
     ] },
-    k2: { titre: "Consignes · Kourel 2 (débutants et intermédiaires)", items: [
+    k2: { titre: "Consignes · Kourel 2", items: [
       "Écoutez d’abord à vitesse 0,75× en suivant la phonétique.",
       "Apprenez beuyite par beuyite avec la boucle, puis enchaînez deux beuyites.",
       "Lettres à soigner dans ce khassida : " + AR("ع ح خ ص ض ط ظ ق") + ". La note « Prononciation » de chaque beuyite vous guide."
