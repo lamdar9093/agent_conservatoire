@@ -293,6 +293,57 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
 .ev-preste { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-weight: 600; font-size: 14px; text-align: left; cursor: pointer; }
 .ev-preste:hover { border-color: var(--accent); }
 .ev-preste .dz-go { margin-left: auto; }
+/* Programme : deux colonnes (répétitions | dahira) ; sur téléphone, un sélecteur */
+:root { --or: #9a6b12; --or-soft: #f6ecd2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --or: #f5d787; --or-soft: #2f2814; } }
+:root[data-theme="dark"] { --or: #f5d787; --or-soft: #2f2814; }
+@media (min-width: 960px) { body.vue-programme main.wrap, body.vue-programme .top .wrap { max-width: 1180px; } }
+.prg-intro { padding: 4px 2px 0; }
+.prg-intro h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.015em; }
+.prg-intro p { margin: 4px 0 0; color: var(--ink-soft); font-size: 14.5px; max-width: 70ch; }
+.prg-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 8px; font-size: 14.5px; }
+.prg-seg .ico { width: 18px; height: 18px; }
+.prg-seg .pastille { margin-left: 2px; }
+.prg-cols { display: grid; gap: 16px; align-items: start; }
+.prg-col { display: grid; gap: 12px; min-width: 0; }
+.prg-col-tete { display: flex; align-items: center; gap: 12px; padding: 2px 2px 4px; }
+.prg-col-tete h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.prg-col-tete small { display: block; color: var(--ink-soft); font-size: 12.5px; }
+.prg-col-ico { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: var(--accent-soft); color: var(--accent); flex: none; }
+.prg-col-ico .ico { width: 22px; height: 22px; }
+.prg-dz .prg-col-ico { background: var(--or-soft); color: var(--or); }
+.prg-vide-col { padding: 22px 16px; border: 1px dashed var(--rule); border-radius: 12px; color: var(--ink-soft); font-size: 14px; text-align: center; }
+@media (max-width: 959px) {
+  .prg-cols[data-col="rep"] .prg-dz, .prg-cols[data-col="dz"] .prg-rep { display: none; }
+  .prg-col-tete { display: none; }
+}
+@media (min-width: 960px) {
+  .prg-seg { display: none !important; }
+  .prg-cols { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .prg-dz { position: relative; }
+  .prg-dz::before { content: ""; position: absolute; left: -12px; top: 6px; bottom: 6px; border-left: 1px solid var(--rule); }
+}
+/* Cartes */
+.ev { position: relative; overflow: hidden; }
+.ev::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+.ev-k2::before { background: linear-gradient(var(--accent), var(--accent)) left / 4px 100% no-repeat, var(--accent-soft); opacity: 0.55; }
+.ev-rg::before { background: linear-gradient(180deg, var(--accent), var(--or)); }
+.ev-dz::before { background: var(--or); }
+.ev-annulee::before { background: var(--rule); }
+.ev-k2 .dz-date { background: transparent; box-shadow: inset 0 0 0 2px var(--accent-soft); }
+.ev-rg .dz-date { background: linear-gradient(160deg, var(--accent-soft), var(--or-soft)); }
+.ev-dz .dz-date { background: var(--or-soft); color: var(--or); }
+.ev-lieu { font-size: 12.5px; color: var(--ink-soft); }
+.prog-dw { font-size: 12.5px; color: var(--ink-soft); }
+.ev-rep .prog { padding-top: 10px; }
+.passage { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.passage .prog { border-top: 0; padding-top: 0; }
+.passage-tete { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+.passage-tete b { font-size: 15px; font-weight: 600; }
+.passage-num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--or-soft); color: var(--or); font-weight: 700; font-size: 13px; flex: none; }
+.passage-ordre { font-size: 12px; font-weight: 600; color: var(--or); text-transform: uppercase; letter-spacing: 0.05em; }
+.passage-dw { margin-left: auto; font-size: 12.5px; color: var(--ink-soft); }
+.ev-dz .ev-preste:hover { border-color: var(--or); }
 dialog.refus { width: min(92vw, 400px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 dialog.refus::backdrop { background: rgba(10, 20, 18, 0.45); }
 dialog.refus form { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 24px 20px 20px; }
@@ -1024,12 +1075,28 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   function seanceCourte(s) { return (TYPES[s.type] || "") + " du " + asDate(s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
   function vueDahiras() {
     if (dahiraOuvert) return vueDahira(dahiraOuvert);
-    /* Onglet Programme : les prochaines répétitions et le dahira du samedi, avec ce que chaque kourel chantera. */
-    var ev = evenementsAVenir();
-    var html = datalistEres() + '<section class="panel"><h2>Programme</h2><p class="muted">Ce que ' + (peutSuivi ? "chaque kourel chantera" : "votre kourel chantera") +
-      " aux prochaines répétitions et au dahira du samedi, avec l’ère de chaque khassida." + (peutSuivi ? " Le dieuwrigne de chaque kourel décide ; les autres membres du Conservatoire peuvent proposer." : "") + "</p></section>";
-    ev.forEach(function (x) { html += x.sorte === "rep" ? carteRepetition(x) : carteDahira(x); });
-    if (!ev.length) html += '<div class="empty">Rien de prévu dans les prochains jours.</div>';
+    /* Onglet Programme : deux colonnes, les répétitions d'un côté et le dahira de l'autre
+       (sur téléphone, un sélecteur Répétitions / Dahira affiche l'une ou l'autre). */
+    var ev = evenementsAVenir(), reps = ev.filter(function (x) { return x.sorte === "rep"; }), dzs = ev.filter(function (x) { return x.sorte === "dz"; });
+    var props = function (l) { return peutSuivi ? l.reduce(function (n, x) {
+      var cles = x.sorte === "rep" ? [x.cle] : x.groupes.map(function (g) { return cleDahira(x.date, g.k); });
+      return n + cles.filter(decideurCle).reduce(function (m, c) { return m + itemsCle(c, "propose").length; }, 0);
+    }, 0) : 0; };
+    var pRep = props(reps), pDz = props(dzs);
+    var colonne = function (cle, ico, titre, sous, cartes, vide) {
+      return '<section class="prg-col prg-' + cle + '" aria-label="' + titre + '"><header class="prg-col-tete"><span class="prg-col-ico">' + ico + "</span>" +
+        "<div><h2>" + titre + "</h2><small>" + sous + "</small></div></header>" + (cartes || '<div class="prg-vide-col">' + vide + "</div>") + "</section>";
+    };
+    var html = datalistEres() +
+      '<section class="prg-intro"><h1>Programme</h1><p>' + (peutSuivi ? "Ce que chaque kourel chantera" : "Ce que votre kourel chantera") + ", avec l’ère de chaque khassida." +
+      (peutSuivi ? " Le dieuwrigne de chaque kourel décide ; les autres membres du Conservatoire proposent." : "") + "</p></section>" +
+      '<span class="seg seg-full prg-seg" role="group" aria-label="Afficher">' +
+        '<button type="button" data-prg-col="rep" aria-pressed="' + (prgCol === "rep") + '">' + '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>' + "Répétitions" + (pRep ? ' <span class="pastille">' + pRep + "</span>" : "") + "</button>" +
+        '<button type="button" data-prg-col="dz" aria-pressed="' + (prgCol === "dz") + '">' + '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.8-3.3 3.2-5.2 6-5.2s5.2 1.9 6 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M16.6 14.3c2.3.3 3.9 2 4.4 4.7"/></svg>' + "Dahira" + (pDz ? ' <span class="pastille">' + pDz + "</span>" : "") + "</button></span>" +
+      '<div class="prg-cols" data-col="' + prgCol + '">' +
+        colonne("rep", '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>', "Répétitions", "Jeudi : Kourel 1 · vendredi : Kourel 2 · dernier dimanche : générale", reps.map(carteRepetition).join(""), "Aucune répétition dans les prochains jours.") +
+        colonne("dz", '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.8-3.3 3.2-5.2 6-5.2s5.2 1.9 6 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M16.6 14.3c2.3.3 3.9 2 4.4 4.7"/></svg>', "Dahira", "Chaque samedi", dzs.map(carteDahira).join(""), "Aucun dahira dans les prochains jours.") +
+      "</div>";
     app.innerHTML = html;
   }
   function vueDahira(dz) {
@@ -2183,6 +2250,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var actif = vue === "khassida" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi" : vue;
     document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     document.body.classList.toggle("lecture", vue === "khassida");
+    document.body.classList.toggle("vue-programme", vue === "dahira" && !dahiraOuvert);
     if (vue === "khassida") return vueLecture();
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
     else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
@@ -2651,6 +2719,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
      chants/{clé} (voir serveur.mjs) : khassidas retenus (et propositions, visibles du Conservatoire seulement).
      Le dieuwrigne de chaque kourel (reglages/kourels.dieuwrigne) et l'admin décident ; les autres membres du Conservatoire proposent. */
   var chants = {}, reglagesKourels = {}, programmeApi = null, progForm = null;
+  var prgCol = (function () { try { return localStorage.getItem("prg-col") === "dz" ? "dz" : "rep"; } catch (e) { return "rep"; } })();
   function kourelsDe(k) { return k === "k1" ? ["k1"] : k === "k2" ? ["k2"] : ["k1", "k2"]; }
   function dieuwrigneDe(k) { var id = (reglagesKourels.dieuwrigne || {})[k]; return id && membres[id] ? membres[id] : null; }
   function nomsDieuwrignes(k) { return kourelsDe(k).map(dieuwrigneDe).filter(Boolean).map(function (m) { return m.nom; }); }
@@ -2697,10 +2766,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       (dec ? "" : '<p class="msg-note">Votre proposition sera visible par le Conservatoire. Le dieuwrigne du kourel décide de la retenir.</p>') +
       '<div class="row"><button type="button" class="btn primary small" data-prog-valider>' + (dec ? "Ajouter au programme" : "Proposer") + '</button><button type="button" class="btn ghost small" data-prog-annuler>Annuler</button></div></div>';
   }
-  function blocProgramme(cle, titre, k) {
-    var ret = itemsCle(cle, "retenu"), props = peutSuivi ? itemsCle(cle, "propose") : [], dec = peutSuivi && decideurCle(cle), dw = nomsDieuwrignes(k);
-    var h = '<div class="prog">' + (titre || dw.length ? '<div class="prog-tete">' + (titre ? "<b>" + esc(titre) + "</b>" : "<span></span>") +
-      (dw.length ? '<span class="muted">Dieuwrigne' + (dw.length > 1 ? "s" : "") + " : " + esc(dw.join(" et ")) + "</span>" : "") + "</div>" : "");
+  function blocProgramme(cle, k, opts) {
+    var ret = itemsCle(cle, "retenu"), props = peutSuivi ? itemsCle(cle, "propose") : [], dec = peutSuivi && decideurCle(cle), dw = (opts && opts.dieuwrigne) || [];
+    var h = '<div class="prog">' + (dw.length ? '<span class="prog-dw">Dieuwrigne' + (dw.length > 1 ? "s" : "") + " : " + esc(dw.join(" et ")) + "</span>" : "");
     h += ret.length ? '<ol class="prog-liste">' + ret.map(function (x, i) {
         var kh = x.khassida && khassidas[x.khassida], href = kh ? pageKhassida(kh) : "", ref = esc(cle) + "|" + esc(x.id);
         return '<li><span class="prog-num" aria-hidden="true">' + (i + 1) + '</span><span class="prog-kh"><b>' + esc(titreItem(x)) + "</b>" + (x.ere ? "<small>ère " + esc(x.ere) + "</small>" : "") + "</span>" +
@@ -2726,24 +2794,30 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return h + "</div>";
   }
   function carteRepetition(x) {
-    var p = x.p;
-    var h = '<section class="panel ev' + (p.annulee ? " ev-annulee" : "") + '"><div class="ev-tete">' + dateBloc(x.date) +
-      '<div class="ev-titre"><b>' + (x.k === "rg" ? "Répétition générale" : "Répétition · " + esc(TYPES[x.k] || "")) + "</b>" +
-      '<span class="muted">' + esc(jourLong(x.date).replace(/ \d{4}$/, "")) + (p.horaire ? " · " + esc(p.horaire) : "") + (p.lieu && !p.annulee ? " · " + esc(p.lieu) : "") + "</span></div>" +
+    var p = x.p, dw = nomsDieuwrignes(x.k);
+    var h = '<article class="panel ev ev-rep ev-' + x.k + (p.annulee ? " ev-annulee" : "") + '"><div class="ev-tete">' + dateBloc(x.date) +
+      '<div class="ev-titre"><b>' + (x.k === "rg" ? "Répétition générale" : esc(TYPES[x.k] || "")) + "</b>" +
+      '<span class="muted">' + esc(jourLong(x.date).replace(/ \d{4}$/, "")) + (p.horaire ? " · " + esc(p.horaire) : "") + "</span>" +
+      (p.lieu && !p.annulee ? '<span class="ev-lieu">📍 ' + esc(p.lieu) + "</span>" : "") + "</div>" +
       (p.exceptionnelle && !p.annulee ? '<span class="pill e">Date exceptionnelle</span>' : "") + "</div>";
-    if (p.annulee) return h + '<p class="ev-note">' + (p.deplaceeVers ? "Déplacée au " + esc(jourCourt(p.deplaceeVers.slice(0, 10))) + "." : "Annulée" + (p.motifAnnulation ? " : " + esc(p.motifAnnulation) : "") + ".") + "</p></section>";
-    return h + blocProgramme(x.cle, "", x.k) + "</section>";
+    if (p.annulee) return h + '<p class="ev-note">' + (p.deplaceeVers ? "Déplacée au " + esc(jourCourt(p.deplaceeVers.slice(0, 10))) + "." : "Annulée" + (p.motifAnnulation ? " : " + esc(p.motifAnnulation) : "") + ".") + "</p></article>";
+    return h + blocProgramme(x.cle, x.k, { dieuwrigne: dw }) + "</article>";
   }
   function carteDahira(x) {
     var e = x.e, dz = x.date;
-    var h = '<section class="panel ev ev-dahira"><div class="ev-tete">' + dateBloc(dz) +
-      '<div class="ev-titre"><b>Dahira du ' + esc(samediLong(dz)) + '</b><span class="muted">' + esc(MODE_PHRASE[e.mode]) + "</span></div></div>";
+    var h = '<article class="panel ev ev-dz"><div class="ev-tete">' + dateBloc(dz) +
+      '<div class="ev-titre"><b>' + esc(samediLong(dz).replace(/^./, function (c) { return c.toUpperCase(); })) + '</b><span class="muted">' + esc(MODE_PHRASE[e.mode]) + "</span></div></div>";
     if (!x.groupes.length) h += '<p class="ev-note">Votre kourel ne preste pas ce samedi.</p>';
-    x.groupes.forEach(function (g) { h += blocProgramme(cleDahira(dz, g.k), (g.ordre ? g.ordre + " · " : "") + g.label, g.k === "tout" ? "general" : g.k); });
+    x.groupes.forEach(function (g, i) {
+      h += '<div class="passage"><div class="passage-tete"><span class="passage-num" aria-hidden="true">' + (x.groupes.length > 1 ? (g.ordre ? g.ordre.charAt(0) : i + 1) : "♪") + "</span>" +
+        "<b>" + esc(g.label) + "</b>" +
+        (function (dw) { return dw.length ? '<span class="passage-dw">Dieuwrigne' + (dw.length > 1 ? "s" : "") + " : " + esc(dw.join(" et ")) + "</span>" : ""; })(nomsDieuwrignes(g.k === "tout" ? "general" : g.k)) + "</div>" +
+        blocProgramme(cleDahira(dz, g.k), g.k === "tout" ? "general" : g.k, {}) + "</div>";
+    });
     h += '<button type="button" class="ev-preste" data-dahira="' + dz + '"><span>Qui preste ?</span>' +
       (peutSuivi ? e.groupes.map(function (g) { return '<span class="pill p">' + g.court + " : " + g.ok.length + " / " + g.total + "</span>"; }).join("") : "") +
       (e.tariBloques.length ? '<span class="pill r">' + e.tariBloques.length + " Tari en attente</span>" : "") + '<span class="dz-go" aria-hidden="true">›</span></button>';
-    return h + "</section>";
+    return h + "</article>";
   }
   function majPastilleProg() {
     var n = 0, t = today();
@@ -2760,6 +2834,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   }
   function clicProgramme(b) {
     var d = b.dataset, ref;
+    if (d.prgCol) { prgCol = d.prgCol; try { localStorage.setItem("prg-col", prgCol); } catch (e) { /* stockage indisponible */ } afficher(); return true; }
     if (d.progAjouter) { progForm = { cle: d.progAjouter, khassida: "", titre: "", ere: "" }; afficher(); var s = document.querySelector('[data-pf="khassida"]'); if (s) s.focus(); return true; }
     if (d.progAnnuler !== undefined) { progForm = null; afficher(); return true; }
     if (d.progValider !== undefined && progForm && programmeApi) {
