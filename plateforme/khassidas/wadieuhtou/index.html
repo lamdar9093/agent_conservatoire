@@ -404,6 +404,7 @@ body.hide-ar .ar, body.hide-ph .ph, body.hide-fr .fr { display: none; }
 .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; }
 .progress span { display: block; width: 0; height: 100%; background: var(--accent); }
 .ar p, .ph p, .scene-ar p, .scene-ph p { transition: opacity 0.3s; }
+body.ecoute .card:not(.is-active) .ar p, body.ecoute .card:not(.is-active) .ph p { opacity: 0.38; }
 .card.is-active.h1 .ar p:nth-child(2), .card.is-active.h1 .ph p:nth-child(2),
 .card.is-active.h2 .ar p:nth-child(1), .card.is-active.h2 .ph p:nth-child(1),
 #scene-body.h1 .scene-ar p:nth-child(2), #scene-body.h1 .scene-ph p:nth-child(2),
@@ -1167,6 +1168,8 @@ dialog.ms::backdrop { background: var(--scrim); }
   function setActive(id) {
     var prev = activeId;
     activeId = id;
+    /* Pendant l'écoute, seul le beuyite chanté reste en pleine lumière ; les autres s'estompent. */
+    document.body.classList.toggle("ecoute", !!id);
     if (prev) {
       var pc = document.getElementById(prev);
       if (pc) { pc.classList.remove("is-active", "h1", "h2"); pc.querySelector(".progress span").style.width = "0"; }
@@ -1386,7 +1389,14 @@ dialog.ms::backdrop { background: var(--scrim); }
   window.addEventListener("wheel", function () { lastUserScroll = Date.now(); }, { passive: true });
   window.addEventListener("touchmove", function () { lastUserScroll = Date.now(); }, { passive: true });
 
-  audio.addEventListener("play", function () { setPlayIcon(true); boucle(); });
+  audio.addEventListener("play", function () {
+    setPlayIcon(true); boucle();
+    /* Au lancement du son, la page revient au beuyite en cours (ou au début), même si l'on était ailleurs. */
+    if (state.calage || state.scene) return;
+    lastUserScroll = 0;
+    var cur = segmentAt(audio.currentTime), cible = document.getElementById(cur ? cur.id : "v1") || document.querySelector(".card");
+    if (cible) cible.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+  });
   audio.addEventListener("pause", function () { setPlayIcon(false); tick(); });
   audio.addEventListener("ended", function () { setPlayIcon(false); tick(); });
   audio.addEventListener("seeked", tick);
