@@ -239,6 +239,17 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
 .msg-form { display: grid; gap: 10px; margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--paper); border: 1px solid var(--rule); }
 .msg-form textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; resize: vertical; }
 .msg-form .lbl { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+.msg-switch { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.msg-switch:hover { border-color: var(--accent); }
+.msg-switch-txt { flex: 1; font-weight: 600; font-size: 14.5px; }
+.msg-switch-etat { font-size: 13px; color: var(--ink-soft); min-width: 2.2em; text-align: right; }
+.msg-switch-piste { position: relative; flex: none; width: 44px; height: 26px; border-radius: 999px; background: var(--rule); transition: background 0.2s ease; }
+.msg-switch-piste span { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s ease; }
+.msg-switch[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.msg-switch[aria-checked="true"] .msg-switch-piste { background: var(--accent); }
+.msg-switch[aria-checked="true"] .msg-switch-piste span { transform: translateX(18px); }
+.msg-switch[aria-checked="true"] .msg-switch-etat { color: var(--accent); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .msg-switch-piste, .msg-switch-piste span { transition: none; } }
 .msg-note { font-size: 12.5px; color: var(--ink-soft); margin: 0; }
 .msg-liste { display: grid; gap: 10px; margin-top: 12px; }
 .msg { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
@@ -2513,12 +2524,15 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   var TYPES_IDEE = { idee: "💡 Idée", suggestion: "🧭 Suggestion", positif: "👍 Point positif", ameliorer: "🛠️ À améliorer" };
   function chargerMessages() {
     if (!messagesApi) return;
-    Promise.all([messagesApi.liste("idees").catch(function () { return null; }), messagesApi.liste("support").catch(function () { return null; })]).then(function (r) {
+    Promise.all([messagesApi.liste("idees", mesAnonymes()).catch(function () { return null; }), messagesApi.liste("support").catch(function () { return null; })]).then(function (r) {
       msgIdees = r[0]; msgSupport = r[1]; majPastilleMsg();
       if (vue === "moi" || vue === "messages") afficher();
     });
   }
   window.addEventListener("conservatoire-messages", chargerMessages);
+  /* Idées anonymes : l'auteur n'est enregistré nulle part ; ses identifiants restent sur son appareil pour retrouver les réponses. */
+  function mesAnonymes() { try { return JSON.parse(localStorage.getItem("idees-anonymes") || "[]"); } catch (e) { return []; } }
+  function garderAnonyme(id) { try { var l = mesAnonymes(); l.unshift(id); localStorage.setItem("idees-anonymes", JSON.stringify(l.slice(0, 30))); } catch (e) { /* stockage indisponible */ } }
   function nbNouveaux() {
     var n = 0;
     if (msgIdees && msgIdees.lecteur) n += msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length;
@@ -2547,12 +2561,13 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       h += '<div class="msg-form"><span class="lbl">C’est plutôt…</span><span class="seg seg-full" role="group" aria-label="Type de message">' +
         Object.keys(TYPES_IDEE).map(function (k) { return '<button type="button" data-idee-type="' + k + '" aria-pressed="' + ((msgBrouillon.type || "idee") === k) + '">' + TYPES_IDEE[k] + "</button>"; }).join("") + "</span>" +
         '<textarea id="msg-texte" placeholder="Votre idée ou votre remarque…" maxlength="3000">' + esc(msgBrouillon.texte || "") + "</textarea>" +
-        '<span class="lbl">Signer ?</span><span class="seg seg-full" role="group" aria-label="Signer le message">' +
-          '<button type="button" data-idee-anon="0" aria-pressed="' + !msgBrouillon.anonyme + '">Avec mon nom</button>' +
-          '<button type="button" data-idee-anon="1" aria-pressed="' + !!msgBrouillon.anonyme + '">Anonyme</button></span>' +
+        /* Une seule question : sans réponse, le message est signé. */
+        '<button type="button" class="msg-switch" role="switch" aria-checked="' + !!msgBrouillon.anonyme + '" data-idee-anon="' + (msgBrouillon.anonyme ? "0" : "1") + '">' +
+          '<span class="msg-switch-txt">Souhaitez-vous rester anonyme ?</span><span class="msg-switch-piste" aria-hidden="true"><span></span></span>' +
+          '<span class="msg-switch-etat">' + (msgBrouillon.anonyme ? "Oui" : "Non") + "</span></button>" +
         '<p class="msg-note">' + (msgBrouillon.anonyme
-          ? "🔒 Anonyme : le Conservatoire lira votre message sans voir votre nom. Seul le dieuwrigne (administrateur) peut savoir qui l’a écrit."
-          : "Le Conservatoire verra votre nom avec votre message.") + "</p>" +
+          ? "🔒 Anonyme : votre nom n’est enregistré nulle part. Personne, ni le Conservatoire ni le dieuwrigne, ne peut savoir qui l’a écrit. Vous verrez la réponse seulement sur cet appareil."
+          : "Votre nom accompagnera votre message.") + "</p>" +
         '<div class="row"><button type="button" class="btn primary" data-msg-envoyer="idees">Envoyer au Conservatoire</button><button type="button" class="btn ghost" data-msg-ouvrir="">Annuler</button></div></div>';
     } else if (msgOuvert === "support") {
       h += '<div class="msg-form"><span class="lbl">Décrivez le souci</span>' +
@@ -2594,11 +2609,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var ni = msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length, ns = support ? msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
     var html = '<div><a class="btn ghost" href="#moi">← Mon espace</a></div><section class="panel"><h2>' + (msgOnglet === "support" ? "Support" : "Boîte à idées") + "</h2>" +
       '<p class="muted">' + (msgOnglet === "support" ? "Les soucis signalés par les membres. Répondez-leur ici : ils voient votre réponse dans Mon espace."
-        : "Les idées et remarques des membres sur le kourel. Les messages anonymes ne montrent pas le nom" + (peutModifier ? " au Conservatoire (vous seul le voyez)." : " de leur auteur.") + " Votre réponse est visible par l’auteur.") + "</p>" +
+        : "Les idées et remarques des membres sur le kourel. Pour un message anonyme, le nom de l’auteur n’est enregistré nulle part : personne ne peut le connaître. Votre réponse est visible par l’auteur.") + "</p>" +
       (support ? '<span class="seg seg-full" role="group" aria-label="Messages" style="margin-top:12px"><button type="button" data-msg-onglet="idees" aria-pressed="' + (msgOnglet === "idees") + '">Boîte à idées' + (ni ? " · " + ni : "") + '</button><button type="button" data-msg-onglet="support" aria-pressed="' + (msgOnglet === "support") + '">Support' + (ns ? " · " + ns : "") + "</button></span>" : "") +
       '<div class="msg-liste">' + (l.length ? l.map(function (d) {
         var neuf = msgOnglet === "support" ? d.statut === "ouvert" : d.statut === "nouveau";
-        var qui = d.anonyme ? (d.nom ? 'Anonyme <span class="muted">(' + esc(d.nom) + ", visible par vous seul)</span>" : "Anonyme") : esc(d.nom || "Membre");
+        var qui = d.anonyme ? "Anonyme" : esc(d.nom || "Membre");
         return '<div class="msg' + (neuf ? " nouveau" : "") + '"><div class="msg-tete"><span class="qui">' + qui + "</span><span>· " + quand(d.creeLe) + "</span>" +
           (msgOnglet === "support" ? (d.statut === "resolu" ? '<span class="pill p">Résolu</span>' : '<span class="pill r">À traiter</span>') : '<span class="pill n">' + esc(TYPES_IDEE[d.type] || "Idée") + "</span>" + (neuf ? '<span class="pill e">Nouveau</span>' : "")) + "</div>" +
           '<p class="msg-texte">' + esc(d.texte) + "</p>" +
@@ -2624,7 +2639,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       var data = type === "idees" ? { texte: texte, type: msgBrouillon.type || "idee", anonyme: !!msgBrouillon.anonyme }
         : { texte: texte, contexte: "Page : " + (location.hash || "#") + " · " + navigator.userAgent.slice(0, 160) };
       b.disabled = true;
-      messagesApi.envoyer(type, data).then(function () {
+      messagesApi.envoyer(type, data).then(function (r) {
+        if (type === "idees" && data.anonyme && r && r.id) garderAnonyme(r.id);
         msgOuvert = null; msgBrouillon = {};
         toast(type === "idees" ? "Merci ! Votre message est arrivé au Conservatoire." : "Merci ! Le dieuwrigne a reçu votre message et vous répondra ici.");
         chargerMessages();

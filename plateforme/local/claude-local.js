@@ -121,7 +121,7 @@
 
   /* Boîte à idées et support (voir serveur.mjs) */
   var messages = Object.freeze({
-    liste: function (type) { return appel("GET", type); },
+    liste: function (type, ids) { return appel("GET", type + (ids && ids.length ? "?ids=" + ids.join(",") : "")); },
     envoyer: function (type, data) { return appel("POST", type, data); },
     maj: function (type, id, data) { return appel("PATCH", type + "/" + encodeURIComponent(id), data); }
   });

@@ -106,6 +106,10 @@ function noterEchec(req) {
   const ip = ipDe(req), e = echecs.get(ip) || { n: 0, t: Date.now() };
   e.n++; echecs.set(ip, e);
 }
+/* Anonymat total des idées : un ancien envoi anonyme qui portait encore un nom le perd (une seule fois, au démarrage). */
+for (const d of await stock.lireCollection("_idees").catch(() => [])) {
+  if (d.data.anonyme && d.data.auteur) { const { auteur, ...reste } = d.data; await stock.ecrireDoc("_idees", d.id, reste); }
+}
 /* Boîte à idées et support : 15 envois par heure et par membre. */
 const envois = new Map();
 function tropDenvois(membre) {
@@ -261,30 +265,35 @@ async function api(req, res, parts, sess) {
   }
 
   /* --- Boîte à idées et support ---
-     Idées (_idees) : tout membre envoie, signé ou anonyme. Le Conservatoire et l'administrateur les lisent et répondent ;
-     l'auteur d'une idée anonyme n'est jamais envoyé au Conservatoire, seul l'administrateur (le dieuwrigne) le voit.
+     Idées (_idees) : tout membre envoie, signé ou anonyme. Le Conservatoire et l'administrateur les lisent et répondent.
+     Anonymat total (choix de l'utilisateur) : pour une idée anonyme, l'auteur n'est jamais enregistré, personne
+     (ni le Conservatoire, ni l'administrateur, ni la base) ne peut savoir qui l'a écrite. L'auteur la retrouve
+     grâce à son identifiant aléatoire, gardé sur son appareil (?ids=…).
      Support (_support) : un membre signale un souci ; seul l'administrateur le lit et répond.
      Chacun retrouve ses propres envois (avec la réponse) dans Mon espace. */
   if ((parts[0] === "idees" || parts[0] === "support") && !sess.temporaire) {
     const col = "_" + parts[0], id = parts[1], lecteur = parts[0] === "idees" ? peut(sess, "suivi") : sess.admin;
     const noms = Object.fromEntries((await stock.lireCollection("membres")).map((d) => [d.id, d.data.nom]));
+    const mesAnonymes = new Set((new URL(req.url, "http://x").searchParams.get("ids") || "").split(",").filter((x) => /^[0-9a-f]{32}$/.test(x)));
     const vue = (d) => {
-      const x = { id: d.id, ...d.data, moi: d.data.auteur === sess.membre };
-      if (!sess.admin && x.anonyme && !x.moi) delete x.auteur;
+      const x = { id: d.id, ...d.data, moi: (!!d.data.auteur && d.data.auteur === sess.membre) || (!!d.data.anonyme && mesAnonymes.has(d.id)) };
+      if (x.anonyme) delete x.auteur;
       if (x.auteur) x.nom = noms[x.auteur] || x.auteur;
       return x;
     };
     if (!id && req.method === "GET") {
-      const docs = (await stock.lireCollection(col)).filter((d) => lecteur || d.data.auteur === sess.membre);
+      const docs = (await stock.lireCollection(col)).filter((d) => lecteur || d.data.auteur === sess.membre || (d.data.anonyme && mesAnonymes.has(d.id)));
       return json(res, 200, { docs: docs.map(vue).sort((a, b) => b.creeLe - a.creeLe), lecteur });
     }
     if (!id && req.method === "POST") {
       const c = await lireCorps(req), texte = String(c.texte || "").trim().slice(0, 3000);
       if (texte.length < 3) return json(res, 400, { code: "court", message: "Écrivez votre message avant d’envoyer." });
       if (tropDenvois(sess.membre)) return json(res, 429, { code: "trop", message: "Trop d’envois rapprochés : réessayez dans une heure." });
-      const nid = Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
+      const anonyme = parts[0] === "idees" && !!c.anonyme;
+      // Idée anonyme : identifiant long et aléatoire (sert de clé à son auteur), et aucun nom enregistré.
+      const nid = anonyme ? crypto.randomBytes(16).toString("hex") : Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
       const doc = parts[0] === "idees"
-        ? { auteur: sess.membre, anonyme: !!c.anonyme, type: ["idee", "suggestion", "positif", "ameliorer"].includes(c.type) ? c.type : "idee", texte, creeLe: Date.now(), statut: "nouveau" }
+        ? { ...(anonyme ? {} : { auteur: sess.membre }), anonyme, type: ["idee", "suggestion", "positif", "ameliorer"].includes(c.type) ? c.type : "idee", texte, creeLe: Date.now(), statut: "nouveau" }
         : { auteur: sess.membre, texte, contexte: String(c.contexte || "").slice(0, 300), creeLe: Date.now(), statut: "ouvert" };
       await stock.ecrireDoc(col, nid, doc); prevenir(col);
       return json(res, 200, { ok: true, id: nid });
