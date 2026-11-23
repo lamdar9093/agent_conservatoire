@@ -1171,12 +1171,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       e.tariSeances.forEach(function (s) {
         var noms = e.tariBloques.filter(function (x) { return x.seances.indexOf(s) > -1; }).map(function (x) { return x.m.nom; });
         if (!noms.length) return;
-        L.push("⏳ *Tari pas encore reçu* (" + noms.length + ")");
+        L.push("⏳ *Tari pas encore maîtrisé* (" + noms.length + ")");
         L.push(tariPlain(s.tariDetail || {}) + (plusieurs ? " · " + seanceCourte(s) : ""));
         puces(L, noms);
         L.push("");
       });
-      L.push("_Envoyez votre Tari avant samedi pour pouvoir entrer dans le kourel._");
+      L.push("_Votre Tari doit être maîtrisé avant samedi pour entrer dans le kourel._");
       L.push("");
     }
     L.push("Merci à tous pour votre engagement.");
@@ -1271,11 +1271,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (p.exceptionnelle) { L.push("⚠️ _Date exceptionnelle : attention au changement de jour._"); L.push(""); }
     if (ty === "rg") { L.push("_Kourels 1 et 2 ensemble, pour préparer la prestation du Kourel général._"); L.push(""); }
     var progR = itemsCle("rep-" + id, "retenu");
-    if (progR.length) { L.push("🎶 *Au programme*"); progR.forEach(function (x, i) { L.push(ligneProgramme(x, i)); }); L.push(""); }
+    if (progR.length) { L.push("🎶 *Au programme*"); progR.forEach(function (x, i) { L.push(ligneProgramme(x, i)); }); if (!kh) L.push("🎧 Textes et audios : " + adressePlateforme() + "/#khassidas"); L.push(""); }
     if (kh) {
       L.push(progR.length ? "📖 *À travailler en priorité*" : "📖 *Au programme*");
-      L.push(kh.titre + (p.tout ? ", khassida entier" : (p.a && Number(p.a) !== Number(p.de) ? ", beuyites " + p.de + " à " + p.a : ", beuyite " + p.de)));
-      if (kh.lien) L.push("🎧 Lire et écouter : " + kh.lien + (p.tout ? "" : "#v" + Number(p.de)));
+      L.push(kh.titre + (p.tout ? ", khassida entier" : (p.a && Number(p.a) !== Number(p.de) ? ", beuyites " + p.de + " à " + p.a : ", beuyite " + p.de)) + (kh.ere ? " · ère " + kh.ere : ""));
+      if (lienKhassida(kh)) L.push("🎧 Lire et écouter : " + lienKhassida(kh, p.tout ? null : p.de));
       L.push("");
     }
     var notes = p.note.split("\n").map(function (x) { return x.trim(); }).filter(Boolean);
@@ -1588,8 +1588,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var t = kh ? kh.titre : "";
     if (kh && td.tout) t += ", khassida entier";
     else if (kh && td.de) t += (td.a && Number(td.a) !== Number(td.de) ? ", beuyites " + td.de + " à " + td.a : ", beuyite " + td.de);
+    if (kh && kh.ere) t += " · ère " + kh.ere;
     if (td.consigne) t += (t ? " (" + td.consigne + ")" : td.consigne);
-    return t || "contenu à préciser";
+    return t || "le Conservatoire précisera quoi envoyer";
   }
   function texteWhatsApp(liste, stats) {
     var sc = seanceChoisie();
@@ -1801,7 +1802,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return "Assalamou aleykoum " + prenom + " 🤲\n\n" +
       "Voici votre accès à la plateforme du *Conservatoire* (Dahira MBTE) : khassidas, Taris, présences et suivi.\n\n" +
       "🔗 " + r.lien + "\n" +
-      "👤 Identifiant : *" + r.identifiant + "*\n" +
+      "👤 Identifiant : *" + (m.telephone || m.nom || r.identifiant) + "*" + (m.telephone ? " (votre numéro WhatsApp)" : "") + "\n" +
       "🔑 Mot de passe temporaire : *" + r.motDePasse + "*\n\n" +
       "À la première connexion, vous choisirez votre propre mot de passe. Ce mot de passe temporaire est valable jusqu’au " + dateCourte(r.expire) + ".\n\n" +
       "Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie";
@@ -2074,6 +2075,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   }
 
   /* ---------- Khassidas : répertoire et lecture ---------- */
+  /* Adresse complète d'une page, pour les messages WhatsApp. */
+  function adressePlateforme() { return ((comptesEtat && comptesEtat.adresse) || location.origin || "").replace(/\/+$/, ""); }
+  function lienKhassida(kh, vers) {
+    if (kh.page) return adressePlateforme() + "/" + pageKhassida(kh, vers);
+    return kh.lien ? kh.lien + (vers ? "#v" + Number(vers) : "") : "";
+  }
   function pageKhassida(kh, vers) {
     if (kh.page) return "#khassida/" + encodeURIComponent(kh.id) + (vers ? "/v" + Number(vers) : "");
     return kh.lien ? kh.lien + (vers ? "#v" + Number(vers) : "") : "";
@@ -2819,14 +2826,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var e = x.e, dz = x.date;
     var h = '<article class="panel ev ev-dz"><div class="ev-tete">' + dateBloc(dz) +
       '<div class="ev-titre"><b>' + esc(samediLong(dz).replace(/^./, function (c) { return c.toUpperCase(); })) + '</b><span class="muted">' + esc(MODE_PHRASE[e.mode]) + "</span></div></div>";
-    if (!x.groupes.length) h += '<p class="ev-note">Votre kourel ne preste pas ce samedi.</p>';
+    if (!x.groupes.length) h += '<p class="ev-note">Votre kourel ne va pas prester ce samedi.</p>';
     x.groupes.forEach(function (g, i) {
       h += '<div class="passage"><div class="passage-tete"><span class="passage-num" aria-hidden="true">' + (x.groupes.length > 1 ? (g.ordre ? g.ordre.charAt(0) : i + 1) : "♪") + "</span>" +
         "<b>" + esc(g.label) + "</b>" +
         (function (dw) { return dw.length ? '<span class="passage-dw">Dieuwrigne' + (dw.length > 1 ? "s" : "") + " : " + esc(dw.join(" et ")) + "</span>" : ""; })(nomsDieuwrignes(g.k === "tout" ? "general" : g.k)) + "</div>" +
         blocProgramme(cleDahira(dz, g.k), g.k === "tout" ? "general" : g.k, {}) + "</div>";
     });
-    h += '<button type="button" class="ev-preste" data-dahira="' + dz + '"><span>Qui preste ?</span>' +
+    h += '<button type="button" class="ev-preste" data-dahira="' + dz + '"><span>Qui va prester ?</span>' +
       (peutSuivi ? e.groupes.map(function (g) { return '<span class="pill p">' + g.court + " : " + g.ok.length + " / " + g.total + "</span>"; }).join("") : "") +
       (e.tariBloques.length ? '<span class="pill r">' + e.tariBloques.length + " Tari en attente</span>" : "") + '<span class="dz-go" aria-hidden="true">›</span></button>';
     return h + "</article>";
@@ -3062,7 +3069,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       : "Ce que chaque kourel chantera aux répétitions et au dahira du samedi, avec l’ère de chaque khassida. " +
         (peutModifier ? "Vous et les dieuwrignes décidez ; les autres membres du Conservatoire proposent."
           : mesKourels.length ? "Comme dieuwrigne du " + mesKourels.map(function (k) { return TYPES[k]; }).join(" et du ") + ", vous décidez du programme ; les autres membres du Conservatoire proposent."
-          : "Le dieuwrigne de chaque kourel décide ; vous pouvez proposer.") + " Vous y voyez aussi qui preste au dahira." });
+          : "Le dieuwrigne de chaque kourel décide ; vous pouvez proposer.") + " Vous y voyez aussi qui va prester au dahira." });
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
     e.push({ vue: "moi", titre: "Mon espace", texte: "Vos présences, vos Taris, vos progrès et les chartes. C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
     if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Les accès des membres et leur rôle, la liste des membres, les khassidas et la sauvegarde des données." });
