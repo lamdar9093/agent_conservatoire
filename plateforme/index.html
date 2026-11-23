@@ -1806,7 +1806,15 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
             [rs.ok.eval, "« Maîtrisé » en prononciation, mémorisation et justesse"]
           ];
           var faits = etapes.filter(function (e) { return e[0]; }).length;
-          html += '<h3 class="group">Mon chemin vers le Kourel 1 · ' + faits + "/" + etapes.length + "</h3>" +
+          /* Le membre voit ses progrès, mais pas le statut « Prêt » : le passage au Kourel 1 est décidé par le Conservatoire
+             (voix, maturité, besoins du kourel), pas par les seuls critères. Conservatoire et administrateur voient tout. */
+          if (!peutSuivi) {
+            html += '<h3 class="group">Mes progrès</h3>' +
+              (rs.niveau === "donnees" ? '<p class="muted" style="margin-bottom:8px">Encore quelques répétitions et vos progrès s’afficheront pleinement.</p>' : "") +
+              '<ul class="etapes">' + etapes.map(function (e) { return '<li class="' + (e[0] ? "ok" : "") + '"><span aria-hidden="true">' + (e[0] ? "✓" : "○") + "</span>" + esc(e[1]) + "</li>"; }).join("") + "</ul>" +
+              '<p class="muted" style="font-size:12.5px;margin-top:8px">Le passage au Kourel 1 est décidé par le Conservatoire.</p>';
+          } else
+          html += '<h3 class="group">Chemin vers le Kourel 1 · ' + faits + "/" + etapes.length + "</h3>" +
             (rs.niveau === "pret" ? '<div class="me-banner ok" style="margin-bottom:10px">✅ <span>Vous remplissez tous les critères. Le Conservatoire décidera de votre passage au Kourel 1.</span></div>' :
              rs.niveau === "donnees" ? '<p class="muted" style="margin-bottom:8px">Encore quelques répétitions et votre parcours s’affichera pleinement.</p>' : "") +
             '<ul class="etapes">' + etapes.map(function (e) { return '<li class="' + (e[0] ? "ok" : "") + '"><span aria-hidden="true">' + (e[0] ? "✓" : "○") + "</span>" + esc(e[1]) + "</li>"; }).join("") + "</ul>";
@@ -2314,7 +2322,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (b.dataset.k && b.dataset.id && peutModifier) {
       var m = membres[b.dataset.id], u = {};
       u[b.dataset.k] = b.dataset.k === "actif" ? m.actif === false : !m[b.dataset.k];
-      db.doc("membres/" + b.dataset.id).update(u).catch(echec);
+      /* Changement de kourel (vers le Kourel 2, ajout d'un kourel…) : inscrit dans l'historique du membre. */
+      if (b.dataset.k === "k1" || b.dataset.k === "k2") {
+        var apres = Object.assign({}, m, u);
+        u.historique = (m.historique || []).concat([{ type: "kourel", date: today(), motif: tagsKourel(m) + " → " + tagsKourel(apres) }]);
+      }
+      db.doc("membres/" + b.dataset.id).update(u).then(function () {
+        if (u.historique) toast(m.nom + " : " + tagsKourel(Object.assign({}, m, u)) + ". Changement noté dans son historique.");
+      }, echec);
     }
   });
   app.addEventListener("click", function (e) {

@@ -142,7 +142,8 @@ function filtrerPour(sess, col, docs) {
 /* Khassidas visibles par un membre (null = tous : administrateur et Conservatoire).
    Un membre voit : les khassidas de son ou ses kourels, ceux sans kourel indiqué, ceux prévus au programme
    d'une répétition générale à venir (les deux kourels la chantent ensemble) ou d'une répétition à venir de son kourel,
-   et ceux dont on lui a demandé le Tari. */
+   et ceux d'un Tari qui le concerne et qu'il n'a pas encore maîtrisé (même règle que la page : Tari pour tous,
+   pour les absents s'il était absent, ou individuel ; état « maîtrisé » = plus besoin). */
 const aujourdhui = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const KOURELS = { k1: ["k1"], k2: ["k2"], k1k2: ["k1", "k2"] };
 async function khassidasVisibles(sess) {
@@ -158,8 +159,11 @@ async function khassidasVisibles(sess) {
     if (p.data.khassida && !p.data.annulee && date >= t && (type === "rg" || m[type])) ok.add(p.data.khassida);
   }
   for (const s of await stock.lireCollection("seances")) {
-    const kh = s.data.tariDetail && s.data.tariDetail.khassida;
-    if (kh && (s.data.participants || []).includes(sess.membre)) ok.add(kh);
+    const d = s.data, moi = sess.membre, kh = d.tariDetail && d.tariDetail.khassida, t = d.tari || "aucun";
+    if (!kh || t === "aucun" || !(d.participants || []).includes(moi)) continue;
+    const concerne = t === "tous" || (d.tariIndividuel || {})[moi] || ((d.statuts || {})[moi] || "P") === "A";
+    const etat = (d.tariEtat || {})[moi] || ((d.tariRecu || {})[moi] ? "maitrise" : "attendu");
+    if (concerne && etat !== "maitrise") ok.add(kh);
   }
   return ok;
 }
