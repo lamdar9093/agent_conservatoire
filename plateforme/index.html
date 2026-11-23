@@ -267,6 +267,12 @@ dialog.refus .refus-ico { display: grid; place-items: center; width: 48px; heigh
 dialog.refus h2 { margin: 0; font-size: 17px; font-weight: 600; }
 dialog.refus p { margin: 0; color: var(--ink-soft); font-size: 14px; }
 dialog.refus .btn { width: 100%; justify-content: center; margin-top: 6px; }
+.tari-choix { margin-top: 10px; padding: 12px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule); display: grid; gap: 10px; }
+.tari-choix-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font-size: 13.5px; }
+.tari-raccourcis { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
+.tari-choix-liste { display: flex; flex-wrap: wrap; gap: 6px; }
+.tari-choix-liste .toggle[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tari-choix-liste .tags { font-size: 11px; color: var(--ink-soft); font-weight: 400; }
 .confirm { margin-top: 12px; padding: 12px; border-radius: 10px; background: var(--bad-soft); display: grid; gap: 8px; }
 
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
@@ -539,7 +545,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   var apercu = false;
   var formOuvert = null, voirPartis = false, ajusterListe = false, tariEdition = false, confirmerTari = false;
   function statutMembre(m) { return m.statut || (m.actif === false ? "pause" : "actif"); }
-  var TARI = { aucun: "Pas de Tari", absents: "Les absents", tous: "Tout le monde" };
+  /* « Certains » : l'administrateur ou le Conservatoire choisit les membres un par un (champ tariChoisis). */
+  var TARI = { aucun: "Pas de Tari", absents: "Les absents", choisis: "Certains", tous: "Tout le monde" };
   function isoPlus(iso, n) { var d = asDate(iso); d.setDate(d.getDate() + n); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   /* Dahira concerné : le samedi de la semaine suivante (semaine du lundi au dimanche). */
   function dahiraConcerne(iso) { var mi = (asDate(iso).getDay() + 6) % 7; return isoPlus(iso, 5 - mi + 7); }
@@ -547,6 +554,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var t = s.tari || "aucun";
     if (t === "aucun") return false;
     if (t === "tous" || (s.tariIndividuel || {})[id]) return true;
+    if (t === "choisis") return !!(s.tariChoisis || {})[id];
     return ((s.statuts || {})[id] || "P") === "A";
   }
   /* Chartes : le Tari (fichier audio) se renvoie jusqu'à maîtrise. États : attendu → reçu, à retravailler → maîtrisé.
@@ -628,6 +636,20 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       (tout ? "" :
         '<label class="field" style="flex:1 1 200px">Du beuyite<select id="t-de" class="vers-select">' + opts(1, td.de || 1) + "</select></label>" +
         '<label class="field" style="flex:1 1 200px">Au beuyite<select id="t-a" class="vers-select">' + opts(Number(td.de) || 1, td.a || n) + "</select></label>");
+  }
+  /* Tari « Certains » : on coche les membres concernés ; raccourcis pour les retards et les absents. */
+  function choixTariHTML(s) {
+    var ch = s.tariChoisis || {}, l = (s.participants || []).filter(function (id) { return requis(s, id) && membres[id]; })
+      .map(function (id) { return membres[id]; }).sort(triNom);
+    var n = l.filter(function (m) { return ch[m.id]; }).length;
+    return '<div class="tari-choix"><div class="tari-choix-tete"><b>' + (n ? n + " membre" + (n > 1 ? "s" : "") + " choisi" + (n > 1 ? "s" : "") : "Touchez les membres concernés") + "</b>" +
+      '<span class="tari-raccourcis"><button type="button" class="linkish" data-tchoix-groupe="R">+ les retards</button><button type="button" class="linkish" data-tchoix-groupe="A">+ les absents</button>' +
+      (n ? '<button type="button" class="linkish" data-tchoix-groupe="">Tout effacer</button>' : "") + "</span></div>" +
+      '<div class="tari-choix-liste">' + l.map(function (m) {
+        var v = choixDe(s, m.id);
+        return '<button type="button" class="toggle" data-tchoix="' + esc(m.id) + '" aria-pressed="' + !!ch[m.id] + '">' + (ch[m.id] ? "✓ " : "") + esc(m.nom) +
+          (v === "R" ? ' <span class="tags">retard</span>' : v === "A" || v === "E" ? ' <span class="tags">absent</span>' : "") + "</button>";
+      }).join("") + "</div></div>";
   }
   function tariDetailHTML(s) {
     if (!s.tari || s.tari === "aucun") return "";
@@ -856,7 +878,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (peutSuivi && tariEdition) {
       html += '<p class="muted" style="margin-top:6px">Qui doit envoyer son Tari ?</p><span class="seg" role="group" aria-label="Qui doit envoyer son Tari">' + Object.keys(TARI).map(function (k) {
           return '<button type="button" data-tari="' + k + '" aria-pressed="' + (tmode === k) + '">' + TARI[k] + "</button>";
-        }).join("") + "</span>" + tariDetailHTML(s) +
+        }).join("") + "</span>" + (tmode === "choisis" ? choixTariHTML(s) : "") + tariDetailHTML(s) +
         '<div class="row" style="margin-top:10px"><button type="button" class="btn primary small" data-action="fin-tari">Terminé</button>' +
         (tmode !== "aucun" && !confirmerTari ? '<button type="button" class="btn danger small" data-action="suppr-tari">Supprimer le Tari</button>' : "") + "</div>" +
         (confirmerTari ? '<div class="confirm"><b>Supprimer ce Tari ?</b><span>La demande et les Taris déjà cochés comme reçus pour cette séance seront effacés.</span>' +
@@ -2384,6 +2406,17 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("seances/" + id).delete().then(function () { seanceOuverte = null; confirmerSuppression = false; afficher(); toast("Séance supprimée."); }, echec);
       return;
     }
+    if ((b.dataset.tchoix || b.dataset.tchoixGroupe !== undefined) && peutSuivi && seanceOuverte) {
+      var stc = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {}, chx = stc.tariChoisis || {}, majc = {};
+      if (b.dataset.tchoix) majc[b.dataset.tchoix] = !chx[b.dataset.tchoix];
+      else if (!b.dataset.tchoixGroupe) Object.keys(chx).forEach(function (id) { majc[id] = false; });
+      else (stc.participants || []).forEach(function (id) {
+        var v = choixDe(stc, id);
+        if (requis(stc, id) && (b.dataset.tchoixGroupe === "R" ? v === "R" : (v === "A" || v === "E"))) majc[id] = true;
+      });
+      db.doc("seances/" + seanceOuverte).update({ tariChoisis: majc }).catch(echec);
+      return;
+    }
     if (b.dataset.tari && peutSuivi) { db.doc("seances/" + seanceOuverte).update({ tari: b.dataset.tari }).catch(echec); return; }
 
     var act = b.dataset.action, mid = b.dataset.id;
@@ -2403,7 +2436,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var so = seances.filter(function (x) { return x.id === seanceOuverte; })[0];
         if (!so) return;
         var copie = {};
-        Object.keys(so).forEach(function (k) { if (["id", "tari", "tariDetail", "tariRecu", "tariEtat", "tariIndividuel"].indexOf(k) < 0) copie[k] = so[k]; });
+        Object.keys(so).forEach(function (k) { if (["id", "tari", "tariDetail", "tariRecu", "tariEtat", "tariIndividuel", "tariChoisis"].indexOf(k) < 0) copie[k] = so[k]; });
         copie.tari = "aucun";
         db.doc("seances/" + so.id).set(copie).then(function () { confirmerTari = false; tariEdition = false; afficher(); toast("Tari supprimé pour cette séance."); }, echec);
         return;

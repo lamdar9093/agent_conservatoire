@@ -173,7 +173,7 @@ async function khassidasVisibles(sess) {
   for (const s of await stock.lireCollection("seances")) {
     const d = s.data, moi = sess.membre, kh = d.tariDetail && d.tariDetail.khassida, t = d.tari || "aucun";
     if (!kh || t === "aucun" || !(d.participants || []).includes(moi)) continue;
-    const concerne = t === "tous" || (d.tariIndividuel || {})[moi] || ((d.statuts || {})[moi] || "P") === "A";
+    const concerne = t === "tous" || (d.tariIndividuel || {})[moi] || (t === "choisis" ? !!(d.tariChoisis || {})[moi] : ((d.statuts || {})[moi] || "P") === "A");
     const etat = (d.tariEtat || {})[moi] || ((d.tariRecu || {})[moi] ? "maitrise" : "attendu");
     if (concerne && etat !== "maitrise") ok.add(kh);
   }
