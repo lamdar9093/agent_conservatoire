@@ -85,22 +85,36 @@ button, input, select { font: inherit; color: inherit; }
   body.lecture .bottom-nav { display: none; }
   body.lecture main { padding-bottom: 0 !important; }
 }
-.kh-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
-.kh-item { position: relative; display: grid; }
-.kh-item.en-rep .kh-card { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.kh-rep-pill { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 600; }
+.kh-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.kh-filtre { margin-top: 14px; display: flex !important; flex-wrap: nowrap !important; }
+.kh-filtre button { flex: 1 1 0; min-width: 0; white-space: nowrap; padding-inline: 6px; }
+.kh-filtre .kh-nb { font-size: 11.5px; opacity: 0.7; margin-left: 2px; }
+.kh-groupe { margin-top: 20px; }
+.kh-gtitre { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.kh-gnb { margin-left: auto; font-size: 12.5px; font-weight: 500; color: var(--ink-soft); }
+.kh-puce { width: 10px; height: 10px; border-radius: 3px; background: var(--accent); }
+.kh-k2 .kh-puce { background: transparent; border: 2px solid var(--accent); }
+.kh-tous .kh-puce { background: linear-gradient(135deg, var(--accent) 50%, transparent 50%); border: 2px solid var(--accent); }
+.khc { position: relative; display: grid; gap: 4px; padding: 14px 16px 12px; border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); transition: border-color 0.15s ease, transform 0.15s ease; }
+.khc:hover { border-color: var(--accent); }
+.khc:active { transform: scale(0.995); }
+.khc-lien { position: absolute; inset: 0; border-radius: inherit; z-index: 0; }
+.khc-lien:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.khc.en-rep { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; background: linear-gradient(180deg, var(--accent-soft), var(--surface) 70%); }
+.khc-ar { font-size: 28px; line-height: 1.5; color: var(--accent); text-align: right; }
+.khc-titre { font-size: 15.5px; font-weight: 600; }
+.khc-meta { font-size: 13px; color: var(--ink-soft); }
+.khc-pied { display: flex; align-items: center; gap: 8px; margin-top: 8px; min-height: 30px; }
+.khc-go { color: var(--accent); font-weight: 600; font-size: 13.5px; }
+.khc-rep { position: relative; z-index: 1; margin-left: auto; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-soft); border-radius: 999px; padding: 5px 11px; font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; }
+.khc-rep:hover { color: var(--ink); border-color: var(--ink-soft); }
+.khc-rep[aria-pressed="true"] { color: var(--ink-soft); }
+.kh-rep-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 600; }
 .kh-rep-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: kh-pulse 1.6s ease-in-out infinite; }
 @keyframes kh-pulse { 50% { opacity: 0.35; } }
-@media (prefers-reduced-motion: reduce) { .kh-rep-pill::before { animation: none; } }
-.kh-rep-btn { position: absolute; top: 12px; left: 12px; z-index: 1; }
-.kh-card { display: grid; gap: 6px; padding: 16px; border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); text-decoration: none; color: var(--ink); cursor: pointer; text-align: left; }
-.kh-card:hover { border-color: var(--accent); }
-.kh-card .kh-ar { font-size: 30px; line-height: 1.5; color: var(--accent); text-align: right; }
-.kh-card .kh-kourel { justify-self: start; }
+@media (prefers-reduced-motion: reduce) { .kh-rep-pill::before { animation: none; } .khc { transition: none; } }
+.kh-aide { font-size: 12.5px; margin-top: 14px !important; }
 .kh-kourel-choix { display: flex; align-items: center; gap: 8px; }
-.kh-card b { font-size: 16px; font-weight: 600; }
-.kh-card .muted { font-size: 13px; }
-.kh-card .go { color: var(--accent); font-weight: 600; font-size: 13.5px; margin-top: 4px; }
 body.lecture main { padding-top: 0; gap: 0; max-width: none; padding-left: 0; padding-right: 0; }
 body.lecture .top { display: none; }
 html:has(body.lecture), body.lecture { overflow: hidden; height: 100%; }
@@ -1884,25 +1898,49 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (kh.page) return "#khassida/" + encodeURIComponent(kh.id) + (vers ? "/v" + Number(vers) : "");
     return kh.lien ? kh.lien + (vers ? "#v" + Number(vers) : "") : "";
   }
+  /* Répertoire : un groupe par kourel ; dans chaque groupe, le khassida en répétition passe en premier.
+     Un membre des deux kourels (et le Conservatoire) peut filtrer : Tous, Kourel 1, Kourel 2. */
+  var GROUPES_KH = [["k1", "Kourel 1"], ["k2", "Kourel 2"], ["tous", "Les deux kourels"]];
+  function groupeKh(k) { return k.kourel === "k1" ? "k1" : k.kourel === "k2" ? "k2" : "tous"; }
+  var filtreKh = (function () { try { return localStorage.getItem("kh-filtre") || "tout"; } catch (e) { return "tout"; } })();
+  function carteKh(k) {
+    var href = pageKhassida(k), interne = !!k.page;
+    return '<div class="khc' + (k.enRepetition ? " en-rep" : "") + '">' +
+      '<a class="khc-lien" href="' + esc(href || "#khassidas") + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ' aria-label="Ouvrir ' + esc(k.titre) + '"></a>' +
+      (k.arabe ? '<span class="khc-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
+      '<b class="khc-titre">' + esc(k.titre) + "</b>" +
+      '<span class="khc-meta">' + (k.vers ? k.vers + " beuyites" : "") + (interne ? (k.vers ? " · " : "") + "texte et audio" : "") + "</span>" +
+      '<span class="khc-pied">' +
+        (k.enRepetition ? '<span class="kh-rep-pill">En répétition</span>' : '<span class="khc-go">' + (href ? "Ouvrir →" : "Page à venir") + "</span>") +
+        (peutSuivi ? '<button type="button" class="khc-rep" data-kh-rep="' + esc(k.id) + '" aria-pressed="' + !!k.enRepetition + '" title="' + (k.enRepetition ? "Retirer de la répétition" : "Marquer en cours de répétition") + '">' +
+          (k.enRepetition ? "Retirer" : "Marquer en répétition") + "</button>" : "") +
+      "</span></div>";
+  }
   function vueRepertoire() {
-    /* Les khassidas en cours de répétition passent en premier. */
-    var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) {
-      return (b.enRepetition ? 1 : 0) - (a.enRepetition ? 1 : 0) || (a.titre || "").localeCompare(b.titre || "", "fr");
+    var tous = Object.keys(khassidas).map(function (k) { return khassidas[k]; });
+    var parG = {};
+    tous.forEach(function (k) { (parG[groupeKh(k)] = parG[groupeKh(k)] || []).push(k); });
+    var presents = GROUPES_KH.filter(function (g) { return parG[g[0]]; });
+    if (filtreKh !== "tout" && !parG[filtreKh]) filtreKh = "tout";
+    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Texte vocalisé, phonétique, traduction et audio de référence.</p>';
+    if (presents.length > 1) {
+      html += '<span class="seg seg-full kh-filtre" role="group" aria-label="Afficher les khassidas de">' +
+        [["tout", "Tous", tous.length]].concat(presents.map(function (g) { return [g[0], g[0] === "tous" ? "Les deux" : g[1], parG[g[0]].length]; })).map(function (o) {
+          return '<button type="button" data-kh-filtre="' + o[0] + '" aria-pressed="' + (filtreKh === o[0]) + '">' + o[1] + ' <span class="kh-nb">' + o[2] + "</span></button>";
+        }).join("") + "</span>";
+    }
+    if (!tous.length) html += '<div class="empty" style="margin-top:12px">Aucun khassida pour l’instant.</div>';
+    presents.forEach(function (g) {
+      if (filtreKh !== "tout" && filtreKh !== g[0]) return;
+      var l = parG[g[0]].sort(function (a, b) { return (b.enRepetition ? 1 : 0) - (a.enRepetition ? 1 : 0) || (a.titre || "").localeCompare(b.titre || "", "fr"); });
+      var enRep = l.filter(function (k) { return k.enRepetition; }).length;
+      html += '<div class="kh-groupe kh-' + g[0] + '"><h3 class="kh-gtitre"><span class="kh-puce" aria-hidden="true"></span>' + g[1] +
+        '<span class="kh-gnb">' + l.length + " khassida" + (l.length > 1 ? "s" : "") + (enRep ? " · " + enRep + " en répétition" : "") + "</span></h3>" +
+        '<div class="kh-list">' + l.map(carteKh).join("") + "</div></div>";
     });
-    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Le répertoire du Conservatoire : texte vocalisé, phonétique, traduction et audio de référence.' +
-      (peutSuivi ? " Touchez « En répétition » sur le khassida que le kourel travaille en ce moment : il s’affiche en premier pour tous les membres." : "") + "</p>" +
-      (kl.length ? '<div class="kh-list">' + kl.map(function (k) {
-        var href = pageKhassida(k), interne = !!k.page;
-        return '<div class="kh-item' + (k.enRepetition ? " en-rep" : "") + '">' +
-          (peutSuivi ? '<button type="button" class="btn small ' + (k.enRepetition ? "" : "ghost ") + 'kh-rep-btn" data-kh-rep="' + esc(k.id) + '" aria-pressed="' + !!k.enRepetition + '">' + (k.enRepetition ? "Retirer de la répétition" : "En répétition") + "</button>" : "") +
-          '<a class="kh-card" href="' + esc(href || "#khassidas") + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ">" +
-          (k.arabe ? '<span class="kh-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
-          (k.enRepetition ? '<span class="kh-rep-pill">En cours de répétition</span>' : "") +
-          "<b>" + esc(k.titre) + "</b>" + (k.kourel ? '<span class="chip kh-kourel">' + (k.kourel === "k1" ? "Kourel 1" : k.kourel === "k2" ? "Kourel 2" : "Kourels 1 et 2") + "</span>" : "") + '<span class="muted">' + (k.vers ? k.vers + " beuyites" : "") + (interne ? " · Texte et audio" : "") + "</span>" +
-          '<span class="go">' + (href ? "Ouvrir →" : "Page d’étude à venir") + "</span></a></div>";
-      }).join("") + "</div>" : '<div class="empty" style="margin-top:12px">Aucun khassida pour l’instant.</div>') +
-      (peutModifier ? '<p class="muted" style="margin-top:12px;font-size:13px">Pour ajouter un khassida, allez dans <a href="#reglages">Réglages</a>.</p>' : "") + "</section>";
-    app.innerHTML = html;
+    if (peutSuivi && tous.length) html += '<p class="muted kh-aide">« Marquer en répétition » : le khassida que le kourel travaille en ce moment passe en tête de son kourel, pour tous les membres.</p>';
+    if (peutModifier) html += '<p class="muted kh-aide">Pour ajouter un khassida ou changer son kourel, allez dans <a href="#reglages">Réglages</a>.</p>';
+    app.innerHTML = html + "</section>";
   }
   function vueLecture() {
     var kh = lecture && khassidas[lecture.id];
@@ -2292,6 +2330,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("seances/" + seanceOuverte).update({ prevenus: pm }).catch(echec);
       return;
     }
+    if (b.dataset.khFiltre) { filtreKh = b.dataset.khFiltre; try { localStorage.setItem("kh-filtre", filtreKh); } catch (e) { /* stockage indisponible */ } afficher(); return; }
     if (b.dataset.khRep && peutSuivi) {
       var kr = khassidas[b.dataset.khRep], oui = !(kr && kr.enRepetition);
       b.disabled = true;
