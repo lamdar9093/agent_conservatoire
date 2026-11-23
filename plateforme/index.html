@@ -86,9 +86,18 @@ button, input, select { font: inherit; color: inherit; }
   body.lecture main { padding-bottom: 0 !important; }
 }
 .kh-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.kh-item { position: relative; display: grid; }
+.kh-item.en-rep .kh-card { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.kh-rep-pill { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 600; }
+.kh-rep-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: kh-pulse 1.6s ease-in-out infinite; }
+@keyframes kh-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .kh-rep-pill::before { animation: none; } }
+.kh-rep-btn { position: absolute; top: 12px; left: 12px; z-index: 1; }
 .kh-card { display: grid; gap: 6px; padding: 16px; border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); text-decoration: none; color: var(--ink); cursor: pointer; text-align: left; }
 .kh-card:hover { border-color: var(--accent); }
 .kh-card .kh-ar { font-size: 30px; line-height: 1.5; color: var(--accent); text-align: right; }
+.kh-card .kh-kourel { justify-self: start; }
+.kh-kourel-choix { display: flex; align-items: center; gap: 8px; }
 .kh-card b { font-size: 16px; font-weight: 600; }
 .kh-card .muted { font-size: 13px; }
 .kh-card .go { color: var(--accent); font-weight: 600; font-size: 13.5px; margin-top: 4px; }
@@ -173,6 +182,13 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
   .table-wrap .sub { white-space: normal; font-size: 10.5px; line-height: 1.25; }
 }
 
+dialog.refus { width: min(92vw, 400px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+dialog.refus::backdrop { background: rgba(10, 20, 18, 0.45); }
+dialog.refus form { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 24px 20px 20px; }
+dialog.refus .refus-ico { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--warn-soft); font-size: 22px; }
+dialog.refus h2 { margin: 0; font-size: 17px; font-weight: 600; }
+dialog.refus p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+dialog.refus .btn { width: 100%; justify-content: center; margin-top: 6px; }
 .confirm { margin-top: 12px; padding: 12px; border-radius: 10px; background: var(--bad-soft); display: grid; gap: 8px; }
 
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
@@ -405,6 +421,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<dialog class="refus" id="refus-admin" aria-labelledby="refus-titre"><form method="dialog"><span class="refus-ico" aria-hidden="true">🔒</span><h2 id="refus-titre"></h2><p></p><button class="btn primary" value="ok" autofocus>Compris</button></form></dialog>
 
 <script>
 (function () {
@@ -413,7 +430,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   var TYPES = { k1: "Kourel 1", k2: "Kourel 2", rg: "Répétition générale" };
   var STATUTS = { P: "Présent", R: "Retard", A: "Absent" };
   /* « Prévenu » = absent qui a prévenu : enregistré comme statut A + entrée dans s.prevenus {id: {motif, note}}. */
-  var CHOIX = { P: "Présent", R: "Retard", A: "Absent", E: "Prévenu" };
+  /* Appel : trois boutons ; « Absent » ouvre la question « A-t-il prévenu ? » (Oui = statut E, prévenu). */
+  var CHOIX = { P: "Présent", R: "Retard", A: "Absent" };
+  function txtPrevenu(n) { return n + (n > 1 ? " ont prévenu" : " a prévenu"); }
   var MOTIFS = ["Travail", "Études", "Santé", "Famille", "Voyage", "Autre"];
   function aPrevenu(s, id) { return ((s.statuts || {})[id] || "P") === "A" && !!(s.prevenus || {})[id]; }
   function choixDe(s, id) { return aPrevenu(s, id) ? "E" : ((s.statuts || {})[id] || "P"); }
@@ -512,14 +531,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (!kh && !td.consigne) return "";
     var t = kh ? "<b>" + esc(kh.titre) + "</b>" : "";
     if (kh && td.tout) t += " · khassida entier";
-    else if (kh && td.de) t += " · vers " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
+    else if (kh && td.de) t += " · beuyite " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
     if (td.consigne) t += (t ? " · " : "") + esc(td.consigne);
     if (avecLien !== false && kh && (kh.page || kh.lien)) t += ' · <a href="' + esc(pageKhassida(kh, td.de)) + '"' + (kh.page ? "" : ' target="_blank" rel="noopener"') + ">Lire et écouter</a>";
     return t;
   }
   function versControles(td) {
     var kh = khassidas[td.khassida];
-    if (!kh) return '<p class="muted" style="flex:1 1 100%;margin:0">Choisissez un khassida pour choisir les vers.</p>';
+    if (!kh) return '<p class="muted" style="flex:1 1 100%;margin:0">Choisissez un khassida pour choisir les beuyites.</p>';
     var n = kh.vers || 0, debuts = kh.versDebut || [];
     function opts(from, sel) {
       var o = "";
@@ -527,10 +546,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       return o;
     }
     var tout = !!td.tout;
-    return '<label class="check"><input type="checkbox" id="t-tout"' + (tout ? " checked" : "") + "> Tout le khassida (" + n + " vers)</label>" +
+    return '<label class="check"><input type="checkbox" id="t-tout"' + (tout ? " checked" : "") + "> Tout le khassida (" + n + " beuyites)</label>" +
       (tout ? "" :
-        '<label class="field" style="flex:1 1 200px">Du vers<select id="t-de" class="vers-select">' + opts(1, td.de || 1) + "</select></label>" +
-        '<label class="field" style="flex:1 1 200px">Au vers<select id="t-a" class="vers-select">' + opts(Number(td.de) || 1, td.a || n) + "</select></label>");
+        '<label class="field" style="flex:1 1 200px">Du beuyite<select id="t-de" class="vers-select">' + opts(1, td.de || 1) + "</select></label>" +
+        '<label class="field" style="flex:1 1 200px">Au beuyite<select id="t-a" class="vers-select">' + opts(Number(td.de) || 1, td.a || n) + "</select></label>");
   }
   function tariDetailHTML(s) {
     if (!s.tari || s.tari === "aucun") return "";
@@ -542,7 +561,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         '<label class="field" style="flex:1 1 220px">Khassida à envoyer<select id="t-kh"><option value="">Choisir…</option>' +
         kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (td.khassida === k.id ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") + "</select></label>" +
         versControles(td) +
-        '<label class="field" style="flex:1 1 240px">Consigne (facultatif)<input type="text" id="t-cons" value="' + esc(td.consigne || "") + '" placeholder="Xàjj du dieuwrigne, chaque vers deux fois…"></label></div>';
+        '<label class="field" style="flex:1 1 240px">Consigne (facultatif)<input type="text" id="t-cons" value="' + esc(td.consigne || "") + '" placeholder="Xàjj du dieuwrigne, chaque beuyite deux fois…"></label></div>';
     }
     var t = tariTexte(td);
     h += t ? '<p style="margin-top:8px">À envoyer : ' + t + "</p>" : (peutSuivi ? "" : '<p class="muted" style="margin-top:6px">Le contenu du Tari n’a pas encore été précisé.</p>');
@@ -563,7 +582,17 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   function triNom(a, b) { return (a.nom || "").localeCompare(b.nom || "", "fr"); }
   var toastTimer = 0;
   function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3500); }
-  function echec(e) { toast(e && e.code === "invalid_argument" ? "Modification refusée : votre rôle ne permet pas de modifier ceci." : "La modification n’a pas pu être enregistrée. Réessayez."); }
+  /* Fenêtre « Contactez l'administrateur » : le Conservatoire crée une séance, mais ne la modifie ni ne la supprime. */
+  function refusSeance(quoi) {
+    var d = document.getElementById("refus-admin");
+    d.querySelector("h2").textContent = quoi === "supprimer" ? "Suppression réservée à l’administrateur" : "Modification réservée à l’administrateur";
+    d.querySelector("p").textContent = "Une séance ne peut être " + (quoi === "supprimer" ? "supprimée" : "modifiée (date, répétition, horaire)") +
+      " que par l’administrateur, même si elle a été créée par erreur. Contactez-le : il s’en occupera. L’appel, les motifs et les sanctions restent modifiables par vous.";
+    if (typeof d.showModal === "function") d.showModal(); else toast(d.querySelector("p").textContent);
+  }
+  function echec(e) {
+    if (e && e.code === "admin_seance") { refusSeance("modifier"); return; }
+    toast(e && e.code === "invalid_argument" ? "Modification refusée : votre rôle ne permet pas de modifier ceci." : "La modification n’a pas pu être enregistrée. Réessayez."); }
 
   function compter(s) {
     var c = { P: 0, R: 0, A: 0, E: 0 };
@@ -575,7 +604,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return '<span class="pill p">' + c.P + " présent" + (c.P > 1 ? "s" : "") + "</span>" +
       (c.R ? '<span class="pill r">' + c.R + " retard" + (c.R > 1 ? "s" : "") + "</span>" : "") +
       (sans ? '<span class="pill a">' + sans + " absent" + (sans > 1 ? "s" : "") + "</span>" : "") +
-      (c.E ? '<span class="pill e">' + c.E + " prévenu" + (c.E > 1 ? "s" : "") + "</span>" : "");
+      (c.E ? '<span class="pill e">' + txtPrevenu(c.E) + "</span>" : "");
   }
 
   /* ---------- Séances ---------- */
@@ -679,7 +708,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
       '<section class="panel"><div class="detail-head"><div><h2>' + esc(jourLong(s.date)) + '</h2><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
       (peutSuivi
-        ? ' <input type="text" class="date-inline" id="s-horaire" value="' + esc(horaireDe(s)) + '" placeholder="Horaire" aria-label="Horaire de la répétition" style="width:110px">'
+        ? ' <input type="text" class="date-inline" id="s-horaire" value="' + esc(horaireDe(s)) + '" placeholder="Horaire" aria-label="Horaire de la répétition" style="width:110px"' + (peutModifier ? "" : " readonly data-refus-seance") + '>'
         : (horaireDe(s) ? ' <span class="muted">' + esc(horaireDe(s)) + "</span>" : "")) + "</div>" +
       '<div class="counts">' + countsHTML(c) + "</div></div>";
     var tc = tariCompte(s), tmode = s.tari || "aucun";
@@ -708,13 +737,18 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
           ? '<span class="pill">Présence non requise</span>'
           : peutSuivi
           ? '<span class="seg" role="group" aria-label="Statut de ' + esc(p.nom) + '">' + Object.keys(CHOIX).map(function (k) {
-              return '<button type="button" data-set="' + esc(p.id) + '" data-v="' + k + '" aria-pressed="' + (v === k) + '">' + CHOIX[k] + "</button>";
+              return '<button type="button" data-set="' + esc(p.id) + '" data-v="' + k + '" aria-pressed="' + (v === k || (k === "A" && v === "E")) + '">' + CHOIX[k] + "</button>";
             }).join("") + "</span>"
           : '<span class="pill ' + v.toLowerCase() + '">' + (v === "E" ? "Absent · a prévenu" : STATUTS[v]) + "</span>";
         var motifs = "";
+        if (peutSuivi && (v === "A" || v === "E") && requis(s, p.id)) {
+          motifs += '<div class="motifs"><span class="lbl">A-t-il prévenu ?</span>' +
+            '<button type="button" class="toggle" data-set="' + esc(p.id) + '" data-v="E" aria-pressed="' + (v === "E") + '">Oui</button>' +
+            '<button type="button" class="toggle" data-set="' + esc(p.id) + '" data-v="N" aria-pressed="' + (v === "A") + '">Non</button></div>';
+        }
         if (v === "E" && requis(s, p.id)) {
           var pv = (s.prevenus || {})[p.id] || {};
-          motifs = peutSuivi
+          motifs += peutSuivi
             ? '<div class="motifs"><span class="lbl">Motif :</span>' + MOTIFS.map(function (mo) {
                 return '<button type="button" class="toggle" data-motif="' + esc(p.id) + '" data-m="' + mo + '" aria-pressed="' + (pv.motif === mo) + '">' + mo + "</button>";
               }).join("") +
@@ -974,7 +1008,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   };
   var MOT_SUGG = [
     "Écoutez l’enregistrement avant de venir pour avoir la mélodie en tête.",
-    "Révisez les vers au programme : nous les reprendrons un par un.",
+    "Révisez les beuyites au programme : nous les reprendrons un par un.",
     "Venez avec ferveur et à l’heure : chaque répétition est une khidma.",
     "Pensez à envoyer votre Tari si ce n’est pas encore fait."
   ];
@@ -1021,7 +1055,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (ty === "rg") { L.push("_Kourels 1 et 2 ensemble, pour préparer la prestation du Kourel général._"); L.push(""); }
     if (kh) {
       L.push("📖 *Au programme*");
-      L.push(kh.titre + (p.tout ? ", khassida entier" : ", vers " + p.de + (p.a && Number(p.a) !== Number(p.de) ? " à " + p.a : "")));
+      L.push(kh.titre + (p.tout ? ", khassida entier" : ", beuyite " + p.de + (p.a && Number(p.a) !== Number(p.de) ? " à " + p.a : "")));
       if (kh.lien) L.push("🎧 Lire et écouter : " + kh.lien + (p.tout ? "" : "#v" + Number(p.de)));
       L.push("");
     }
@@ -1064,9 +1098,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       '<h3 class="group">Au programme</h3><div class="row">' +
       '<label class="field" style="flex:1 1 220px">Khassida<select id="r-kh"><option value="">Aucun khassida précisé</option>' +
       kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (p.khassida === k.id ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") + "</select></label>" +
-      (kh && n ? '<label class="check"><input type="checkbox" id="r-tout"' + (p.tout ? " checked" : "") + "> Tout le khassida (" + n + " vers)</label>" +
-        (p.tout ? "" : '<label class="field" style="flex:1 1 200px">Du vers<select id="r-de" class="vers-select">' + opts(1, p.de) + '</select></label>' +
-          '<label class="field" style="flex:1 1 200px">Au vers<select id="r-a" class="vers-select">' + opts(Number(p.de) || 1, p.a || n) + "</select></label>") : "") +
+      (kh && n ? '<label class="check"><input type="checkbox" id="r-tout"' + (p.tout ? " checked" : "") + "> Tout le khassida (" + n + " beuyites)</label>" +
+        (p.tout ? "" : '<label class="field" style="flex:1 1 200px">Du beuyite<select id="r-de" class="vers-select">' + opts(1, p.de) + '</select></label>' +
+          '<label class="field" style="flex:1 1 200px">Au beuyite<select id="r-a" class="vers-select">' + opts(Number(p.de) || 1, p.a || n) + "</select></label>") : "") +
       '<label class="field" style="flex:1 1 100%">Mot du Conservatoire (facultatif)<textarea id="r-note" rows="' + Math.max(2, p.note.split("\n").length + 1) + '" placeholder="Laisser vide pour ne rien ajouter">' + esc(p.note) + "</textarea></label>" +
       '<div class="motifs"><span class="lbl">Suggestions :</span>' + MOT_SUGG.concat(MOT_DEFAUT[ty] && MOT_SUGG.indexOf(MOT_DEFAUT[ty]) < 0 ? [MOT_DEFAUT[ty]] : []).map(function (m, i, arr) {
         var on = p.note.split("\n").map(function (x) { return x.trim(); }).indexOf(m) > -1;
@@ -1289,7 +1323,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
           var mm = membres[st.id], sm = mm ? statutMembre(mm) : "actif";
           return "<tr><td>" + esc(st.nom) + (sm !== "actif" ? ' <span class="chip">' + (sm === "pause" ? "En pause" : "Parti") + "</span>" : "") + (st.suite >= 2 ? '<span class="flag">' + st.suite + " absences de suite</span>" : "") + "</td><td>" + st.total + "</td>" +
             '<td><span class="bar"><span style="width:' + taux + '%"></span></span>' + taux + " %</td>" +
-            '<td class="' + (st.R ? "c-r" : "") + '">' + st.R + '</td><td class="' + (st.A ? "c-a" : "") + '">' + st.A + (st.E ? '<span class="sub">dont ' + st.E + " prévenue" + (st.E > 1 ? "s" : "") + "</span>" : "") + "</td>" +
+            '<td class="' + (st.R ? "c-r" : "") + '">' + st.R + '</td><td class="' + (st.A ? "c-a" : "") + '">' + st.A + (st.E ? '<span class="sub">' + txtPrevenu(st.E) + "</span>" : "") + "</td>" +
             '<td class="' + (st.tdus && st.trecus < st.tdus ? "c-r" : "") + '">' + (st.tdus ? st.trecus + "/" + st.tdus : "–") + "</td></tr>";
         }).join("") + "</tbody></table></div></section>";
     }
@@ -1321,7 +1355,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var kh = khassidas[td.khassida];
     var t = kh ? kh.titre : "";
     if (kh && td.tout) t += ", khassida entier";
-    else if (kh && td.de) t += ", vers " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
+    else if (kh && td.de) t += ", beuyite " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
     if (td.consigne) t += (t ? " (" + td.consigne + ")" : td.consigne);
     return t || "contenu à préciser";
   }
@@ -1344,7 +1378,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var absents = stats.filter(function (st) { return st.A; }).sort(function (a, b) { return (b.A - a.A) || fr(a, b); });
     if (absents.length) {
       L.push("🔴 *Absences* (" + absents.length + ")");
-      absents.forEach(function (st) { L.push("• " + st.nom + " : " + pluriel(st.A, "absence") + " sur " + st.total + (st.E ? (st.E === st.A ? (st.A > 1 ? ", toutes prévenues" : ", prévenue") : ", dont " + st.E + " prévenue" + (st.E > 1 ? "s" : "")) : "") + (st.R ? ", " + pluriel(st.R, "retard") : "")); });
+      absents.forEach(function (st) { L.push("• " + st.nom + " : " + pluriel(st.A, "absence") + " sur " + st.total + (st.E ? " (" + txtPrevenu(st.E) + ")" : "") + (st.R ? ", " + pluriel(st.R, "retard") : "")); });
       L.push("");
     }
     if (retards.length) {
@@ -1772,7 +1806,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       cm.E = 0;
       mes.forEach(function (s) { var v = (s.statuts || {})[moi.id] || "P"; ct[v]++; if (s.date.slice(0, 7) === mois) { cm[v]++; if (aPrevenu(s, moi.id)) cm.E++; } });
       html += '<section class="panel"><h2>Mes présences</h2><p class="muted">' + esc(moisLabel(mois)) + "</p>" +
-        '<div class="stats"><span class="pill p">' + cm.P + " présent" + (cm.P > 1 ? "s" : "") + '</span><span class="pill r">' + cm.R + " retard" + (cm.R > 1 ? "s" : "") + '</span><span class="pill a">' + cm.A + " absence" + (cm.A > 1 ? "s" : "") + (cm.E ? " (dont " + cm.E + " prévenue" + (cm.E > 1 ? "s" : "") + ")" : "") + "</span></div>" +
+        '<div class="stats"><span class="pill p">' + cm.P + " présent" + (cm.P > 1 ? "s" : "") + '</span><span class="pill r">' + cm.R + " retard" + (cm.R > 1 ? "s" : "") + '</span><span class="pill a">' + cm.A + " absence" + (cm.A > 1 ? "s" : "") + (cm.E ? " (" + txtPrevenu(cm.E) + ")" : "") + "</span></div>" +
         '<p class="muted" style="margin-top:10px">Depuis le début : ' + mes.length + " séance" + (mes.length > 1 ? "s" : "") + ", " + ct.R + " retard" + (ct.R > 1 ? "s" : "") + ", " + ct.A + " absence" + (ct.A > 1 ? "s" : "") + ".</p>" +
         '<div class="list" style="margin-top:10px">' + mes.slice(0, 8).map(function (s) {
           var v = choixDe(s, moi.id);
@@ -1800,14 +1834,21 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return kh.lien ? kh.lien + (vers ? "#v" + Number(vers) : "") : "";
   }
   function vueRepertoire() {
-    var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
-    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Le répertoire du Conservatoire : texte vocalisé, phonétique, traduction et audio de référence.</p>' +
+    /* Les khassidas en cours de répétition passent en premier. */
+    var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) {
+      return (b.enRepetition ? 1 : 0) - (a.enRepetition ? 1 : 0) || (a.titre || "").localeCompare(b.titre || "", "fr");
+    });
+    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Le répertoire du Conservatoire : texte vocalisé, phonétique, traduction et audio de référence.' +
+      (peutSuivi ? " Touchez « En répétition » sur le khassida que le kourel travaille en ce moment : il s’affiche en premier pour tous les membres." : "") + "</p>" +
       (kl.length ? '<div class="kh-list">' + kl.map(function (k) {
         var href = pageKhassida(k), interne = !!k.page;
-        return '<a class="kh-card" href="' + esc(href || "#khassidas") + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ">" +
+        return '<div class="kh-item' + (k.enRepetition ? " en-rep" : "") + '">' +
+          (peutSuivi ? '<button type="button" class="btn small ' + (k.enRepetition ? "" : "ghost ") + 'kh-rep-btn" data-kh-rep="' + esc(k.id) + '" aria-pressed="' + !!k.enRepetition + '">' + (k.enRepetition ? "Retirer de la répétition" : "En répétition") + "</button>" : "") +
+          '<a class="kh-card" href="' + esc(href || "#khassidas") + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ">" +
           (k.arabe ? '<span class="kh-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
-          "<b>" + esc(k.titre) + '</b><span class="muted">' + (k.vers ? k.vers + " vers" : "") + (interne ? " · Texte et audio" : "") + "</span>" +
-          '<span class="go">' + (href ? "Ouvrir →" : "Page d’étude à venir") + "</span></a>";
+          (k.enRepetition ? '<span class="kh-rep-pill">En cours de répétition</span>' : "") +
+          "<b>" + esc(k.titre) + "</b>" + (k.kourel ? '<span class="chip kh-kourel">' + (k.kourel === "k1" ? "Kourel 1" : k.kourel === "k2" ? "Kourel 2" : "Kourels 1 et 2") + "</span>" : "") + '<span class="muted">' + (k.vers ? k.vers + " beuyites" : "") + (interne ? " · Texte et audio" : "") + "</span>" +
+          '<span class="go">' + (href ? "Ouvrir →" : "Page d’étude à venir") + "</span></a></div>";
       }).join("") + "</div>" : '<div class="empty" style="margin-top:12px">Aucun khassida pour l’instant.</div>') +
       (peutModifier ? '<p class="muted" style="margin-top:12px;font-size:13px">Pour ajouter un khassida, allez dans <a href="#reglages">Réglages</a>.</p>' : "") + "</section>";
     app.innerHTML = html;
@@ -1836,17 +1877,21 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   /* ---------- Khassidas (réglages) ---------- */
   function vueKhassidas(ajouter) {
     var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
-    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Les khassidas du répertoire. Ils servent à préciser le Tari de chaque séance.</p>' +
+    var html = '<section class="panel"><h2>Khassidas</h2><p class="muted">Les khassidas du répertoire. Ils servent à préciser le Tari de chaque séance. Un membre ne voit que les khassidas de son kourel, plus ceux prévus pour une répétition générale à venir et ceux de ses Taris.</p>' +
       '<div class="list" style="margin-top:12px">' + (kl.length ? kl.map(function (k) {
         return '<div class="item">' + (k.arabe ? '<span class="kh-ar" lang="ar">' + esc(k.arabe) + "</span>" : "") +
-          '<div class="ligne"><span><b>' + esc(k.titre) + "</b>" + (k.vers ? " · " + k.vers + " vers" : "") + "</span>" +
+          '<div class="ligne"><span><b>' + esc(k.titre) + "</b>" + (k.vers ? " · " + k.vers + " beuyites" : "") + "</span>" +
+          (peutModifier ? '<label class="field kh-kourel-choix">Kourel<select data-kh-kourel="' + esc(k.id) + '">' +
+            [["", "Tous les membres"], ["k1", "Kourel 1"], ["k2", "Kourel 2"], ["k1k2", "Kourels 1 et 2"]].map(function (o) { return '<option value="' + o[0] + '"' + ((k.kourel || "") === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") +
+            "</select></label>" : "") +
           ((k.page || k.lien) ? '<a href="' + esc(pageKhassida(k)) + '"' + (k.page ? "" : ' target="_blank" rel="noopener"') + ">Ouvrir la page d’étude</a>" : "") + "</div></div>";
       }).join("") : '<div class="empty">Aucun khassida pour l’instant.</div>') + "</div>";
     if (peutModifier) {
       html += '<form class="row" id="f-kh" style="margin-top:14px">' +
         '<label class="field" style="flex:1 1 200px">Titre<input type="text" id="k-titre" required placeholder="Mawahibu Nafih"></label>' +
         '<label class="field" style="flex:1 1 160px">Titre en arabe (facultatif)<input type="text" id="k-ar" dir="rtl" lang="ar"></label>' +
-        '<label class="field">Nombre de vers<input type="number" id="k-vers" min="1" style="width:100px"></label>' +
+        '<label class="field">Nombre de beuyites<input type="number" id="k-vers" min="1" style="width:100px"></label>' +
+        '<label class="field">Kourel<select id="k-kourel"><option value="">Tous les membres</option><option value="k1">Kourel 1</option><option value="k2">Kourel 2</option><option value="k1k2">Kourels 1 et 2</option></select></label>' +
         '<label class="field" style="flex:1 1 220px">Lien de la page (facultatif)<input type="url" id="k-lien" placeholder="https://claude.ai/artifact/…"></label>' +
         '<button class="btn primary" type="submit">Ajouter le khassida</button></form>';
     }
@@ -1861,7 +1906,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       while (khassidas[id]) id = slug(titre) + "-" + n++;
       db.doc("khassidas/" + id).set({
         titre: titre, arabe: document.getElementById("k-ar").value.trim(),
-        vers: parseInt(document.getElementById("k-vers").value, 10) || null, lien: document.getElementById("k-lien").value.trim()
+        vers: parseInt(document.getElementById("k-vers").value, 10) || null, lien: document.getElementById("k-lien").value.trim(),
+        kourel: document.getElementById("k-kourel").value
       }).then(function () { toast(titre + " ajouté à la liste."); }, echec);
     });
   }
@@ -1951,6 +1997,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   window.addEventListener("hashchange", function () { lireHash(); window.scrollTo(0, 0); seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null; afficher(); });
 
   app.addEventListener("click", function (e) {
+    if (e.target.closest("[data-refus-seance]")) { refusSeance("modifier"); return; }
     var b = e.target.closest("button");
     if (!b) return;
     if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
@@ -2167,6 +2214,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (b.dataset.set && peutSuivi) {
       var sv = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
       var pid = b.dataset.set, nv = b.dataset.v;
+      // « Absent » touché alors qu'il a prévenu : on garde « a prévenu ». « Non » à la question : absent sans prévenir.
+      if (nv === "A" && choixDe(sv, pid) === "E") return;
+      if (nv === "N") nv = "A";
       if (choixDe(sv, pid) === nv) return;
       var patch = {}, maj = { statuts: patch };
       patch[pid] = nv === "E" ? "A" : nv;
@@ -2182,7 +2232,17 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("seances/" + seanceOuverte).update({ prevenus: pm }).catch(echec);
       return;
     }
-    if (b.hasAttribute("data-askdel")) { confirmerSuppression = true; afficher(); return; }
+    if (b.dataset.khRep && peutSuivi) {
+      var kr = khassidas[b.dataset.khRep], oui = !(kr && kr.enRepetition);
+      b.disabled = true;
+      db.doc("khassidas/" + b.dataset.khRep).update({ enRepetition: oui, enRepetitionLe: oui ? today() : null, enRepetitionPar: oui ? (moiCourant || null) : null })
+        .then(function () { toast(oui ? (kr ? kr.titre : "Le khassida") + " est marqué en cours de répétition." : "Retiré des khassidas en répétition."); }, function (e) { b.disabled = false; echec(e); });
+      return;
+    }
+    if (b.hasAttribute("data-askdel")) {
+      if (!peutModifier) { refusSeance("supprimer"); return; }
+      confirmerSuppression = true; afficher(); return;
+    }
     if (b.hasAttribute("data-nodel")) { confirmerSuppression = false; afficher(); return; }
     if (b.hasAttribute("data-del")) {
       var id = seanceOuverte;
@@ -2270,6 +2330,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       else { v = {}; v[f] = parseInt(t.value, 10) || 1; enregistrerRappel(rappelOuvert, v); }
       return;
     }
+    if (t.dataset && t.dataset.khKourel && peutModifier) {
+      db.doc("khassidas/" + t.dataset.khKourel).update({ kourel: t.value }).then(function () { toast("Kourel du khassida enregistré."); }, echec);
+      return;
+    }
     if (t.dataset && t.dataset.tel && peutModifier) {
       db.doc("membres/" + t.dataset.tel).update({ telephone: t.value.trim() }).then(function () { toast("Numéro enregistré."); }, echec);
       return;
@@ -2286,7 +2350,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       if (sel) sel.value = nty; if (hh) hh.value = HORAIRE[nty] || "";
       return;
     }
-    if (t.id === "s-horaire" && peutSuivi && seanceOuverte) {
+    if (t.id === "s-horaire" && peutModifier && seanceOuverte) {
       db.doc("seances/" + seanceOuverte).update({ horaire: t.value.trim() }).then(function () { toast("Horaire enregistré."); }, echec);
       return;
     }

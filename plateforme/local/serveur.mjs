@@ -49,6 +49,21 @@ if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
   process.exit(1);
 }
 const stock = await ouvrirStockage();
+
+/* Chaque page de khassida du code porte sa fiche (plateforme/khassidas/<dossier>/fiche.json).
+   Au démarrage, une fiche absente de la liste y est ajoutée ; pour une fiche déjà présente, seuls les champs
+   manquants sont complétés (ex. le kourel) : ce qui a été modifié sur la plateforme n'est jamais écrasé. */
+for (const dossier of await fsp.readdir(path.join(PLATEFORME, "khassidas")).catch(() => [])) {
+  try {
+    const { id, ...fiche } = JSON.parse(await fsp.readFile(path.join(PLATEFORME, "khassidas", dossier, "fiche.json"), "utf8"));
+    const actuel = id ? await stock.lireDoc("khassidas", id) : null;
+    if (id && !actuel) { await stock.ecrireDoc("khassidas", id, fiche); console.log("Khassida ajouté à la liste : " + fiche.titre); }
+    else if (actuel) {
+      const manque = Object.fromEntries(Object.entries(fiche).filter(([k]) => actuel[k] === undefined));
+      if (Object.keys(manque).length) await stock.fusionnerDoc("khassidas", id, manque);
+    }
+  } catch { /* dossier sans fiche */ }
+}
 const comptes = creerComptes(stock);
 
 const clients = new Set();
@@ -122,6 +137,31 @@ function filtrerPour(sess, col, docs) {
     return docs;
   }
   return filtrerPourMembre(col, docs, sess.membre);
+}
+
+/* Khassidas visibles par un membre (null = tous : administrateur et Conservatoire).
+   Un membre voit : les khassidas de son ou ses kourels, ceux sans kourel indiqué, ceux prévus au programme
+   d'une répétition générale à venir (les deux kourels la chantent ensemble) ou d'une répétition à venir de son kourel,
+   et ceux dont on lui a demandé le Tari. */
+const aujourdhui = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const KOURELS = { k1: ["k1"], k2: ["k2"], k1k2: ["k1", "k2"] };
+async function khassidasVisibles(sess) {
+  if (peut(sess, "suivi")) return null;
+  const m = (await stock.lireDoc("membres", sess.membre)) || {};
+  const ok = new Set(), t = aujourdhui();
+  for (const d of await stock.lireCollection("khassidas")) {
+    const ks = KOURELS[d.data.kourel];
+    if (!ks || ks.some((k) => m[k])) ok.add(d.id);
+  }
+  for (const p of await stock.lireCollection("programmes")) {
+    const date = p.id.slice(0, 10), type = p.id.slice(11);
+    if (p.data.khassida && !p.data.annulee && date >= t && (type === "rg" || m[type])) ok.add(p.data.khassida);
+  }
+  for (const s of await stock.lireCollection("seances")) {
+    const kh = s.data.tariDetail && s.data.tariDetail.khassida;
+    if (kh && (s.data.participants || []).includes(sess.membre)) ok.add(kh);
+  }
+  return ok;
 }
 
 /* Départ définitif : l'accès du membre est supprimé (déconnecté partout, demande en cours effacée).
@@ -251,13 +291,29 @@ async function api(req, res, parts, sess) {
     if (!sess.admin && !LECTURE_MEMBRE.has(col)) return json(res, 403, { code: "invalid_argument" });
     let docs = id ? [{ id, data: await stock.lireDoc(col, id) }].filter((d) => d.data) : await stock.lireCollection(col);
     docs = filtrerPour(sess, col, docs);
+    if (col === "khassidas") { const vis = await khassidasVisibles(sess); if (vis) docs = docs.filter((d) => vis.has(d.id)); }
     if (id) return docs[0] ? json(res, 200, docs[0]) : json(res, 404, { code: "not_found" });
     return json(res, 200, { docs });
   }
-  if (!peut(sess, PERMISSION_COLLECTION[col])) return json(res, 403, { code: "invalid_argument", message: "Vous n’avez pas le droit de modifier ceci." });
-  if (req.method === "PUT") { await stock.ecrireDoc(col, id, await lireCorps(req)); prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true }); }
+  const corps = req.method === "PUT" || req.method === "PATCH" ? await lireCorps(req) : null;
+  // Conservatoire : il peut marquer un khassida « en répétition » (et seulement cela).
+  const marqueRepetition = col === "khassidas" && req.method === "PATCH" && corps && Object.keys(corps).length > 0
+    && Object.keys(corps).every((k) => ["enRepetition", "enRepetitionLe", "enRepetitionPar"].includes(k));
+  if (!peut(sess, marqueRepetition ? "suivi" : PERMISSION_COLLECTION[col])) return json(res, 403, { code: "invalid_argument", message: "Vous n’avez pas le droit de modifier ceci." });
+  // Conservatoire : il crée une séance et fait l'appel, mais seul l'administrateur la supprime
+  // ou change ce qui la définit (date, répétition, horaire), même en cas d'erreur.
+  if (col === "seances" && !sess.admin) {
+    const avant = id ? await stock.lireDoc("seances", id) : null;
+    const PROTEGES = ["date", "type", "horaire", "creeLe"];
+    const different = (k) => JSON.stringify(corps[k]) !== JSON.stringify(avant[k]);
+    const refuse = req.method === "DELETE"
+      || (avant && req.method === "PUT" && PROTEGES.some(different))
+      || (avant && req.method === "PATCH" && PROTEGES.some((k) => k in corps && different(k)));
+    if (refuse) return json(res, 403, { code: "admin_seance", message: "Seul l’administrateur peut modifier ou supprimer une séance. Contactez-le si c’est une erreur." });
+  }
+  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true }); }
   if (req.method === "PATCH") {
-    if (!(await stock.fusionnerDoc(col, id, await lireCorps(req)))) return json(res, 404, { code: "not_found" });
+    if (!(await stock.fusionnerDoc(col, id, corps))) return json(res, 404, { code: "not_found" });
     prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true });
   }
   if (req.method === "DELETE") { await stock.supprimerDoc(col, id); prevenir(col); return json(res, 200, { ok: true }); }
@@ -289,6 +345,13 @@ async function fichier(req, res, urlPath, sess) {
     }
     res.writeHead(401, { "Content-Type": "text/plain; charset=utf-8" });
     return res.end("Connexion nécessaire");
+  }
+  // Page, audio et manuscrit d'un khassida qui ne concerne pas ce membre : refusés aussi.
+  const dossierKh = /^\/khassidas\/([\w-]+)\//.exec(rel);
+  if (dossierKh && sess && !peut(sess, "suivi")) {
+    const fiche = await fsp.readFile(path.join(PLATEFORME, "khassidas", dossierKh[1], "fiche.json"), "utf8").then(JSON.parse, () => null);
+    const vis = fiche && fiche.id ? await khassidasVisibles(sess) : null;
+    if (vis && !vis.has(fiche.id)) { res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("Ce khassida est réservé à un autre kourel."); }
   }
   const cible = path.resolve(PLATEFORME, "." + rel);
   if (!cible.startsWith(PLATEFORME + path.sep)) { res.writeHead(403); return res.end(); }
