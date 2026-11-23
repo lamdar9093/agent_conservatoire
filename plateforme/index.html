@@ -273,6 +273,10 @@ dialog.refus .btn { width: 100%; justify-content: center; margin-top: 6px; }
 .tari-choix-liste { display: flex; flex-wrap: wrap; gap: 6px; }
 .tari-choix-liste .toggle[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .tari-choix-liste .tags { font-size: 11px; color: var(--ink-soft); font-weight: 400; }
+.taris-faits { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.taris-faits li { display: flex; gap: 10px; align-items: baseline; font-size: 13.5px; }
+.taris-faits .ok { color: var(--good); font-weight: 700; flex: none; }
+.taris-faits .muted { font-size: 12.5px; }
 .confirm { margin-top: 12px; padding: 12px; border-radius: 10px; background: var(--bad-soft); display: grid; gap: 8px; }
 
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
@@ -617,7 +621,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (!kh && !td.consigne) return "";
     var t = kh ? "<b>" + esc(kh.titre) + "</b>" : "";
     if (kh && td.tout) t += " · khassida entier";
-    else if (kh && td.de) t += " · beuyite " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
+    else if (kh && td.de) t += (td.a && Number(td.a) !== Number(td.de) ? " · beuyites " + td.de + " à " + td.a : " · beuyite " + td.de);
     if (td.consigne) t += (t ? " · " : "") + esc(td.consigne);
     if (avecLien !== false && kh && (kh.page || kh.lien)) t += ' · <a href="' + esc(pageKhassida(kh, td.de)) + '"' + (kh.page ? "" : ' target="_blank" rel="noopener"') + ">Lire et écouter</a>";
     return t;
@@ -1155,7 +1159,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (ty === "rg") { L.push("_Kourels 1 et 2 ensemble, pour préparer la prestation du Kourel général._"); L.push(""); }
     if (kh) {
       L.push("📖 *Au programme*");
-      L.push(kh.titre + (p.tout ? ", khassida entier" : ", beuyite " + p.de + (p.a && Number(p.a) !== Number(p.de) ? " à " + p.a : "")));
+      L.push(kh.titre + (p.tout ? ", khassida entier" : (p.a && Number(p.a) !== Number(p.de) ? ", beuyites " + p.de + " à " + p.a : ", beuyite " + p.de)));
       if (kh.lien) L.push("🎧 Lire et écouter : " + kh.lien + (p.tout ? "" : "#v" + Number(p.de)));
       L.push("");
     }
@@ -1467,7 +1471,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var kh = khassidas[td.khassida];
     var t = kh ? kh.titre : "";
     if (kh && td.tout) t += ", khassida entier";
-    else if (kh && td.de) t += ", beuyite " + td.de + (td.a && Number(td.a) !== Number(td.de) ? " à " + td.a : "");
+    else if (kh && td.de) t += (td.a && Number(td.a) !== Number(td.de) ? ", beuyites " + td.de + " à " + td.a : ", beuyite " + td.de);
     if (td.consigne) t += (t ? " (" + td.consigne + ")" : td.consigne);
     return t || "contenu à préciser";
   }
@@ -1863,17 +1867,22 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         items.push({ s: s, recu: recu, et: et, ech: ech });
       });
       items.sort(function (a, b) { return (a.recu - b.recu) || (a.ech < b.ech ? -1 : 1); });
-      var attente = items.filter(function (x) { return !x.recu; }).length;
-      html += '<section class="panel"><h2>Mes Taris</h2><p class="muted">' + (attente ? attente + " Tari" + (attente > 1 ? "s" : "") + " à envoyer ou à retravailler, sur WhatsApp ou à un membre du Conservatoire." : "Aucun Tari en attente.") + "</p>" +
-        '<div class="list" style="margin-top:10px">' + (items.length ? items.map(function (x) {
+      /* Mes Taris : d'abord ceux à envoyer, puis (à part, en petit) ceux déjà maîtrisés ces 30 derniers jours. */
+      var aFaire = items.filter(function (x) { return !x.recu; }), faits = items.filter(function (x) { return x.recu; });
+      var quandTari = function (x) { return (x.s.type === "rg" ? "la répétition générale" : "la répétition du " + esc(TYPES[x.s.type] || "kourel")) + " du " + esc(asDate(x.s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })); };
+      html += '<section class="panel"><h2>Mes Taris</h2><p class="muted">' + (aFaire.length ? aFaire.length + " Tari" + (aFaire.length > 1 ? "s" : "") + " à envoyer ou à retravailler, sur WhatsApp ou à un membre du Conservatoire." : "Aucun Tari à envoyer pour le moment.") + "</p>" +
+        (aFaire.length ? '<div class="list" style="margin-top:10px">' + aFaire.map(function (x) {
           var t = tariTexte(x.s.tariDetail || {});
-          var lab = x.recu ? "Maîtrisé" : x.et === "recu" ? "À retravailler" : "À envoyer";
-          var depasse = !x.recu && x.ech < today();
-          return '<div class="item' + (x.recu ? "" : " attente") + '"><div class="ligne"><span>' + (t || "Contenu à préciser par le Conservatoire") + '</span><span class="pill ' + (x.recu ? "p" : x.et === "recu" ? "e" : "r") + '">' + lab + "</span></div>" +
-            '<span class="muted">Demandé à la séance ' + esc(TYPES[x.s.type] || "") + " du " + esc(asDate(x.s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })) +
-            (x.recu ? "" : depasse ? " · échéance dépassée : pas de dahira ni de prestation tant qu’il n’est pas maîtrisé"
+          var depasse = x.ech < today();
+          return '<div class="item attente"><div class="ligne"><span>' + (t || "Le Conservatoire vous précisera quoi envoyer") + '</span><span class="pill ' + (x.et === "recu" ? "e" : "r") + '">' + (x.et === "recu" ? "À retravailler" : "À envoyer") + "</span></div>" +
+            '<span class="muted">Demandé à ' + quandTari(x) +
+            (depasse ? " · échéance dépassée : pas de dahira ni de prestation tant qu’il n’est pas maîtrisé"
               : " · à maîtriser avant la répétition du " + esc(jourEcheance(x.ech)) + (x.et === "recu" ? " : renvoyez-le jusqu’à maîtrise" : "")) + "</span></div>";
-        }).join("") : '<div class="empty">Rien à envoyer pour le moment.</div>') + "</div></section>";
+        }).join("") + "</div>" : "") +
+        (faits.length ? '<h3 class="group">Déjà maîtrisés</h3><ul class="taris-faits">' + faits.map(function (x) {
+          var t = tariTexte(x.s.tariDetail || {});
+          return '<li><span class="ok" aria-hidden="true">✓</span><span>' + (t || "Tari") + ' <span class="muted">· demandé à ' + quandTari(x) + "</span></span></li>";
+        }).join("") + "</ul>" : "") + "</section>";
 
       /* Mon suivi : indicateurs, évaluation du Conservatoire, chemin vers le Kourel 1 */
       if (statutMembre(moi) === "actif") {
