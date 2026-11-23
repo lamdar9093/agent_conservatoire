@@ -93,7 +93,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
 
   <section id="v-inscription" hidden>
     <h1 id="t-inscription">Créer mon accès</h1>
-    <p class="muted">Réservé aux membres du Kourel. Le Conservatoire valide chaque demande avant la première connexion.</p>
+    <p class="muted">Réservé aux membres du Kourel. L’admin valide chaque demande avant la première connexion.</p>
     <form id="f-inscription" novalidate>
       <div class="etape">
         <span class="lab" id="lab-nom">1. Votre nom</span>
@@ -126,7 +126,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
 
   <section id="v-lien" hidden>
     <h1>Lien plus valable</h1>
-    <p class="muted" id="m-lien">Ce lien d’inscription n’est plus valable. Demandez le nouveau lien au Conservatoire, dans le groupe WhatsApp du Kourel.</p>
+    <p class="muted" id="m-lien">Ce lien d’inscription n’est plus valable. Demandez le nouveau lien à l’admin, dans le groupe WhatsApp du Kourel.</p>
     <p class="aide"><a class="lien" href="/connexion.html">Aller à la connexion</a></p>
   </section>
 
@@ -186,7 +186,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
     var l = membresInscription.filter(function (m) { return !q || simple(m.nom).split(/\s+/).some(function (w) { return w.indexOf(q) === 0; }) || simple(m.nom).indexOf(q) === 0; });
     $("noms").innerHTML = l.length ? l.map(function (m) {
       return '<button type="button" data-membre="' + esc(m.id) + '"><span>' + esc(m.nom) + "</span>" + (ETATS[m.etat] ? "<small>" + ETATS[m.etat] + "</small>" : "") + "</button>";
-    }).join("") : '<div class="vide">Aucun nom ne correspond. Vérifiez l’orthographe, ou demandez au Conservatoire de vous ajouter.</div>';
+    }).join("") : '<div class="vide">Aucun nom ne correspond. Vérifiez l’orthographe, ou demandez à l’admin de vous ajouter.</div>';
   }
   function choisir(m) {
     choisi = m;
@@ -194,7 +194,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
     var note = "";
     if (m) {
       $("choix-nom").textContent = m.nom;
-      if (m.etat === "compte") note = "Vous avez déjà un accès. Cette demande vous donnera un nouveau mot de passe, une fois validée par le Conservatoire. D’ici là, l’ancien reste valable.";
+      if (m.etat === "compte") note = "Vous avez déjà un accès. Cette demande vous donnera un nouveau mot de passe, une fois validée par l’admin. D’ici là, l’ancien reste valable.";
       if (m.etat === "demande") note = "Une demande est déjà en cours pour ce nom. Celle-ci la remplacera.";
     }
     $("i-note").textContent = note; $("i-note").hidden = !note;
@@ -235,7 +235,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
       btn.disabled = false;
       if (!r._ok) { if (r.code === "lien") { ecrireCode(""); montrer("v-lien"); } return erreur($("i-err"), r.message || "Envoi impossible."); }
       var prenom = (r.nom || "").split(" ")[0];
-      $("m-envoyee").textContent = "Merci " + prenom + " ! Le Conservatoire va valider votre demande et vous prévenir sur WhatsApp.";
+      $("m-envoyee").textContent = "Merci " + prenom + " ! L’admin va valider votre demande et vous prévenir sur WhatsApp.";
       $("e-tel").textContent = r.telephone || tel;
       $("vers-connexion").href = "/connexion.html?u=" + encodeURIComponent(r.telephone || tel);
       montrer("v-envoyee");

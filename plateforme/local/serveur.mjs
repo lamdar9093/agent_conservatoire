@@ -197,10 +197,10 @@ async function api(req, res, parts, sess) {
     if (tropDEchecs(req)) return json(res, 429, { code: "rate_limited", message: "Trop d’essais. Réessayez dans un quart d’heure." });
     const corps = await lireCorps(req);
     const r = await comptes.connecter(corps.identifiant, corps.motDePasse, await stock.lireCollection("membres"));
-    if (r.erreur === "attente") return json(res, 403, { code: "attente", message: "Votre demande d’accès est bien reçue : elle attend la validation du Conservatoire. Vous serez prévenu sur WhatsApp." });
+    if (r.erreur === "attente") return json(res, 403, { code: "attente", message: "Votre demande d’accès est bien reçue : elle attend la validation de l’admin. Vous serez prévenu sur WhatsApp." });
     if (r.erreur === "ambigu") return json(res, 401, { code: "ambigu", message: "Plusieurs membres ont ce nom : tapez votre numéro WhatsApp, ou votre prénom et votre nom." });
     if (r.erreur) noterEchec(req); else echecs.delete(ipDe(req));
-    if (r.erreur === "expire") return json(res, 401, { code: "expire", message: "Ce mot de passe temporaire a expiré. Demandez-en un nouveau au Conservatoire." });
+    if (r.erreur === "expire") return json(res, 401, { code: "expire", message: "Ce mot de passe temporaire a expiré. Demandez-en un nouveau à l’admin." });
     if (r.erreur === "inconnu") return json(res, 401, { code: "identifiants", message: "Aucun accès à ce numéro ou ce nom. Tapez le numéro WhatsApp donné à l’inscription. Pas encore inscrit ? Ouvrez le lien d’inscription partagé dans le groupe WhatsApp du Kourel." });
     if (r.erreur) return json(res, 401, { code: "identifiants", message: "Mot de passe incorrect." });
     return json(res, 200, { ok: true, doitChanger: r.temporaire }, { "Set-Cookie": cookieSession(req, r.jeton, DUREE_SESSION / 1000) });
@@ -209,7 +209,7 @@ async function api(req, res, parts, sess) {
   if (parts[0] === "inscription") {
     const corps = req.method === "POST" ? await lireCorps(req) : {};
     const code = req.method === "POST" ? corps.c : new URL(req.url, "http://x").searchParams.get("c");
-    if (!(await comptes.codeValide(code))) return json(res, 404, { code: "lien", message: "Ce lien d’inscription n’est plus valable. Demandez le nouveau lien au Conservatoire." });
+    if (!(await comptes.codeValide(code))) return json(res, 404, { code: "lien", message: "Ce lien d’inscription n’est plus valable. Demandez le nouveau lien à l’admin." });
     const membres = (await stock.lireCollection("membres")).filter((m) => m.data.statut !== "parti");
     if (req.method === "GET") {
       const etats = await comptes.etatDemandes();
@@ -221,7 +221,7 @@ async function api(req, res, parts, sess) {
     if (!m) return json(res, 400, { code: "membre", message: "Choisissez votre nom dans la liste." });
     // Un compte administrateur ne se réinitialise jamais par le lien du groupe (personne ne peut demander à sa place).
     const existant = (await comptes.liste())[m.id];
-    if (existant && existant.admin) return json(res, 403, { code: "admin", message: "Pour ce compte, le mot de passe se change uniquement auprès du Conservatoire." });
+    if (existant && existant.admin) return json(res, 403, { code: "admin", message: "Pour ce compte, le mot de passe se change uniquement auprès de l’admin." });
     const tel = chiffres(corps.telephone);
     if (tel.length < 10 || tel.length > 15) return json(res, 400, { code: "telephone", message: "Saisissez votre numéro WhatsApp complet (10 chiffres au moins)." });
     if (typeof corps.motDePasse !== "string" || corps.motDePasse.length < 8) return json(res, 400, { code: "court", message: "Choisissez un mot de passe d’au moins 8 caractères." });
