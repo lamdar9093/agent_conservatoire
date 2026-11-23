@@ -260,6 +260,39 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
 .msg-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .msg-actions textarea { flex: 1 1 100%; min-height: 60px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; resize: vertical; }
 .pill.anon { background: var(--paper); color: var(--ink-soft); border: 1px dashed var(--rule); }
+/* Programme de chant (onglet Programme) */
+.ev { display: grid; gap: 12px; }
+.ev-tete { display: flex; align-items: center; gap: 14px; }
+.ev-titre { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.ev-titre b { font-size: 16px; font-weight: 600; }
+.ev-titre .muted { font-size: 13px; }
+.ev-annulee { opacity: 0.72; }
+.ev-note { margin: 0; color: var(--ink-soft); font-size: 14px; }
+.prog { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.prog-tete { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.prog-tete b { font-size: 14.5px; font-weight: 600; }
+.prog-tete .muted { font-size: 12.5px; }
+.prog-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.prog-liste li { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); }
+.prog-num { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; }
+.prog-kh { flex: 1; min-width: 0; display: grid; }
+.prog-kh b { font-size: 14.5px; font-weight: 600; }
+.prog-kh small { font-size: 12.5px; color: var(--ink-soft); }
+.prog-lien { flex: none; font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; padding: 4px 2px; }
+.prog-outils { flex: none; display: flex; }
+.prog-outils button { border: 0; background: none; color: var(--ink-soft); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 15px; }
+.prog-outils button:hover { background: var(--accent-soft); color: var(--ink); }
+.prog-vide { margin: 0; font-size: 13.5px; color: var(--ink-soft); font-style: italic; }
+.prog-props { display: grid; gap: 8px; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--warn); background: var(--warn-soft); }
+.prog-props .lbl { font-size: 11.5px; font-weight: 700; color: var(--warn); text-transform: uppercase; letter-spacing: 0.05em; }
+.prop { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.prog-ajouter { justify-self: start; border: 1px dashed var(--rule); background: none; color: var(--accent); font: inherit; font-size: 13.5px; font-weight: 600; padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+.prog-ajouter:hover { border-color: var(--accent); }
+.prog-form { display: grid; gap: 10px; padding: 12px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule); }
+.prog-form .field input, .prog-form .field select { background: var(--surface); }
+.ev-preste { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-weight: 600; font-size: 14px; text-align: left; cursor: pointer; }
+.ev-preste:hover { border-color: var(--accent); }
+.ev-preste .dz-go { margin-left: auto; }
 dialog.refus { width: min(92vw, 400px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 dialog.refus::backdrop { background: rgba(10, 20, 18, 0.45); }
 dialog.refus form { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 24px 20px 20px; }
@@ -489,7 +522,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     <nav class="tabs" aria-label="Sections">
       <a href="#khassidas" data-view="khassidas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/></svg><span>Khassidas</span></a>
       <a href="#seances" data-view="seances"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg><span>Répétitions</span></a>
-      <a href="#dahira" data-view="dahira"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.8-3.3 3.2-5.2 6-5.2s5.2 1.9 6 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M16.6 14.3c2.3.3 3.9 2 4.4 4.7"/></svg><span>Dahira</span></a>
+      <a href="#dahira" data-view="dahira"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg><span>Programme</span></a>
       <a href="#bilan" data-view="bilan"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2.5 20h19"/></svg><span>Bilan</span></a>
       <a href="#moi" data-view="moi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c1-3.9 3.8-6.1 7-6.1s6 2.2 7 6.1"/></svg><span>Mon espace</span></a>
       <a href="#reglages" data-view="reglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/></svg><span>Réglages</span></a>
@@ -499,7 +532,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
 <nav class="bottom-nav" aria-label="Sections">
   <a href="#khassidas" data-view="khassidas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/></svg><span>Khassidas</span></a>
   <a href="#seances" data-view="seances"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg><span>Répétitions</span></a>
-  <a href="#dahira" data-view="dahira"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.8-3.3 3.2-5.2 6-5.2s5.2 1.9 6 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M16.6 14.3c2.3.3 3.9 2 4.4 4.7"/></svg><span>Dahira</span></a>
+  <a href="#dahira" data-view="dahira"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg><span>Programme</span></a>
   <a href="#bilan" data-view="bilan"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2.5 20h19"/></svg><span>Bilan</span></a>
   <a href="#moi" data-view="moi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c1-3.9 3.8-6.1 7-6.1s6 2.2 7 6.1"/></svg><span>Moi</span></a>
 </nav>
@@ -741,7 +774,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
               (prog.deplaceeVers ? "Déplacée au " + esc(jourCourt(prog.deplaceeVers.slice(0, 10))) + (prog.deplaceeVers.slice(11) !== r.type ? " (" + esc(TYPES[prog.deplaceeVers.slice(11)]) + ")" : "") : "Annulée" + (prog.motifAnnulation ? " · " + esc(prog.motifAnnulation) : "")) + "</span></span>" +
               (prog.deplaceeVers ? "" : '<button type="button" class="btn small primary" data-rappel="' + esc(r.id) + '">Message d’annulation</button><button type="button" class="btn small ghost" data-action="rep-retablir" data-id="' + esc(r.id) + '">Rétablir</button>') + "</div>";
           }
-          var h = '<div class="rap-row">' + when + '<span class="muted">' + esc(prog.horaire) + (kh ? " · " + esc(kh.titre) : "") + "</span></span>" +
+          var h = '<div class="rap-row">' + when + '<span class="muted">' + esc(prog.horaire) + (itemsCle("rep-" + r.id, "retenu").length ? " · " + itemsCle("rep-" + r.id, "retenu").length + " khassida" + (itemsCle("rep-" + r.id, "retenu").length > 1 ? "s" : "") + " au programme" : kh ? " · " + esc(kh.titre) : "") + "</span></span>" +
             '<button type="button" class="btn small' + (prog.envoye ? "" : " primary") + '" data-rappel="' + esc(r.id) + '">' + (prog.envoye ? "Rappel envoyé ✓" : "Préparer le rappel") + "</button>" +
             '<button type="button" class="btn small ghost" data-action="rep-edit" data-id="' + esc(r.id) + '">Modifier</button>';
           if (editRep === r.id) {
@@ -984,21 +1017,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   function seanceCourte(s) { return (TYPES[s.type] || "") + " du " + asDate(s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
   function vueDahiras() {
     if (dahiraOuvert) return vueDahira(dahiraOuvert);
-    var html = "";
-    /* Prochains dahiras : qui peut entrer dans le kourel */
-    var cartes = "";
-    prochainsDahiras().forEach(function (dz, i) {
-      var e = etatDahira(dz);
-      if (i > 0 && !e.tariDemandes) return;
-      var d = asDate(dz);
-      cartes += '<button type="button" class="dz-card' + (e.tariBloques.length ? " alerte" : "") + '" data-dahira="' + dz + '">' +
-        '<span class="dz-date"><small>Sam.</small><b>' + d.getDate() + "</b><small>" + esc(d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "")) + "</small></span>" +
-        '<span class="dz-body"><b>Qui preste au dahira du ' + esc(samediLong(dz)) + " ?</b>" +
-        '<span class="counts" style="justify-content:flex-start">' + e.groupes.map(function (g) { return '<span class="pill p">' + g.court + " : " + g.ok.length + " / " + g.total + "</span>"; }).join("") +
-        (e.tariBloques.length ? '<span class="pill r">' + e.tariBloques.length + " Tari en attente</span>" : "") + "</span></span>" +
-        '<span class="dz-go" aria-hidden="true">›</span></button>';
-    });
-    html += '<section class="panel"><h2>Prochains dahiras</h2><p class="muted">Qui preste, quel kourel, et les Taris encore attendus, selon les <a href="#chartes">chartes du kourel</a>.</p><div class="list" style="margin-top:12px">' + cartes + "</div></section>";
+    /* Onglet Programme : les prochaines répétitions et le dahira du samedi, avec ce que chaque kourel chantera. */
+    var ev = evenementsAVenir();
+    var html = datalistEres() + '<section class="panel"><h2>Programme</h2><p class="muted">Ce que ' + (peutSuivi ? "chaque kourel chantera" : "votre kourel chantera") +
+      " aux prochaines répétitions et au dahira du samedi, avec l’ère de chaque khassida." + (peutSuivi ? " Le dieuwrigne de chaque kourel décide ; les autres membres du Conservatoire peuvent proposer." : "") + "</p></section>";
+    ev.forEach(function (x) { html += x.sorte === "rep" ? carteRepetition(x) : carteDahira(x); });
+    if (!ev.length) html += '<div class="empty">Rien de prévu dans les prochains jours.</div>';
     app.innerHTML = html;
   }
   function vueDahira(dz) {
@@ -1007,7 +1031,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       ? (e.rg ? "Kourel général : ceux qui sont venus à la répétition générale du " + dimancheLong(e.rg.date) + "."
               : "Kourel général. Aucune répétition générale enregistrée avant ce samedi : tous les membres actifs sont comptés.")
       : MODE_PHRASE[e.mode] + " Un membre qui doit encore un Tari de son kourel n’y entre pas.";
-    var html = '<div><button type="button" class="btn ghost" data-back>← Prochains dahiras</button></div>' +
+    var html = '<div><button type="button" class="btn ghost" data-back>← Programme</button></div>' +
       '<section class="panel"><h2>Dahira du ' + esc(samediLong(dz)) + '</h2><p class="muted">' + esc(intro) + "</p>";
     if (peutModifier) {
       html += '<span class="seg seg-full" role="group" aria-label="Organisation du kourel" style="margin-top:12px">' +
@@ -1061,6 +1085,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     e.groupes.forEach(function (g) {
       L.push("✅ *" + (g.ordre ? g.ordre + " : " : (e.groupes.length === 1 && !e.fusion ? "Prestation : " : "")) + g.label + "* (" + g.ok.length + ")");
       puces(L, g.ok.map(function (m) { return m.nom; }));
+      var pg = itemsCle(cleDahira(dz, g.k), "retenu");
+      if (pg.length) { L.push("🎶 _Au programme :_"); pg.forEach(function (x, i) { L.push(ligneProgramme(x, i)); }); }
       L.push("");
     });
     if (e.tariBloques.length) {
@@ -1157,8 +1183,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     L.push("");
     if (p.extra) { L.push("⚠️ _Date exceptionnelle : attention au changement de jour._"); L.push(""); }
     if (ty === "rg") { L.push("_Kourels 1 et 2 ensemble, pour préparer la prestation du Kourel général._"); L.push(""); }
+    var progR = itemsCle("rep-" + id, "retenu");
+    if (progR.length) { L.push("🎶 *Au programme*"); progR.forEach(function (x, i) { L.push(ligneProgramme(x, i)); }); L.push(""); }
     if (kh) {
-      L.push("📖 *Au programme*");
+      L.push(progR.length ? "📖 *À travailler en priorité*" : "📖 *Au programme*");
       L.push(kh.titre + (p.tout ? ", khassida entier" : (p.a && Number(p.a) !== Number(p.de) ? ", beuyites " + p.de + " à " + p.a : ", beuyite " + p.de)));
       if (kh.lien) L.push("🎧 Lire et écouter : " + kh.lien + (p.tout ? "" : "#v" + Number(p.de)));
       L.push("");
@@ -2030,10 +2058,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   /* ---------- Khassidas (réglages) ---------- */
   function vueKhassidas(ajouter) {
     var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
-    /* Ères proposées : celles déjà utilisées, plus celles annoncées par le Conservatoire. */
-    var eres = ["Serigne Cissé", "Serigne Mayib", "Serigne Massamba", "Baye Moustapha Diop"];
-    kl.forEach(function (k) { if (k.ere && eres.indexOf(k.ere) < 0) eres.push(k.ere); });
-    var html = '<datalist id="eres-connues">' + eres.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("") + "</datalist>" +
+    var html = datalistEres() +
       '<section class="panel"><h2>Khassidas</h2><p class="muted">Les khassidas du répertoire. Ils servent à préciser le Tari de chaque séance. Un membre ne voit que les khassidas de son kourel, plus ceux prévus pour une répétition générale à venir et ceux de ses Taris.</p>' +
       '<div class="list" style="margin-top:12px">' + (kl.length ? kl.map(function (k) {
         return '<div class="item">' + (k.arabe ? '<span class="kh-ar" lang="ar">' + esc(k.arabe) + "</span>" : "") +
@@ -2146,6 +2171,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
     else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
     if (vue === "moi") app.insertAdjacentHTML("beforeend", blocMessagesMembre());
+    if (vue === "reglages") vueDieuwrignes();
     if (vue === "reglages" && comptesApi) vueAcces();
   }
   function lireHash() {
@@ -2162,6 +2188,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var b = e.target.closest("button");
     if (!b) return;
     if (clicMessages(b)) return;
+    if (clicProgramme(b)) return;
     if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.hasAttribute("data-back")) { seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.dataset.rappel) { rappelOuvert = b.dataset.rappel; afficher(); window.scrollTo(0, 0); return; }
@@ -2498,8 +2525,28 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       setTimeout(afficher, 300);
     }
   });
+  /* Formulaire du programme : on garde la saisie (les données peuvent se rafraîchir pendant qu'on écrit). */
+  app.addEventListener("input", function (e) {
+    var t = e.target;
+    if (progForm && t.dataset && (t.dataset.pf === "titre" || t.dataset.pf === "ere")) progForm[t.dataset.pf] = t.value;
+  });
   app.addEventListener("change", function (e) {
     var t = e.target;
+    if (progForm && t.dataset && t.dataset.pf === "khassida") {
+      progForm.khassida = t.value;
+      if (khassidas[t.value]) progForm.ere = khassidas[t.value].ere || "";
+      afficher();
+      var suite = document.querySelector(t.value === "__autre" ? '[data-pf="titre"]' : '[data-pf="ere"]'); if (suite) suite.focus();
+      return;
+    }
+    if (t.dataset && t.dataset.dieuwrigne && peutModifier) {
+      var dw = Object.assign({}, reglagesKourels.dieuwrigne || {}), kd = t.dataset.dieuwrigne;
+      dw[kd] = t.value;
+      db.doc("reglages/kourels").set({ dieuwrigne: dw }).then(function () {
+        toast(t.value && membres[t.value] ? membres[t.value].nom + " est le dieuwrigne du " + TYPES[kd] + "." : "Plus de dieuwrigne pour le " + TYPES[kd] + ".");
+      }, echec);
+      return;
+    }
     if (t.dataset && t.dataset.depuis && peutModifier && t.value) {
       db.doc("membres/" + t.dataset.depuis).update({ depuis: t.value }).then(function () { toast("Date de pause modifiée : les séances à partir de cette date ne lui sont plus comptées."); }, echec);
       return;
@@ -2570,6 +2617,160 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
 
 
 
+
+  /* ---------- Programme de chant : répétitions et dahiras ----------
+     chants/{clé} (voir serveur.mjs) : khassidas retenus (et propositions, visibles du Conservatoire seulement).
+     Le dieuwrigne de chaque kourel (reglages/kourels.dieuwrigne) et l'admin décident ; les autres membres du Conservatoire proposent. */
+  var chants = {}, reglagesKourels = {}, programmeApi = null, progForm = null;
+  function kourelsDe(k) { return k === "k1" ? ["k1"] : k === "k2" ? ["k2"] : ["k1", "k2"]; }
+  function dieuwrigneDe(k) { var id = (reglagesKourels.dieuwrigne || {})[k]; return id && membres[id] ? membres[id] : null; }
+  function nomsDieuwrignes(k) { return kourelsDe(k).map(dieuwrigneDe).filter(Boolean).map(function (m) { return m.nom; }); }
+  function decideurCle(cle) {
+    if (peutModifier) return true;
+    var d = reglagesKourels.dieuwrigne || {}, k = cle.split("-").pop();
+    return !!moiCourant && kourelsDe(k).some(function (x) { return d[x] === moiCourant; });
+  }
+  function itemsCle(cle, statut) { return ((chants[cle] || {}).items || []).filter(function (x) { return !statut || x.statut === statut; }); }
+  function titreItem(x) { var k = x.khassida && khassidas[x.khassida]; return k ? k.titre : (x.titre || "Khassida"); }
+  function cleDahira(dz, k) { return "dz-" + dz + "-" + (k === "tout" ? "general" : k); }
+  function ligneProgramme(x, i) { return (i + 1) + ". " + titreItem(x) + (x.ere ? " · ère " + x.ere : ""); }
+  function datalistEres() {
+    var eres = ["Serigne Cissé", "Serigne Mayib", "Serigne Massamba", "Baye Moustapha Diop"];
+    Object.keys(khassidas).forEach(function (k) { var e = khassidas[k].ere; if (e && eres.indexOf(e) < 0) eres.push(e); });
+    return '<datalist id="eres-connues">' + eres.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("") + "</datalist>";
+  }
+  function dateBloc(iso) {
+    var d = asDate(iso), j = d.toLocaleDateString("fr-FR", { weekday: "short" }).replace(".", "");
+    return '<span class="dz-date"><small>' + esc(j.charAt(0).toUpperCase() + j.slice(1)) + ".</small><b>" + d.getDate() + "</b><small>" + esc(d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "")) + "</small></span>";
+  }
+  function evenementsAVenir() {
+    var moi = membres[moiCourant] || {}, ev = [];
+    var pourMoi = function (k) { return peutSuivi || kourelsDe(k).some(function (x) { return moi[x]; }); };
+    prochainesRepetitions().forEach(function (r) {
+      if (pourMoi(r.type)) ev.push({ sorte: "rep", date: r.date, k: r.type, cle: "rep-" + r.id, p: progDe(r.id) });
+    });
+    prochainsDahiras().forEach(function (dz, i) {
+      var e = etatDahira(dz), groupes = e.groupes.filter(function (g) { return g.k === "tout" || pourMoi(g.k); });
+      var aProg = groupes.some(function (g) { return itemsCle(cleDahira(dz, g.k)).length; });
+      if (i > 0 && !peutSuivi && !aProg && !e.tariDemandes) return;
+      ev.push({ sorte: "dz", date: dz, e: e, groupes: groupes });
+    });
+    return ev.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+  }
+  function formProgramme(dec) {
+    var f = progForm, kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
+    return '<div class="prog-form">' +
+      '<label class="field">Khassida<select data-pf="khassida"><option value="">Choisir un khassida…</option>' +
+        kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (f.khassida === k.id ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") +
+        '<option value="__autre"' + (f.khassida === "__autre" ? " selected" : "") + ">Autre khassida (pas encore dans la liste)…</option></select></label>" +
+      (f.khassida === "__autre" ? '<label class="field">Titre du khassida<input type="text" data-pf="titre" value="' + esc(f.titre || "") + '" placeholder="Ex. : Mawahibu Nafih" maxlength="120"></label>' : "") +
+      '<label class="field">Ère<input type="text" list="eres-connues" data-pf="ere" value="' + esc(f.ere || "") + '" placeholder="Serigne Cissé" maxlength="80"></label>' +
+      (dec ? "" : '<p class="msg-note">Votre proposition sera visible par le Conservatoire. Le dieuwrigne du kourel décide de la retenir.</p>') +
+      '<div class="row"><button type="button" class="btn primary small" data-prog-valider>' + (dec ? "Ajouter au programme" : "Proposer") + '</button><button type="button" class="btn ghost small" data-prog-annuler>Annuler</button></div></div>';
+  }
+  function blocProgramme(cle, titre, k) {
+    var ret = itemsCle(cle, "retenu"), props = peutSuivi ? itemsCle(cle, "propose") : [], dec = peutSuivi && decideurCle(cle), dw = nomsDieuwrignes(k);
+    var h = '<div class="prog">' + (titre || dw.length ? '<div class="prog-tete">' + (titre ? "<b>" + esc(titre) + "</b>" : "<span></span>") +
+      (dw.length ? '<span class="muted">Dieuwrigne' + (dw.length > 1 ? "s" : "") + " : " + esc(dw.join(" et ")) + "</span>" : "") + "</div>" : "");
+    h += ret.length ? '<ol class="prog-liste">' + ret.map(function (x, i) {
+        var kh = x.khassida && khassidas[x.khassida], href = kh ? pageKhassida(kh) : "", ref = esc(cle) + "|" + esc(x.id);
+        return '<li><span class="prog-num" aria-hidden="true">' + (i + 1) + '</span><span class="prog-kh"><b>' + esc(titreItem(x)) + "</b>" + (x.ere ? "<small>ère " + esc(x.ere) + "</small>" : "") + "</span>" +
+          (href ? '<a class="prog-lien" href="' + esc(href) + '">Ouvrir</a>' : "") +
+          (dec ? '<span class="prog-outils">' +
+            (i > 0 ? '<button type="button" data-prog-haut="' + ref + '" aria-label="Monter ' + esc(titreItem(x)) + '">↑</button>' : "") +
+            (i < ret.length - 1 ? '<button type="button" data-prog-bas="' + ref + '" aria-label="Descendre ' + esc(titreItem(x)) + '">↓</button>' : "") +
+            '<button type="button" data-prog-retirer="' + ref + '" aria-label="Retirer ' + esc(titreItem(x)) + ' du programme">✕</button></span>' : "") + "</li>";
+      }).join("") + "</ol>"
+      : '<p class="prog-vide">' + (peutSuivi ? "Aucun khassida au programme pour l’instant." : "Le programme sera bientôt annoncé.") + "</p>";
+    if (props.length) {
+      h += '<div class="prog-props"><span class="lbl">' + (dec ? "Propositions à valider" : "En attente du dieuwrigne") + "</span>" + props.map(function (x) {
+        var mien = x.par === moiCourant, ref = esc(cle) + "|" + esc(x.id);
+        return '<div class="prop"><span class="prog-kh"><b>' + esc(titreItem(x)) + "</b><small>" + (x.ere ? "ère " + esc(x.ere) + " · " : "") + "proposé par " + (mien ? "vous" : esc(x.parNom || "un membre")) + "</small></span>" +
+          (dec ? '<button type="button" class="btn small primary" data-prog-retenir="' + ref + '">Retenir</button><button type="button" class="btn small ghost" data-prog-retirer="' + ref + '">Écarter</button>'
+            : mien ? '<button type="button" class="btn small ghost" data-prog-retirer="' + ref + '">Retirer</button>' : "") + "</div>";
+      }).join("") + "</div>";
+    }
+    if (peutSuivi && programmeApi) {
+      h += progForm && progForm.cle === cle ? formProgramme(dec)
+        : '<button type="button" class="prog-ajouter" data-prog-ajouter="' + esc(cle) + '">+ ' + (dec ? "Ajouter un khassida" : "Proposer un khassida") + "</button>";
+    }
+    return h + "</div>";
+  }
+  function carteRepetition(x) {
+    var p = x.p;
+    var h = '<section class="panel ev' + (p.annulee ? " ev-annulee" : "") + '"><div class="ev-tete">' + dateBloc(x.date) +
+      '<div class="ev-titre"><b>' + (x.k === "rg" ? "Répétition générale" : "Répétition · " + esc(TYPES[x.k] || "")) + "</b>" +
+      '<span class="muted">' + esc(jourLong(x.date).replace(/ \d{4}$/, "")) + (p.horaire ? " · " + esc(p.horaire) : "") + (p.lieu && !p.annulee ? " · " + esc(p.lieu) : "") + "</span></div>" +
+      (p.extra ? '<span class="pill e">Date exceptionnelle</span>' : "") + "</div>";
+    if (p.annulee) return h + '<p class="ev-note">' + (p.deplaceeVers ? "Déplacée au " + esc(jourCourt(p.deplaceeVers.slice(0, 10))) + "." : "Annulée" + (p.motifAnnulation ? " : " + esc(p.motifAnnulation) : "") + ".") + "</p></section>";
+    return h + blocProgramme(x.cle, "", x.k) + "</section>";
+  }
+  function carteDahira(x) {
+    var e = x.e, dz = x.date;
+    var h = '<section class="panel ev ev-dahira"><div class="ev-tete">' + dateBloc(dz) +
+      '<div class="ev-titre"><b>Dahira du ' + esc(samediLong(dz)) + '</b><span class="muted">' + esc(MODE_PHRASE[e.mode]) + "</span></div></div>";
+    if (!x.groupes.length) h += '<p class="ev-note">Votre kourel ne preste pas ce samedi.</p>';
+    x.groupes.forEach(function (g) { h += blocProgramme(cleDahira(dz, g.k), (g.ordre ? g.ordre + " · " : "") + g.label, g.k === "tout" ? "general" : g.k); });
+    h += '<button type="button" class="ev-preste" data-dahira="' + dz + '"><span>Qui preste ?</span>' +
+      (peutSuivi ? e.groupes.map(function (g) { return '<span class="pill p">' + g.court + " : " + g.ok.length + " / " + g.total + "</span>"; }).join("") : "") +
+      (e.tariBloques.length ? '<span class="pill r">' + e.tariBloques.length + " Tari en attente</span>" : "") + '<span class="dz-go" aria-hidden="true">›</span></button>';
+    return h + "</section>";
+  }
+  function majPastilleProg() {
+    var n = 0, t = today();
+    if (peutSuivi) Object.keys(chants).forEach(function (cle) {
+      if (cle.replace(/^(rep|dz)-/, "").slice(0, 10) < t || !decideurCle(cle)) return;
+      n += itemsCle(cle, "propose").length;
+    });
+    document.querySelectorAll('a[data-view="dahira"]').forEach(function (a) {
+      var p = a.querySelector(".pastille");
+      if (!n) { if (p) p.remove(); return; }
+      if (!p) { p = document.createElement("span"); p.className = "pastille"; a.appendChild(p); }
+      p.textContent = n; p.setAttribute("aria-label", n + " proposition" + (n > 1 ? "s" : "") + " à valider");
+    });
+  }
+  function clicProgramme(b) {
+    var d = b.dataset, ref;
+    if (d.progAjouter) { progForm = { cle: d.progAjouter, khassida: "", titre: "", ere: "" }; afficher(); var s = document.querySelector('[data-pf="khassida"]'); if (s) s.focus(); return true; }
+    if (d.progAnnuler !== undefined) { progForm = null; afficher(); return true; }
+    if (d.progValider !== undefined && progForm && programmeApi) {
+      var f = progForm;
+      if (!f.khassida) { toast("Choisissez d’abord un khassida."); return true; }
+      if (f.khassida === "__autre" && !f.titre.trim()) { toast("Écrivez le titre du khassida."); return true; }
+      b.disabled = true;
+      programmeApi.ajouter(f.cle, { khassida: f.khassida === "__autre" ? "" : f.khassida, titre: f.titre, ere: f.ere }).then(function (r) {
+        progForm = null; afficher();
+        toast(r && r.message === "propose" ? "Proposition envoyée : le dieuwrigne décidera." : "Ajouté au programme.");
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Ajout impossible."); });
+      return true;
+    }
+    ref = d.progRetenir || d.progRetirer || d.progHaut || d.progBas;
+    if (ref && programmeApi) {
+      var pr = ref.split("|"), act = d.progRetenir ? programmeApi.maj(pr[0], pr[1], { statut: "retenu" })
+        : d.progRetirer ? programmeApi.retirer(pr[0], pr[1]) : programmeApi.maj(pr[0], pr[1], { deplacer: d.progHaut ? "haut" : "bas" });
+      b.disabled = true;
+      act.then(function () { if (d.progRetenir) toast("Retenu au programme."); else if (d.progRetirer) toast("Retiré du programme."); },
+        function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
+      return true;
+    }
+    return false;
+  }
+  /* Réglages : qui est le dieuwrigne de chaque kourel (parmi les membres du Conservatoire et les admins). */
+  function vueDieuwrignes() {
+    if (!peutModifier) return;
+    var cs = (comptesEtat && comptesEtat.comptes) || null, d = reglagesKourels.dieuwrigne || {};
+    var choix = function (k) {
+      var l = Object.keys(membres).map(function (x) { return membres[x]; }).filter(function (m) {
+        return statutMembre(m) !== "parti" && m[k] && (!cs || (cs[m.id] && (cs[m.id].admin || cs[m.id].conservatoire)));
+      }).sort(triNom);
+      if (d[k] && membres[d[k]] && l.indexOf(membres[d[k]]) < 0) l.unshift(membres[d[k]]);
+      return '<label class="field" style="flex:1 1 220px">Dieuwrigne du ' + TYPES[k] + '<select data-dieuwrigne="' + k + '"><option value="">Personne pour l’instant</option>' +
+        l.map(function (m) { return '<option value="' + esc(m.id) + '"' + (d[k] === m.id ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") + "</select></label>";
+    };
+    app.insertAdjacentHTML("afterbegin", '<section class="panel"><h2>Dieuwrignes des kourels</h2><p class="muted">Chaque dieuwrigne décide du programme de son kourel (répétitions et dahira) ; les autres membres du Conservatoire peuvent proposer. Seuls les membres ayant le rôle Conservatoire ou Admin peuvent être choisis.</p>' +
+      '<div class="row" style="margin-top:12px">' + choix("k1") + choix("k2") + "</div></section>");
+  }
+
   /* ---------- Boîte à idées et support ---------- */
   var messagesApi = null, msgIdees = null, msgSupport = null, msgOuvert = null, msgOnglet = "idees";
   var TYPES_IDEE = { idee: "💡 Idée", suggestion: "🧭 Suggestion", positif: "👍 Point positif", ameliorer: "🛠️ À améliorer" };
@@ -2606,7 +2807,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var h = '<section class="panel" id="boite"><h2>Boîte à idées et assistance</h2><p class="muted">Une idée pour le kourel, une remarque, ou un souci sur la plateforme : écrivez-nous.</p>' +
       '<div class="msg-choix">' +
         '<button type="button" data-msg-ouvrir="idees" aria-pressed="' + (msgOuvert === "idees") + '"><span class="msg-ico" aria-hidden="true">💡</span><b>Boîte à idées</b><small>Idée, suggestion, remarque positive ou à améliorer sur la vie du kourel. Signée ou anonyme.</small></button>' +
-        '<button type="button" data-msg-ouvrir="support" aria-pressed="' + (msgOuvert === "support") + '"><span class="msg-ico" aria-hidden="true">🛟</span><b>Signaler un souci</b><small>Quelque chose ne marche pas dans votre espace ? Le dieuwrigne vous aidera.</small></button>' +
+        '<button type="button" data-msg-ouvrir="support" aria-pressed="' + (msgOuvert === "support") + '"><span class="msg-ico" aria-hidden="true">🛟</span><b>Signaler un souci</b><small>Quelque chose ne marche pas dans votre espace ? L’admin vous aidera.</small></button>' +
       "</div>";
     if (msgOuvert === "idees") {
       h += '<div class="msg-form"><span class="lbl">C’est plutôt…</span><span class="seg seg-full" role="group" aria-label="Type de message">' +
@@ -2617,14 +2818,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
           '<span class="msg-switch-txt">Souhaitez-vous rester anonyme ?</span><span class="msg-switch-piste" aria-hidden="true"><span></span></span>' +
           '<span class="msg-switch-etat">' + (msgBrouillon.anonyme ? "Oui" : "Non") + "</span></button>" +
         '<p class="msg-note">' + (msgBrouillon.anonyme
-          ? "🔒 Anonyme : votre nom n’est enregistré nulle part. Personne, ni le Conservatoire ni le dieuwrigne, ne peut savoir qui l’a écrit. Vous verrez la réponse seulement sur cet appareil."
+          ? "🔒 Anonyme : votre nom n’est enregistré nulle part. Personne, ni le Conservatoire ni l’admin, ne peut savoir qui l’a écrit. Vous verrez la réponse seulement sur cet appareil."
           : "Votre nom accompagnera votre message.") + "</p>" +
         '<div class="row"><button type="button" class="btn primary" data-msg-envoyer="idees">Envoyer au Conservatoire</button><button type="button" class="btn ghost" data-msg-ouvrir="">Annuler</button></div></div>';
     } else if (msgOuvert === "support") {
       h += '<div class="msg-form"><span class="lbl">Décrivez le souci</span>' +
         '<textarea id="msg-texte" placeholder="Ex. : je ne vois pas mes Taris, la page du khassida ne s’ouvre pas…" maxlength="3000">' + esc(msgBrouillon.texte || "") + "</textarea>" +
-        '<p class="msg-note">Votre nom, la page où vous êtes et votre appareil sont joints au message, pour que le dieuwrigne vous aide plus vite.</p>' +
-        '<div class="row"><button type="button" class="btn primary" data-msg-envoyer="support">Envoyer au dieuwrigne</button><button type="button" class="btn ghost" data-msg-ouvrir="">Annuler</button></div></div>';
+        '<p class="msg-note">Votre nom, la page où vous êtes et votre appareil sont joints au message, pour que l’admin vous aide plus vite.</p>' +
+        '<div class="row"><button type="button" class="btn primary" data-msg-envoyer="support">Envoyer à l’admin</button><button type="button" class="btn ghost" data-msg-ouvrir="">Annuler</button></div></div>';
     }
     var miens = [].concat(
       (msgIdees ? msgIdees.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "idees"; return d; }) : []),
@@ -2693,7 +2894,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       messagesApi.envoyer(type, data).then(function (r) {
         if (type === "idees" && data.anonyme && r && r.id) garderAnonyme(r.id);
         msgOuvert = null; msgBrouillon = {};
-        toast(type === "idees" ? "Merci ! Votre message est arrivé au Conservatoire." : "Merci ! Le dieuwrigne a reçu votre message et vous répondra ici.");
+        toast(type === "idees" ? "Merci ! Votre message est arrivé au Conservatoire." : "Merci ! L’admin a reçu votre message et vous répondra ici.");
         chargerMessages();
       }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Envoi impossible. Réessayez."); });
       return true;
@@ -2733,7 +2934,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (peutSuivi) e.push({ vue: "seances", titre: "Répétitions", texte: peutModifier
       ? "Créez la séance du jour et faites l’appel : retards, absences, motifs et Taris. Préparez aussi les rappels WhatsApp des prochaines répétitions."
       : "Créez la séance du jour et faites l’appel : retards, absences, motifs, sanctions et Taris." });
-    e.push({ vue: "dahira", titre: "Dahira", texte: peutSuivi ? "Qui entre dans le kourel au dahira du samedi, et les Taris encore en attente." : "Le dahira du samedi : qui entre dans le kourel, et les Taris encore en attente." });
+    e.push({ vue: "dahira", titre: "Programme", texte: peutSuivi
+      ? "Ce que chaque kourel chantera aux répétitions et au dahira du samedi, avec l’ère. Le dieuwrigne décide ; vous pouvez proposer. Et qui preste au dahira."
+      : "Ce que votre kourel chantera aux prochaines répétitions et au dahira du samedi, avec l’ère de chaque khassida." });
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
     e.push({ vue: "moi", titre: "Mon espace", texte: "Vos présences, vos Taris, vos progrès et les chartes. C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
     if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Les accès des membres et leur rôle, la liste des membres, les khassidas et la sauvegarde des données." });
@@ -2841,9 +3044,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       user ? user.canEdit().catch(function () { return false; }) : Promise.resolve(false),
       user && typeof user.compte === "function" ? user.compte().catch(function () { return null; }) : Promise.resolve(null),
       claudeApi.use("comptes").catch(function () { return null; }),
-      claudeApi.use("messages").catch(function () { return null; })
+      claudeApi.use("messages").catch(function () { return null; }),
+      claudeApi.use("programme").catch(function () { return null; })
     ]).then(function (rr) {
       messagesApi = rr[1] ? rr[3] : null;
+      programmeApi = rr[1] ? rr[4] : null;
       if (messagesApi) chargerMessages();
       peutModifier = !!rr[0];
       monCompte = rr[1];
@@ -2875,6 +3080,15 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       snap.docs.forEach(function (d) { programmes[d.id] = d.data(); });
       afficher();
     }, function () { /* pas de programme enregistré */ });
+    db.collection("chants").onSnapshot(function (snap) {
+      chants = {};
+      snap.docs.forEach(function (d) { chants[d.id] = d.data(); });
+      majPastilleProg(); afficher();
+    }, function () { /* pas encore de programme */ });
+    db.collection("reglages").onSnapshot(function (snap) {
+      snap.docs.forEach(function (d) { if (d.id === "kourels") reglagesKourels = d.data() || {}; });
+      majPastilleProg(); afficher();
+    }, function () { /* pas de réglage */ });
     db.collection("dahiras").onSnapshot(function (snap) {
       dahirasCfg = {};
       snap.docs.forEach(function (d) { dahirasCfg[d.id] = d.data(); });

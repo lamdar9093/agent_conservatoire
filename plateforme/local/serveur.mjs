@@ -39,7 +39,7 @@ const PERMISSION_COLLECTION = { seances: "suivi", evaluations: "suivi" };
 const roleDe = (sess) => (sess.admin ? "admin" : sess.conservatoire ? "conservatoire" : "membre");
 const peut = (sess, perm) => { const r = ROLES[roleDe(sess)]; return r === null || (!!perm && r.has(perm)); };
 // Collections lisibles par un membre (les autres sont réservées à l'administrateur).
-const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations"]);
+const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages"]);
 // Fichiers accessibles sans connexion (le logo et les icônes de /marque/ aussi : page de connexion, onglet, écran d'accueil).
 const PUBLICS = new Set(["/connexion.html", "/local/connexion.js", "/favicon.ico"]);
 const estPublic = (rel) => PUBLICS.has(rel) || /^\/marque\/[\w.-]+$/.test(rel);
@@ -137,7 +137,21 @@ function filtrerPourMembre(col, docs, moi) {
     if (s.discipline) s.discipline = s.discipline[moi] ? { [moi]: s.discipline[moi] } : {};
     return { id: d.id, data: s };
   });
+  // Programme de chant : un membre ne voit que ce qui est retenu, sans les propositions ni leurs auteurs.
+  if (col === "chants") return docs.map((d) => ({ id: d.id, data: { items: (d.data.items || []).filter((x) => x.statut === "retenu")
+    .map((x) => ({ id: x.id, khassida: x.khassida, titre: x.titre, ere: x.ere, statut: x.statut })) } }));
   return docs;
+}
+
+/* Programme de chant : kourels concernés par une clé, et qui décide. */
+function infoChant(cle) {
+  const m = /^(rep|dz)-(\d{4}-\d{2}-\d{2})-(k1|k2|rg|general)$/.exec(cle);
+  return m ? { sorte: m[1], date: m[2], k: m[3], kourels: m[3] === "k1" ? ["k1"] : m[3] === "k2" ? ["k2"] : ["k1", "k2"] } : null;
+}
+async function decideChant(sess, info) {
+  if (sess.admin) return true;
+  const d = (((await stock.lireDoc("reglages", "kourels")) || {}).dieuwrigne) || {};
+  return info.kourels.some((k) => d[k] === sess.membre);
 }
 
 /* Ce qu'un compte voit d'une collection selon son rôle. */
@@ -169,6 +183,12 @@ async function khassidasVisibles(sess) {
   for (const p of await stock.lireCollection("programmes")) {
     const date = p.id.slice(0, 10), type = p.id.slice(11);
     if (p.data.khassida && !p.data.annulee && date >= t && (type === "rg" || m[type])) ok.add(p.data.khassida);
+  }
+  // Programme de chant à venir de son kourel (ou des deux kourels ensemble) : khassidas retenus.
+  for (const c of await stock.lireCollection("chants")) {
+    const info = infoChant(c.id);
+    if (!info || info.date < t || !info.kourels.some((k) => m[k])) continue;
+    for (const x of c.data.items || []) if (x.statut === "retenu" && x.khassida) ok.add(x.khassida);
   }
   for (const s of await stock.lireCollection("seances")) {
     const d = s.data, moi = sess.membre, kh = d.tariDetail && d.tariDetail.khassida, t = d.tari || "aucun";
@@ -307,6 +327,56 @@ async function api(req, res, parts, sess) {
       prevenir(col); return json(res, 200, { ok: true });
     }
     return json(res, 405, { code: "invalid_argument" });
+  }
+
+  /* --- Programme de chant (répétitions et dahiras) ---
+     chants/{clé} = { items: [{ id, khassida, titre, ere, statut: "retenu"|"propose", par, parNom, le }] }
+     Clé : rep-AAAA-MM-JJ-(k1|k2|rg) pour une répétition, dz-AAAA-MM-JJ-(k1|k2|general) pour un passage au dahira.
+     Le dieuwrigne du kourel (reglages/kourels.dieuwrigne) et l'admin décident : ce qu'ils ajoutent est retenu.
+     Un autre membre du Conservatoire propose : sa proposition attend que le dieuwrigne la retienne ou l'écarte. */
+  if (parts[0] === "chants" && (parts.length > 2 || req.method !== "GET")) {
+    if (!peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Réservé au Conservatoire." });
+    const cle = parts[1] || "", info = infoChant(cle);
+    if (!info || !nomValide(cle)) return json(res, 400, { code: "invalid_argument" });
+    const decideur = await decideChant(sess, info);
+    const items = ((await stock.lireDoc("chants", cle)) || {}).items || [];
+    const moiNom = ((await stock.lireDoc("membres", sess.membre)) || {}).nom || sess.membre;
+    const c = req.method === "POST" || req.method === "PATCH" ? await lireCorps(req) : {};
+    const ere = (x) => String(x || "").trim().slice(0, 80);
+    let message = "";
+    if (parts[2] === "items" && !parts[3] && req.method === "POST") {
+      if (items.length >= 30) return json(res, 400, { code: "plein", message: "Le programme est déjà bien rempli (30 khassidas au plus)." });
+      const kh = c.khassida && nomValide(String(c.khassida)) ? await stock.lireDoc("khassidas", String(c.khassida)) : null;
+      const titre = kh ? kh.titre : String(c.titre || "").trim().slice(0, 120);
+      if (!titre) return json(res, 400, { code: "titre", message: "Choisissez un khassida ou écrivez son titre." });
+      items.push({ id: crypto.randomBytes(5).toString("hex"), khassida: kh ? String(c.khassida) : "", titre, ere: ere(c.ere !== undefined ? c.ere : kh && kh.ere),
+        statut: decideur ? "retenu" : "propose", par: sess.membre, parNom: moiNom, le: Date.now() });
+      message = decideur ? "ajoute" : "propose";
+    } else if (parts[2] === "items" && parts[3]) {
+      const i = items.findIndex((x) => x.id === parts[3]);
+      if (i < 0) return json(res, 404, { code: "not_found", message: "Ce khassida n’est plus au programme." });
+      const it = items[i], auteur = it.par === sess.membre && it.statut === "propose";
+      if (req.method === "DELETE") {
+        if (!decideur && !auteur) return json(res, 403, { code: "dieuwrigne", message: "Seul le dieuwrigne de ce kourel peut retirer un khassida du programme." });
+        items.splice(i, 1);
+      } else if (req.method === "PATCH") {
+        if (c.statut !== undefined || c.deplacer !== undefined) {
+          if (!decideur) return json(res, 403, { code: "dieuwrigne", message: "Seul le dieuwrigne de ce kourel décide du programme." });
+          if (c.statut === "retenu") it.statut = "retenu";
+          if (c.deplacer === "haut" || c.deplacer === "bas") {
+            const ret = items.filter((x) => x.statut === "retenu"), j = ret.indexOf(it), k = c.deplacer === "haut" ? j - 1 : j + 1;
+            if (j > -1 && k >= 0 && k < ret.length) { const a = items.indexOf(ret[k]); items[i] = ret[k]; items[a] = it; }
+          }
+        }
+        if (c.ere !== undefined) {
+          if (!decideur && !auteur) return json(res, 403, { code: "dieuwrigne", message: "Seul le dieuwrigne de ce kourel peut changer l’ère." });
+          it.ere = ere(c.ere);
+        }
+      } else return json(res, 405, { code: "invalid_argument" });
+    } else return json(res, 405, { code: "invalid_argument" });
+    await stock.ecrireDoc("chants", cle, { items, majLe: Date.now(), majPar: moiNom });
+    prevenir("chants");
+    return json(res, 200, { ok: true, decideur, message });
   }
 
   /* --- Comptes des membres (administrateur) --- */

@@ -126,7 +126,14 @@
     maj: function (type, id, data) { return appel("PATCH", type + "/" + encodeURIComponent(id), data); }
   });
 
-  var caps = { db: db, user: user, downloads: downloads, messages: messages };
+  /* Programme de chant des répétitions et dahiras (voir serveur.mjs : le dieuwrigne décide, le Conservatoire propose) */
+  var programme = Object.freeze({
+    ajouter: function (cle, data) { return appel("POST", "chants/" + encodeURIComponent(cle) + "/items", data); },
+    maj: function (cle, id, data) { return appel("PATCH", "chants/" + encodeURIComponent(cle) + "/items/" + encodeURIComponent(id), data); },
+    retirer: function (cle, id) { return appel("DELETE", "chants/" + encodeURIComponent(cle) + "/items/" + encodeURIComponent(id)); }
+  });
+
+  var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme };
   window.claude = Object.freeze({
     use: function (nom) {
       if (nom === "comptes") return admin().then(function (a) { return a ? comptes : null; });
