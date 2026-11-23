@@ -250,15 +250,21 @@ async function api(req, res, parts, sess) {
     return json(res, 200, { ok: true, identifiant: m.id, nom: m.data.nom, telephone: String(corps.telephone).trim() });
   }
   // Visite guidée des onglets : vue une fois par personne (enregistré sur son compte, valable sur tous ses appareils).
-  if (parts[0] === "moi" && parts[1] === "tour" && req.method === "POST") {
+  // Nouveautés (bulle affichée une seule fois, ex. « programme ») : enregistrées aussi sur le compte.
+  if (parts[0] === "moi" && (parts[1] === "tour" || parts[1] === "vu") && req.method === "POST") {
     if (!sess) return json(res, 401, { code: "non_connecte" });
-    await stock.fusionnerDoc("_comptes", sess.membre, { tourVu: Date.now() });
+    if (parts[1] === "tour") await stock.fusionnerDoc("_comptes", sess.membre, { tourVu: Date.now() });
+    else {
+      const cle = String((await lireCorps(req)).cle || "");
+      if (!/^[a-z0-9-]{1,40}$/.test(cle)) return json(res, 400, { code: "invalid_argument" });
+      await stock.fusionnerDoc("_comptes", sess.membre, { vu: { [cle]: Date.now() } });
+    }
     return json(res, 200, { ok: true });
   }
   if (parts[0] === "moi") {
     if (!sess) return json(res, 200, { connecte: false, aucunCompte: await comptes.aucunCompte() });
     const m = await stock.lireDoc("membres", sess.membre), c = (await stock.lireDoc("_comptes", sess.membre)) || {};
-    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire, tourVu: !!c.tourVu, k1: !!(m && m.k1), k2: !!(m && m.k2) });
+    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire, tourVu: !!c.tourVu, vu: Object.keys(c.vu || {}), k1: !!(m && m.k1), k2: !!(m && m.k2) });
   }
   if (parts[0] === "deconnexion" && req.method === "POST") {
     if (sess) await comptes.deconnecter(sess.id);

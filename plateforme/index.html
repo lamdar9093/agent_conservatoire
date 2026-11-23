@@ -576,7 +576,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   var utilisateur = null, monCompte = null, comptesApi = null, comptesEtat = null, accesOuvert = null;
   var vue = "seances", seanceOuverte = null, confirmerSuppression = false;
   var lecture = null;
-  var dahiraOuvert = null, apercuDahira = false, rappelOuvert = null, programmes = {}, editRep = null, discOuvert = null;
+  var dahiraOuvert = null, apercuDahira = false, rappelOuvert = null, programmes = {}, editRep = null, discOuvert = null, supprRep = null;
   var filtre = { periode: "mois", kourel: "tous" };
   var bilanMode = "presences", evalOuvert = null, promoOuvert = null, evaluations = {};
   var apercu = false;
@@ -768,11 +768,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         pr.map(function (r) {
           var prog = progDe(r.id), kh = khassidas[prog.khassida];
           var when = '<span class="rap-when"><b>' + esc(jourCourt(r.date)) + '</b> <span class="chip">' + esc(TYPES[r.type]) + "</span>" +
-            (prog.extra ? ' <span class="pill e">Date exceptionnelle</span>' : "");
+            (prog.exceptionnelle && !prog.annulee ? ' <span class="pill e">Date exceptionnelle</span>' : "");
           if (prog.annulee) {
             return '<div class="rap-row annulee">' + when + '<span class="muted">' +
               (prog.deplaceeVers ? "Déplacée au " + esc(jourCourt(prog.deplaceeVers.slice(0, 10))) + (prog.deplaceeVers.slice(11) !== r.type ? " (" + esc(TYPES[prog.deplaceeVers.slice(11)]) + ")" : "") : "Annulée" + (prog.motifAnnulation ? " · " + esc(prog.motifAnnulation) : "")) + "</span></span>" +
-              (prog.deplaceeVers ? "" : '<button type="button" class="btn small primary" data-rappel="' + esc(r.id) + '">Message d’annulation</button><button type="button" class="btn small ghost" data-action="rep-retablir" data-id="' + esc(r.id) + '">Rétablir</button>') + "</div>";
+              (prog.deplaceeVers ? "" : '<button type="button" class="btn small primary" data-rappel="' + esc(r.id) + '">Message d’annulation</button><button type="button" class="btn small ghost" data-action="rep-retablir" data-id="' + esc(r.id) + '">Rétablir</button>') +
+              (supprRep === r.id
+                ? '<button type="button" class="btn small danger" data-action="rep-suppr-ok" data-id="' + esc(r.id) + '">Oui, supprimer</button><button type="button" class="btn small ghost" data-action="rep-suppr-non">Non</button>'
+                : '<button type="button" class="btn small ghost" data-action="rep-suppr" data-id="' + esc(r.id) + '" title="Retirer cette date de la liste">Supprimer</button>') + "</div>";
           }
           var h = '<div class="rap-row">' + when + '<span class="muted">' + esc(prog.horaire) + (itemsCle("rep-" + r.id, "retenu").length ? " · " + itemsCle("rep-" + r.id, "retenu").length + " khassida" + (itemsCle("rep-" + r.id, "retenu").length > 1 ? "s" : "") + " au programme" : kh ? " · " + esc(kh.titre) : "") + "</span></span>" +
             '<button type="button" class="btn small' + (prog.envoye ? "" : " primary") + '" data-rappel="' + esc(r.id) + '">' + (prog.envoye ? "Rappel envoyé ✓" : "Préparer le rappel") + "</button>" +
@@ -782,10 +785,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
               '<label class="field" style="flex:1 1 150px">Date<input type="date" id="e-date" value="' + r.date + '"></label>' +
               '<label class="field" style="flex:1 1 150px">Répétition<select id="e-type">' + Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (k === r.type ? " selected" : "") + ">" + TYPES[k] + "</option>"; }).join("") + "</select></label>" +
               '<label class="field" style="flex:1 1 110px">Horaire<input type="text" id="e-heure" value="' + esc(prog.horaire) + '" placeholder="18h - 21h"></label>' +
+              '<label class="check" style="flex:1 1 100%"><input type="checkbox" data-rep-exc="' + esc(r.id) + '"' + (prog.exceptionnelle ? " checked" : "") + '> Date exceptionnelle <span class="muted">(le rappel prévient d’un changement de jour)</span></label>' +
               '<div class="row" style="flex:1 1 100%"><button type="button" class="btn primary small" data-action="rep-save" data-id="' + esc(r.id) + '">Enregistrer</button>' +
               '<button type="button" class="btn small" data-action="rep-fermer">Fermer</button>' +
               '<button type="button" class="btn danger small" data-action="rep-annuler" data-id="' + esc(r.id) + '" style="margin-left:auto">Annuler cette répétition</button></div>' +
-              '<label class="field" style="flex:1 1 100%">Motif de l’annulation (facultatif)<input type="text" id="e-motif" placeholder="Événement au dahira, fête…"></label></div>';
+              '<label class="field" style="flex:1 1 100%">Motif de l’annulation (facultatif)<input type="text" id="e-motif" placeholder="Événement au dahira, fête…"></label>' +
+              '<div class="row" style="flex:1 1 100%;justify-content:flex-end">' + (supprRep === r.id
+                ? '<span class="muted" style="font-size:13px">Retirer cette date sans message d’annulation ?</span><button type="button" class="btn small danger" data-action="rep-suppr-ok" data-id="' + esc(r.id) + '">Oui, retirer</button><button type="button" class="btn small ghost" data-action="rep-suppr-non">Non</button>'
+                : '<button type="button" class="linkish" data-action="rep-suppr" data-id="' + esc(r.id) + '">Retirer cette date de la liste (sans message)</button>') + "</div></div>";
           }
           return h + "</div>";
         }).join("") + "</div>";
@@ -1116,13 +1123,13 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     for (var i = 0; i <= 8; i++) {
       var d = isoPlus(t, i), j = asDate(d).getDay();
       var ty = j === 4 ? "k1" : j === 5 ? "k2" : (j === 0 && dernierDimancheDuMois(d)) ? "rg" : null;
-      if (ty) l.push({ id: d + "-" + ty, date: d, type: ty });
+      if (ty && !(programmes[d + "-" + ty] || {}).masquee) l.push({ id: d + "-" + ty, date: d, type: ty });
     }
     var deja = {};
     l.forEach(function (r) { deja[r.id] = true; });
     Object.keys(programmes).forEach(function (id) {
       var d = id.slice(0, 10);
-      if (!deja[id] && programmes[id].extra && !programmes[id].annulee && d >= t && d <= isoPlus(t, 45)) l.push({ id: id, date: d, type: id.slice(11) });
+      if (!deja[id] && programmes[id].extra && !programmes[id].annulee && !programmes[id].masquee && d >= t && d <= isoPlus(t, 45)) l.push({ id: id, date: d, type: id.slice(11) });
     });
     return l.sort(function (a, b) { return a.date === b.date ? (a.type < b.type ? -1 : 1) : (a.date < b.date ? -1 : 1); });
   }
@@ -1147,8 +1154,17 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return {
       horaire: p.horaire != null ? p.horaire : (HORAIRE[ty] || ""), lieu: p.lieu != null ? p.lieu : lieuParDefaut(),
       khassida: p.khassida || "", tout: !!p.tout, de: p.de || 1, a: p.a || null, note: p.note != null ? p.note : (MOT_DEFAUT[ty] || ""), taris: p.taris !== false, envoye: !!p.envoye,
-      extra: !!p.extra, annulee: !!p.annulee, deplaceeVers: p.deplaceeVers || null, deplaceeDe: p.deplaceeDe || null, motifAnnulation: p.motifAnnulation || ""
+      extra: !!p.extra, annulee: !!p.annulee, deplaceeVers: p.deplaceeVers || null, deplaceeDe: p.deplaceeDe || null, motifAnnulation: p.motifAnnulation || "",
+      /* « Date exceptionnelle » (avertissement dans le rappel) : choisi par l'admin ; par défaut, une date ajoutée hors du jour habituel. */
+      exceptionnelle: p.exceptionnelle != null ? !!p.exceptionnelle : !!p.extra && !jourHabituel(id.slice(0, 10), ty), masquee: !!p.masquee
     };
+  }
+  /* Jour habituel : jeudi pour le Kourel 1, vendredi pour le Kourel 2, dernier dimanche du mois pour la répétition générale. */
+  function jourHabituel(date, ty) { var j = asDate(date).getDay(); return ty === "k1" ? j === 4 : ty === "k2" ? j === 5 : ty === "rg" ? dernierDimancheDuMois(date) : false; }
+  /* Retirer une date de la liste, sans message : une date ajoutée est effacée ; une date habituelle est masquée (elle ne revient pas). */
+  function retirerRepetition(id) {
+    var p = programmes[id] || {};
+    return p.extra ? db.doc("programmes/" + id).delete() : db.doc("programmes/" + id).set(Object.assign({}, progDe(id), { masquee: true, annulee: false, deplaceeVers: null }));
   }
   function samediApres(iso) { var mi = (asDate(iso).getDay() + 6) % 7; return isoPlus(iso, mi <= 5 ? 5 - mi : 6); }
   /* Taris pas encore maîtrisés, demandés avant cette répétition, pour les membres de ce kourel (échéance : cette répétition, ou dépassée). */
@@ -1181,7 +1197,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     L.push("*" + jourLong(date).replace(/ \d{4}$/, "") + "*" + (p.horaire ? " · " + p.horaire : ""));
     if (p.lieu) L.push("📍 " + p.lieu);
     L.push("");
-    if (p.extra) { L.push("⚠️ _Date exceptionnelle : attention au changement de jour._"); L.push(""); }
+    if (p.exceptionnelle) { L.push("⚠️ _Date exceptionnelle : attention au changement de jour._"); L.push(""); }
     if (ty === "rg") { L.push("_Kourels 1 et 2 ensemble, pour préparer la prestation du Kourel général._"); L.push(""); }
     var progR = itemsCle("rep-" + id, "retenu");
     if (progR.length) { L.push("🎶 *Au programme*"); progR.forEach(function (x, i) { L.push(ligneProgramme(x, i)); }); L.push(""); }
@@ -1223,7 +1239,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     }
     var tr = tarisPourRappel(date, ty), nbT = tr.liste.reduce(function (a, x) { return a + x.noms.length; }, 0);
     var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
-      '<section class="panel"><h2>Rappel · ' + esc(jourLong(date)) + '</h2><span class="chip">' + esc(TYPES[ty]) + "</span>" + (p.extra ? ' <span class="pill e">Date exceptionnelle</span>' : "") +
+      '<section class="panel"><h2>Rappel · ' + esc(jourLong(date)) + '</h2><span class="chip">' + esc(TYPES[ty]) + "</span>" + (p.exceptionnelle ? ' <span class="pill e">Date exceptionnelle</span>' : "") +
       '<div class="row" style="margin-top:14px">' +
       '<label class="field" style="flex:0 1 140px">Horaire<input type="text" id="r-heure" value="' + esc(p.horaire) + '" placeholder="18h - 21h"></label>' +
       '<label class="field" style="flex:1 1 220px">Lieu (facultatif)<input type="text" id="r-lieu" value="' + esc(p.lieu) + '" placeholder="Adresse ou salle"></label></div>' +
@@ -2316,7 +2332,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       var lire = function (x) { var el = document.getElementById(x); return el ? el.value.trim() : ""; };
       if (ra === "rep-edit") { editRep = editRep === rid ? null : rid; afficher(); return; }
       if (ra === "rep-new") { editRep = "new"; afficher(); return; }
-      if (ra === "rep-fermer") { editRep = null; afficher(); return; }
+      if (ra === "rep-fermer") { editRep = null; supprRep = null; afficher(); return; }
+      if (ra === "rep-suppr") { supprRep = rid; afficher(); return; }
+      if (ra === "rep-suppr-non") { supprRep = null; afficher(); return; }
+      if (ra === "rep-suppr-ok") {
+        supprRep = null; editRep = null;
+        retirerRepetition(rid).then(function () { toast("Date retirée de la liste."); }, echec);
+        return;
+      }
       if (ra === "rep-retablir") { enregistrerRappel(rid, { annulee: false, motifAnnulation: "" }); toast("Répétition rétablie."); return; }
       if (ra === "rep-annuler") {
         enregistrerRappel(rid, { annulee: true, motifAnnulation: lire("e-motif"), deplaceeVers: null });
@@ -2332,6 +2355,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var ancien = progDe(rid), copie = {};
         Object.keys(ancien).forEach(function (k) { copie[k] = ancien[k]; });
         copie.horaire = nh; copie.extra = true; copie.annulee = false; copie.deplaceeVers = null; copie.deplaceeDe = rid; copie.envoye = false; copie.motifAnnulation = "";
+        copie.masquee = false; copie.exceptionnelle = !jourHabituel(nd, nt);
         db.doc("programmes/" + nid).set(copie).then(function () {
           var fin = ancien.extra ? db.doc("programmes/" + rid).delete() : db.doc("programmes/" + rid).set(Object.assign({}, ancien, { annulee: true, deplaceeVers: nid }));
           return fin;
@@ -2345,9 +2369,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var aid = ad + "-" + at;
         var estDefaut = prochainesRepetitions().some(function (r) { return r.id === aid; }) && !(programmes[aid] && programmes[aid].extra);
         editRep = null;
-        if (programmes[aid] && programmes[aid].annulee) { enregistrerRappel(aid, { annulee: false, deplaceeVers: null, horaire: ah }); toast("Répétition rétablie."); return; }
+        if (programmes[aid] && (programmes[aid].annulee || programmes[aid].masquee)) { enregistrerRappel(aid, { annulee: false, masquee: false, deplaceeVers: null, horaire: ah }); toast("Répétition rétablie."); return; }
         if (estDefaut || (programmes[aid] && programmes[aid].extra)) { toast("Cette répétition est déjà prévue."); afficher(); return; }
-        db.doc("programmes/" + aid).set({ horaire: ah, lieu: lieuParDefaut(), extra: true }).then(function () { toast("Répétition ajoutée : " + jourCourt(ad) + "."); }, echec);
+        db.doc("programmes/" + aid).set({ horaire: ah, lieu: lieuParDefaut(), extra: true, exceptionnelle: !jourHabituel(ad, at) }).then(function () { toast("Répétition ajoutée : " + jourCourt(ad) + "."); }, echec);
         return;
       }
     }
@@ -2539,6 +2563,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       var suite = document.querySelector(t.value === "__autre" ? '[data-pf="titre"]' : '[data-pf="ere"]'); if (suite) suite.focus();
       return;
     }
+    if (t.dataset && t.dataset.repExc && peutModifier) {
+      enregistrerRappel(t.dataset.repExc, { exceptionnelle: t.checked });
+      toast(t.checked ? "Marquée comme date exceptionnelle : le rappel préviendra du changement de jour." : "Ce n’est plus une date exceptionnelle.");
+      return;
+    }
     if (t.dataset && t.dataset.dieuwrigne && peutModifier) {
       var dw = Object.assign({}, reglagesKourels.dieuwrigne || {}), kd = t.dataset.dieuwrigne;
       dw[kd] = t.value;
@@ -2701,7 +2730,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var h = '<section class="panel ev' + (p.annulee ? " ev-annulee" : "") + '"><div class="ev-tete">' + dateBloc(x.date) +
       '<div class="ev-titre"><b>' + (x.k === "rg" ? "Répétition générale" : "Répétition · " + esc(TYPES[x.k] || "")) + "</b>" +
       '<span class="muted">' + esc(jourLong(x.date).replace(/ \d{4}$/, "")) + (p.horaire ? " · " + esc(p.horaire) : "") + (p.lieu && !p.annulee ? " · " + esc(p.lieu) : "") + "</span></div>" +
-      (p.extra ? '<span class="pill e">Date exceptionnelle</span>' : "") + "</div>";
+      (p.exceptionnelle && !p.annulee ? '<span class="pill e">Date exceptionnelle</span>' : "") + "</div>";
     if (p.annulee) return h + '<p class="ev-note">' + (p.deplaceeVers ? "Déplacée au " + esc(jourCourt(p.deplaceeVers.slice(0, 10))) + "." : "Annulée" + (p.motifAnnulation ? " : " + esc(p.motifAnnulation) : "") + ".") + "</p></section>";
     return h + blocProgramme(x.cle, "", x.k) + "</section>";
   }
@@ -2934,25 +2963,46 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (peutSuivi) e.push({ vue: "seances", titre: "Répétitions", texte: peutModifier
       ? "Créez la séance du jour et faites l’appel : retards, absences, motifs et Taris. Préparez aussi les rappels WhatsApp des prochaines répétitions."
       : "Créez la séance du jour et faites l’appel : retards, absences, motifs, sanctions et Taris." });
-    e.push({ vue: "dahira", titre: "Programme", texte: peutSuivi
-      ? "Ce que chaque kourel chantera aux répétitions et au dahira du samedi, avec l’ère. Le dieuwrigne décide ; vous pouvez proposer. Et qui preste au dahira."
-      : "Ce que votre kourel chantera aux prochaines répétitions et au dahira du samedi, avec l’ère de chaque khassida." });
+    /* Programme : le texte dépend du rôle (admin, dieuwrigne d'un kourel, autre membre du Conservatoire, membre). */
+    var mesKourels = ["k1", "k2"].filter(function (k) { return (reglagesKourels.dieuwrigne || {})[k] === moiCourant; });
+    e.push({ vue: "dahira", titre: "Programme", texte: !peutSuivi
+      ? "Ce que votre kourel chantera aux prochaines répétitions et au dahira du samedi, avec l’ère de chaque khassida."
+      : "Ce que chaque kourel chantera aux répétitions et au dahira du samedi, avec l’ère de chaque khassida. " +
+        (peutModifier ? "Vous et les dieuwrignes décidez ; les autres membres du Conservatoire proposent."
+          : mesKourels.length ? "Comme dieuwrigne du " + mesKourels.map(function (k) { return TYPES[k]; }).join(" et du ") + ", vous décidez du programme ; les autres membres du Conservatoire proposent."
+          : "Le dieuwrigne de chaque kourel décide ; vous pouvez proposer.") + " Vous y voyez aussi qui preste au dahira." });
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
     e.push({ vue: "moi", titre: "Mon espace", texte: "Vos présences, vos Taris, vos progrès et les chartes. C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
     if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Les accès des membres et leur rôle, la liste des membres, les khassidas et la sauvegarde des données." });
     e.push({ fin: true, titre: "C’est parti !", texte: "Vous pourrez revoir cette visite à tout moment depuis Mon espace." });
     return e;
   }
-  function lancerTour() {
+  /* Nouveautés : une bulle, une seule fois par personne, sur l'onglet concerné. Ceux qui font la visite complète ne la voient pas. */
+  var NOUVEAUTES = [{ cle: "programme", vue: "dahira", titre: "L’onglet Programme",
+    texte: "L’onglet Dahira devient Programme : vous y trouvez ce que votre kourel chantera aux répétitions et au dahira, avec l’ère de chaque khassida." }];
+  function nouveauteVue(cle) { return !!(monCompte && (monCompte.vu || []).indexOf(cle) > -1); }
+  function marquerNouveautes() {
+    NOUVEAUTES.forEach(function (n) {
+      if (!monCompte || nouveauteVue(n.cle)) return;
+      monCompte.vu = (monCompte.vu || []).concat([n.cle]);
+      if (utilisateur && typeof utilisateur.vu === "function") utilisateur.vu(n.cle).catch(function () {});
+    });
+  }
+  function montrerNouveaute() {
+    if (!monCompte || tourEtat) return;
+    var n = NOUVEAUTES.filter(function (x) { return !nouveauteVue(x.cle) && cibleOnglet(x.vue); })[0];
+    if (n) lancerTour([{ vue: n.vue, titre: n.titre, texte: n.texte, etiquette: "Nouveauté", nouveaute: n }]);
+  }
+  function lancerTour(etapesDonnees) {
     if (tourEtat || vue === "khassida") return;
     var el = document.createElement("div");
     el.className = "tour"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Visite guidée");
     el.innerHTML = '<div class="tour-voile"></div><div class="tour-spot" aria-hidden="true"></div><div class="tour-bulle" aria-live="polite"></div>';
     document.body.appendChild(el);
-    tourEtat = { el: el, etapes: etapesTour(), i: 0, retour: document.activeElement };
+    tourEtat = { el: el, etapes: etapesDonnees || etapesTour(), i: 0, retour: document.activeElement, simple: !!etapesDonnees };
     el.addEventListener("click", function (e) {
       var b = e.target.closest("[data-tour]");
-      if (b) { var a = b.dataset.tour; if (a === "suivant") allerTour(tourEtat.i + 1); else if (a === "precedent") allerTour(tourEtat.i - 1); else finirTour(); }
+      if (b) { var a = b.dataset.tour; if (a === "suivant") allerTour(tourEtat.i + 1); else if (a === "precedent") allerTour(tourEtat.i - 1); else if (a === "voir") { var v = tourEtat.etapes[0].vue; finirTour(); location.hash = "#" + v; } else finirTour(); }
     });
     document.addEventListener("keydown", toucheTour);
     window.addEventListener("resize", placerTour);
@@ -2977,12 +3027,13 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     b.className = "tour-bulle" + (centre ? " centre" : "");
     b.innerHTML = (centre && i === 0 ? '<img class="tour-logo" src="/marque/logo.webp" alt="">' : "") +
       (et.vue ? '<span class="tour-ico">' + iconeOnglet(et.vue) + "</span>" : "") +
-      (et.vue ? '<span class="tour-etape">Onglet ' + i + " sur " + (n - 2) + "</span>" : "") +
+      (et.vue ? '<span class="tour-etape">' + (et.etiquette ? esc(et.etiquette) : "Onglet " + i + " sur " + (n - 2)) + "</span>" : "") +
       "<h2>" + esc(et.titre) + "</h2><p>" + esc(et.texte) + "</p>" +
-      '<div class="tour-pied">' + (centre ? "" : points) +
+      (t.simple ? '<div class="tour-pied"><span class="tour-points"></span><button type="button" class="btn ghost small" data-tour="fin">Compris</button><button type="button" class="btn primary small" data-tour="voir">Voir</button></div><span class="tour-fleche" aria-hidden="true"></span>' : "") +
+      (t.simple ? "" : '<div class="tour-pied">' + (centre ? "" : points) +
       (i === 0 ? '<button type="button" class="tour-passer" data-tour="fin">Plus tard</button>' : et.fin ? "" : '<button type="button" class="btn ghost small" data-tour="precedent">Retour</button>') +
       '<button type="button" class="btn primary small" data-tour="suivant">' + (i === 0 ? "Commencer la visite" : et.fin ? "Terminer" : "Suivant") + "</button></div>" +
-      '<span class="tour-fleche" aria-hidden="true"></span>';
+      '<span class="tour-fleche" aria-hidden="true"></span>');
     placerTour();
     var bt = b.querySelector('[data-tour="suivant"]'); if (bt) bt.focus({ preventScroll: true });
   }
@@ -3016,6 +3067,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     t.el.classList.remove("visible", "cible");
     setTimeout(function () { t.el.remove(); }, 350);
     if (t.retour && t.retour.focus) try { t.retour.focus({ preventScroll: true }); } catch (e) { /* élément disparu */ }
+    /* Nouveauté vue, ou visite complète terminée (qui présente déjà les nouveautés). */
+    marquerNouveautes();
+    if (t.simple) return;
     if (monCompte) monCompte.tourVu = true;
     try { localStorage.setItem("conservatoire-tour", "1"); } catch (e) { /* stockage indisponible */ }
     if (utilisateur && typeof utilisateur.tourVu === "function") utilisateur.tourVu().catch(function () {});
@@ -3063,7 +3117,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       charge.r = true;
       afficher();
       /* Première visite : la visite guidée s'ouvre une fois les données affichées. */
-      if (!tourDejaVu()) { var essais = 0, attendre = setInterval(function () { if ((charge.m && charge.s) || ++essais > 40) { clearInterval(attendre); setTimeout(lancerTour, 500); } }, 150); }
+      var essais = 0, attendre = setInterval(function () {
+        if ((charge.m && charge.s) || ++essais > 40) { clearInterval(attendre); setTimeout(function () { if (!tourDejaVu()) lancerTour(); else montrerNouveaute(); }, 500); }
+      }, 150);
     });
     db.collection("membres").onSnapshot(function (snap) {
       membres = {};
