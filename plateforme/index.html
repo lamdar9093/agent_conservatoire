@@ -1218,10 +1218,22 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var k2 = actifs.filter(function (m) { return m.k2 && !m.k1; }).map(suiviMembre).sort(function (a, b) { return (ordre[a.niveau] - ordre[b.niveau]) || triNom(a.m, b.m); });
     var nbPret = k2.filter(function (r) { return r.niveau === "pret"; }).length;
     var acc = actifs.map(suiviMembre).filter(function (r) { return r.raisons.length; });
+    /* En transition : promus au Kourel 1 en gardant le Kourel 2 (section affichée seulement s'il y en a). */
+    var trans = actifs.filter(function (m) {
+      if (!m.k1 || !m.k2) return false;
+      var hk = (m.historique || []).filter(function (h) { return h.type === "kourel"; });
+      return hk.length && /reste au Kourel 2/.test(hk[hk.length - 1].motif || "");
+    }).map(function (m) { var hk = (m.historique || []).filter(function (h) { return h.type === "kourel"; }); return { m: m, depuis: hk[hk.length - 1].date }; });
     var html = ongletBilan() +
       '<section class="panel"><h2>Prêts pour le Kourel 1 ?' + (nbPret ? ' <span class="pill p">' + nbPret + " prêt" + (nbPret > 1 ? "s" : "") + "</span>" : "") + "</h2>" +
       '<p class="muted">Membres du Kourel 2, sur les 3 derniers mois. Critères proposés, à valider : assiduité d’au moins ' + SUIVI.assiduite + " %, " + SUIVI.retardsMax + " retards au plus, jamais " + (SUIVI.suiteMax + 1) + " absences de suite, tous les Taris envoyés, et « Maîtrisé » en prononciation, mémorisation et justesse.</p>" +
       '<div class="list" style="margin-top:12px">' + (k2.length ? k2.map(carteSuivi).join("") : '<div class="empty">Aucun membre uniquement en Kourel 2.</div>') + "</div></section>" +
+      (trans.length ? '<section class="panel"><h2>En transition · ' + trans.length + "</h2>" +
+        '<p class="muted">Passés au Kourel 1 en gardant le Kourel 2 pour un temps. Quand c’est le moment, terminez la transition : ils ne restent qu’au Kourel 1.</p>' +
+        '<div class="list" style="margin-top:12px">' + trans.map(function (x) {
+          return '<div class="acc-row"><span class="who"><b>' + esc(x.m.nom) + '</b> <span class="tags">Kourel 1 et 2 depuis le ' + esc(court(x.depuis)) + "</span></span>" +
+            (peutModifier ? '<button type="button" class="btn small" data-action="transition-fin" data-id="' + esc(x.m.id) + '">Quitter le Kourel 2</button>' : "") + "</div>";
+        }).join("") + "</div></section>" : "") +
       '<section class="panel"><h2>À accompagner' + (acc.length ? " · " + acc.length : "") + "</h2>" +
       '<p class="muted">Membres actifs du Kourel 1 et du Kourel 2 qui ont besoin d’un coaching individuel ou d’un mot d’encouragement.</p>' +
       '<div class="list" style="margin-top:12px">' + (acc.length ? acc.map(function (r) {
@@ -2104,6 +2116,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (peutSuivi && b.dataset.action === "eval-fin") { evalOuvert = null; afficher(); toast("Évaluation enregistrée."); return; }
     if (peutModifier && b.dataset.action === "promo-open") { promoOuvert = b.dataset.id; evalOuvert = null; afficher(); return; }
     if (peutModifier && b.dataset.action === "promo-non") { promoOuvert = null; afficher(); return; }
+    if (peutModifier && b.dataset.action === "transition-fin") {
+      var mt = membres[b.dataset.id];
+      if (!mt) return;
+      b.disabled = true;
+      db.doc("membres/" + mt.id).update({ k2: false, historique: (mt.historique || []).concat([{ type: "kourel", date: today(), motif: "Transition terminée : Kourel 1 seulement" }]) })
+        .then(function () { toast(mt.nom + " est maintenant au Kourel 1 seulement."); }, function (e) { b.disabled = false; echec(e); });
+      return;
+    }
     if (peutModifier && b.dataset.action === "promo-ok") {
       var pm2 = membres[b.dataset.id], garder = b.dataset.garder === "1";
       if (!pm2) return;
