@@ -88,7 +88,6 @@ button, input, select { font: inherit; color: inherit; }
 .kh-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
 .kh-filtre { margin-top: 14px; display: flex !important; flex-wrap: nowrap !important; }
 .kh-filtre button { flex: 1 1 0; min-width: 0; white-space: nowrap; padding-inline: 6px; }
-.kh-filtre .kh-nb { font-size: 11.5px; opacity: 0.7; margin-left: 2px; }
 .kh-groupe { margin-top: 20px; }
 .kh-gtitre { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 600; }
 .kh-gnb { margin-left: auto; font-size: 12.5px; font-weight: 500; color: var(--ink-soft); }
@@ -1960,7 +1959,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (presents.length > 1) {
       html += '<span class="seg seg-full kh-filtre" role="group" aria-label="Afficher les khassidas de">' +
         [["tout", "Tous", tous.length]].concat(presents.map(function (g) { return [g[0], g[0] === "tous" ? "Les deux" : g[1], parG[g[0]].length]; })).map(function (o) {
-          return '<button type="button" data-kh-filtre="' + o[0] + '" aria-pressed="' + (filtreKh === o[0]) + '">' + o[1] + ' <span class="kh-nb">' + o[2] + "</span></button>";
+          return '<button type="button" data-kh-filtre="' + o[0] + '" aria-pressed="' + (filtreKh === o[0]) + '" aria-label="' + o[1] + " : " + o[2] + " khassida" + (o[2] > 1 ? "s" : "") + '">' + o[1] + "</button>";
         }).join("") + "</span>";
     }
     if (!tous.length) html += '<div class="empty" style="margin-top:12px">Aucun khassida pour l’instant.</div>';
