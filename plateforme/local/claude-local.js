@@ -87,7 +87,9 @@
     isOwner: admin,
     can: function () { return admin(); },
     /* Compte connecté : { membre, nom, admin, role } (role : membre, conservatoire ou admin) */
-    compte: function () { return moi().then(function (r) { return r.connecte ? { membre: r.membre, nom: r.nom, admin: !!r.admin, role: r.role || (r.admin ? "admin" : "membre") } : null; }); },
+    compte: function () { return moi().then(function (r) { return r.connecte ? { membre: r.membre, nom: r.nom, admin: !!r.admin, role: r.role || (r.admin ? "admin" : "membre"), tourVu: !!r.tourVu } : null; }); },
+    /* Visite guidée vue : enregistrée sur le compte. */
+    tourVu: function () { return appel("POST", "moi/tour", {}); },
     deconnexion: function () { return appel("POST", "deconnexion").then(function () { location.href = "/connexion.html"; }); }
   });
 

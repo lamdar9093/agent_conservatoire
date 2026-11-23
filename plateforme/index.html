@@ -182,6 +182,37 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
   .table-wrap .sub { white-space: normal; font-size: 10.5px; line-height: 1.25; }
 }
 
+/* Visite guidée des onglets */
+.tour { position: fixed; inset: 0; z-index: 80; }
+.tour-voile { position: fixed; inset: 0; background: rgba(6, 16, 15, 0.62); opacity: 0; transition: opacity 0.35s ease; }
+.tour.visible .tour-voile { opacity: 1; }
+.tour.cible .tour-voile { background: transparent; }
+.tour-spot { position: fixed; border-radius: 14px; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 9999px rgba(6, 16, 15, 0.62), 0 0 0 3px var(--accent), 0 0 24px 4px rgba(108, 196, 189, 0.55);
+  transition: top 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease; }
+.tour.cible .tour-spot { opacity: 1; }
+.tour-spot::after { content: ""; position: absolute; inset: -3px; border-radius: inherit; border: 2px solid var(--accent); animation: tour-pouls 1.8s ease-out infinite; }
+@keyframes tour-pouls { from { opacity: 0.9; transform: scale(1); } to { opacity: 0; transform: scale(1.18); } }
+.tour-bulle { position: fixed; width: min(340px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); border-radius: 18px; padding: 20px 20px 16px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35); opacity: 0; transform: translateY(8px) scale(0.98);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.tour.visible .tour-bulle { opacity: 1; transform: none; }
+.tour-bulle.centre { text-align: center; }
+.tour-bulle .tour-logo { display: block; width: 86px; height: 86px; margin: -4px auto 10px; filter: drop-shadow(0 6px 14px rgba(10, 60, 62, 0.3)); }
+.tour-bulle .tour-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); margin-bottom: 10px; }
+.tour-bulle .tour-ico .ico { width: 22px; height: 22px; }
+.tour-bulle .tour-etape { font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.tour-bulle h2 { margin: 2px 0 6px; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+.tour-bulle p { margin: 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.5; }
+.tour-pied { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+.tour-points { display: flex; gap: 5px; flex: 1; }
+.tour-bulle.centre .tour-pied { justify-content: center; }
+.tour-points span { width: 6px; height: 6px; border-radius: 999px; background: var(--rule); transition: width 0.3s ease, background 0.3s ease; }
+.tour-points span.on { width: 18px; background: var(--accent); }
+.tour-passer { border: 0; background: none; color: var(--ink-soft); font: inherit; font-size: 13.5px; cursor: pointer; padding: 8px 4px; }
+.tour-passer:hover { color: var(--ink); }
+.tour-fleche { position: absolute; width: 14px; height: 14px; background: var(--surface); transform: rotate(45deg); }
+@media (prefers-reduced-motion: reduce) { .tour-spot, .tour-bulle, .tour-voile { transition: none; } .tour-spot::after { animation: none; } }
 dialog.refus { width: min(92vw, 400px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 dialog.refus::backdrop { background: rgba(10, 20, 18, 0.45); }
 dialog.refus form { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 24px 20px 20px; }
@@ -1737,7 +1768,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var html = '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
       (monCompte
         ? '<section class="panel compte"><div><h2>' + esc((membres[monCompte.membre] || {}).nom || monCompte.nom || "Mon espace") + '</h2><p class="muted">' + ROLES_NOMS[monRole] + " · " + esc(tagsKourel(membres[monCompte.membre] || {})) + "</p></div>" +
-          '<div class="row"><a class="btn small" href="/connexion.html?changer=1">Changer mon mot de passe</a><button type="button" class="btn ghost small" data-action="deconnexion">Se déconnecter</button></div></section>'
+          '<div class="row"><a class="btn small" href="/connexion.html?changer=1">Changer mon mot de passe</a><button type="button" class="btn ghost small" data-action="revoir-tour">Revoir la visite</button><button type="button" class="btn ghost small" data-action="deconnexion">Se déconnecter</button></div></section>'
         : '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
           '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 240px">Je suis<select id="moi"><option value="">Choisir mon nom…</option>' +
           liste.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === moiCourant ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") +
@@ -2031,6 +2062,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (b.dataset.action === "sv-complete" && peutModifier) { telecharger("conservatoire-sauvegarde-" + today() + ".json", JSON.stringify(donneesCompletes(), null, 2), "complete"); return; }
     if (b.dataset.action === "sv-csv" && peutModifier) { telecharger("conservatoire-presences-" + today() + ".csv", csvPresences(), "csv"); return; }
     if (b.dataset.action === "deconnexion" && utilisateur && utilisateur.deconnexion) { utilisateur.deconnexion(); return; }
+    if (b.dataset.action === "revoir-tour") { window.scrollTo(0, 0); lancerTour(); return; }
     if (b.dataset.acces && comptesApi) {
       var ida = b.dataset.acces, ma = membres[ida];
       b.disabled = true;
@@ -2409,6 +2441,114 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     }
   });
 
+
+  /* ---------- Visite guidée des onglets (première connexion) ---------- */
+  var tourEtat = null;
+  function iconeOnglet(v) {
+    var a = document.querySelector('.tabs a[data-view="' + v + '"] svg, .bottom-nav a[data-view="' + v + '"] svg, .gear[data-view="' + v + '"] svg');
+    return a ? a.outerHTML : "";
+  }
+  function cibleOnglet(v) {
+    var l = document.querySelectorAll('.tabs a[data-view="' + v + '"], .bottom-nav a[data-view="' + v + '"], .gear[data-view="' + v + '"]');
+    for (var i = 0; i < l.length; i++) { var r = l[i].getBoundingClientRect(); if (r.width && r.height) return l[i]; }
+    return null;
+  }
+  function etapesTour() {
+    var prenom = ((membres[moiCourant] || {}).nom || (monCompte && monCompte.nom) || "").split(" ")[0];
+    var e = [{ titre: "Bienvenue" + (prenom ? ", " + prenom : "") + " !", texte: "Voici la plateforme du Conservatoire. Faisons ensemble le tour des onglets : moins d’une minute." }];
+    e.push({ vue: "khassidas", titre: "Khassidas", texte: "Les khassidas de votre kourel : texte arabe, phonétique, traduction et audio de référence. Celui en cours de répétition apparaît en premier." });
+    if (peutSuivi) e.push({ vue: "seances", titre: "Répétitions", texte: peutModifier
+      ? "Créez la séance du jour et faites l’appel : retards, absences, motifs et Taris. Préparez aussi les rappels WhatsApp des prochaines répétitions."
+      : "Créez la séance du jour et faites l’appel : retards, absences, motifs, sanctions et Taris." });
+    e.push({ vue: "dahira", titre: "Dahira", texte: peutSuivi ? "Qui entre dans le kourel au dahira du samedi, et les Taris encore en attente." : "Le dahira du samedi : qui entre dans le kourel, et les Taris encore en attente." });
+    if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
+    e.push({ vue: "moi", titre: "Mon espace", texte: "Vos présences, vos Taris, vos progrès et les chartes du Conservatoire. C’est aussi ici que vous changez votre mot de passe." });
+    if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Les accès des membres et leur rôle, la liste des membres, les khassidas et la sauvegarde des données." });
+    e.push({ fin: true, titre: "C’est parti !", texte: "Vous pourrez revoir cette visite à tout moment depuis Mon espace." });
+    return e;
+  }
+  function lancerTour() {
+    if (tourEtat || vue === "khassida") return;
+    var el = document.createElement("div");
+    el.className = "tour"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Visite guidée");
+    el.innerHTML = '<div class="tour-voile"></div><div class="tour-spot" aria-hidden="true"></div><div class="tour-bulle" aria-live="polite"></div>';
+    document.body.appendChild(el);
+    tourEtat = { el: el, etapes: etapesTour(), i: 0, retour: document.activeElement };
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-tour]");
+      if (b) { var a = b.dataset.tour; if (a === "suivant") allerTour(tourEtat.i + 1); else if (a === "precedent") allerTour(tourEtat.i - 1); else finirTour(); }
+    });
+    document.addEventListener("keydown", toucheTour);
+    window.addEventListener("resize", placerTour);
+    allerTour(0);
+    requestAnimationFrame(function () { el.classList.add("visible"); });
+  }
+  function toucheTour(e) {
+    if (!tourEtat) return;
+    if (e.key === "Escape") finirTour();
+    else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); allerTour(tourEtat.i + 1); }
+    else if (e.key === "ArrowLeft") allerTour(tourEtat.i - 1);
+  }
+  function allerTour(i) {
+    var t = tourEtat;
+    if (!t) return;
+    if (i >= t.etapes.length) { finirTour(); return; }
+    if (i < 0) return;
+    t.i = i;
+    var et = t.etapes[i], n = t.etapes.length, b = t.el.querySelector(".tour-bulle");
+    var points = '<span class="tour-points" aria-hidden="true">' + t.etapes.map(function (x, k) { return '<span class="' + (k === i ? "on" : "") + '"></span>'; }).join("") + "</span>";
+    var centre = !et.vue;
+    b.className = "tour-bulle" + (centre ? " centre" : "");
+    b.innerHTML = (centre && i === 0 ? '<img class="tour-logo" src="/marque/logo.webp" alt="">' : "") +
+      (et.vue ? '<span class="tour-ico">' + iconeOnglet(et.vue) + "</span>" : "") +
+      (et.vue ? '<span class="tour-etape">Onglet ' + i + " sur " + (n - 2) + "</span>" : "") +
+      "<h2>" + esc(et.titre) + "</h2><p>" + esc(et.texte) + "</p>" +
+      '<div class="tour-pied">' + (centre ? "" : points) +
+      (i === 0 ? '<button type="button" class="tour-passer" data-tour="fin">Plus tard</button>' : et.fin ? "" : '<button type="button" class="btn ghost small" data-tour="precedent">Retour</button>') +
+      '<button type="button" class="btn primary small" data-tour="suivant">' + (i === 0 ? "Commencer la visite" : et.fin ? "Terminer" : "Suivant") + "</button></div>" +
+      '<span class="tour-fleche" aria-hidden="true"></span>';
+    placerTour();
+    var bt = b.querySelector('[data-tour="suivant"]'); if (bt) bt.focus({ preventScroll: true });
+  }
+  function placerTour() {
+    var t = tourEtat;
+    if (!t) return;
+    var et = t.etapes[t.i], b = t.el.querySelector(".tour-bulle"), spot = t.el.querySelector(".tour-spot"), fl = b.querySelector(".tour-fleche");
+    var cible = et.vue ? cibleOnglet(et.vue) : null, vw = window.innerWidth, vh = window.innerHeight;
+    t.el.classList.toggle("cible", !!cible);
+    var bw = b.offsetWidth, bh = b.offsetHeight;
+    if (!cible) {
+      b.style.left = Math.round((vw - bw) / 2) + "px"; b.style.top = Math.round((vh - bh) / 2) + "px"; fl.style.display = "none"; return;
+    }
+    var r = cible.getBoundingClientRect(), pad = 6;
+    spot.style.left = (r.left - pad) + "px"; spot.style.top = (r.top - pad) + "px";
+    spot.style.width = (r.width + pad * 2) + "px"; spot.style.height = (r.height + pad * 2) + "px";
+    var dessous = r.top + r.height / 2 < vh / 2, gap = 18;
+    var left = Math.max(16, Math.min(vw - bw - 16, r.left + r.width / 2 - bw / 2));
+    var top = dessous ? r.bottom + pad + gap : r.top - pad - gap - bh;
+    b.style.left = Math.round(left) + "px"; b.style.top = Math.round(top) + "px";
+    fl.style.display = "block";
+    fl.style.left = Math.round(Math.max(18, Math.min(bw - 32, r.left + r.width / 2 - left - 7))) + "px";
+    fl.style.top = dessous ? "-7px" : ""; fl.style.bottom = dessous ? "" : "-7px";
+  }
+  function finirTour() {
+    var t = tourEtat;
+    if (!t) return;
+    tourEtat = null;
+    document.removeEventListener("keydown", toucheTour);
+    window.removeEventListener("resize", placerTour);
+    t.el.classList.remove("visible", "cible");
+    setTimeout(function () { t.el.remove(); }, 350);
+    if (t.retour && t.retour.focus) try { t.retour.focus({ preventScroll: true }); } catch (e) { /* élément disparu */ }
+    if (monCompte) monCompte.tourVu = true;
+    try { localStorage.setItem("conservatoire-tour", "1"); } catch (e) { /* stockage indisponible */ }
+    if (utilisateur && typeof utilisateur.tourVu === "function") utilisateur.tourVu().catch(function () {});
+  }
+  function tourDejaVu() {
+    if (monCompte) return !!monCompte.tourVu;
+    try { return localStorage.getItem("conservatoire-tour") === "1"; } catch (e) { return true; }
+  }
+
   /* ---------- Démarrage ---------- */
   lireHash();
   var claudeApi = window.claude && typeof window.claude.use === "function" ? window.claude : null;
@@ -2441,6 +2581,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       document.body.classList.toggle("vue-conservatoire", peutSuivi && !peutModifier);
       charge.r = true;
       afficher();
+      /* Première visite : la visite guidée s'ouvre une fois les données affichées. */
+      if (!tourDejaVu()) { var essais = 0, attendre = setInterval(function () { if ((charge.m && charge.s) || ++essais > 40) { clearInterval(attendre); setTimeout(lancerTour, 500); } }, 150); }
     });
     db.collection("membres").onSnapshot(function (snap) {
       membres = {};

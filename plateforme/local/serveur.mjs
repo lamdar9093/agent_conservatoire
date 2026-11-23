@@ -217,10 +217,16 @@ async function api(req, res, parts, sess) {
     prevenir("_comptes");
     return json(res, 200, { ok: true, identifiant: m.id, nom: m.data.nom, telephone: String(corps.telephone).trim() });
   }
+  // Visite guidée des onglets : vue une fois par personne (enregistré sur son compte, valable sur tous ses appareils).
+  if (parts[0] === "moi" && parts[1] === "tour" && req.method === "POST") {
+    if (!sess) return json(res, 401, { code: "non_connecte" });
+    await stock.fusionnerDoc("_comptes", sess.membre, { tourVu: Date.now() });
+    return json(res, 200, { ok: true });
+  }
   if (parts[0] === "moi") {
     if (!sess) return json(res, 200, { connecte: false, aucunCompte: await comptes.aucunCompte() });
-    const m = await stock.lireDoc("membres", sess.membre);
-    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire });
+    const m = await stock.lireDoc("membres", sess.membre), c = (await stock.lireDoc("_comptes", sess.membre)) || {};
+    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire, tourVu: !!c.tourVu });
   }
   if (parts[0] === "deconnexion" && req.method === "POST") {
     if (sess) await comptes.deconnecter(sess.id);
