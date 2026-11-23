@@ -334,6 +334,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
 .ev-rg .dz-date { background: linear-gradient(160deg, var(--accent-soft), var(--or-soft)); }
 .ev-dz .dz-date { background: var(--or-soft); color: var(--or); }
 .ev-lieu { font-size: 12.5px; color: var(--ink-soft); }
+.ev-lieu.inhabituel { color: var(--warn); font-weight: 600; }
 .prog-dw { font-size: 12.5px; color: var(--ink-soft); }
 .ev-rep .prog { padding-top: 10px; }
 .passage { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
@@ -819,7 +820,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         pr.map(function (r) {
           var prog = progDe(r.id), kh = khassidas[prog.khassida];
           var when = '<span class="rap-when"><b>' + esc(jourCourt(r.date)) + '</b> <span class="chip">' + esc(TYPES[r.type]) + "</span>" +
-            (prog.exceptionnelle && !prog.annulee ? ' <span class="pill e">Date exceptionnelle</span>' : "");
+            (prog.exceptionnelle && !prog.annulee ? ' <span class="pill e">Date exceptionnelle</span>' : "") +
+            (lieuInhabituel(prog) && !prog.annulee ? ' <span class="pill r" title="' + esc(prog.lieu) + '">Lieu inhabituel</span>' : "");
           if (prog.annulee) {
             return '<div class="rap-row annulee">' + when + '<span class="muted">' +
               (prog.deplaceeVers ? "Déplacée au " + esc(jourCourt(prog.deplaceeVers.slice(0, 10))) + (prog.deplaceeVers.slice(11) !== r.type ? " (" + esc(TYPES[prog.deplaceeVers.slice(11)]) + ")" : "") : "Annulée" + (prog.motifAnnulation ? " · " + esc(prog.motifAnnulation) : "")) + "</span></span>" +
@@ -836,6 +838,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
               '<label class="field" style="flex:1 1 150px">Date<input type="date" id="e-date" value="' + r.date + '"></label>' +
               '<label class="field" style="flex:1 1 150px">Répétition<select id="e-type">' + Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (k === r.type ? " selected" : "") + ">" + TYPES[k] + "</option>"; }).join("") + "</select></label>" +
               '<label class="field" style="flex:1 1 110px">Horaire<input type="text" id="e-heure" value="' + esc(prog.horaire) + '" placeholder="18h - 21h"></label>' +
+              '<label class="field" style="flex:1 1 100%">Lieu de cette répétition<input type="text" id="e-lieu" value="' + esc(prog.lieu) + '" placeholder="' + esc(lieuParDefaut()) + '"></label>' +
               '<label class="check" style="flex:1 1 100%"><input type="checkbox" data-rep-exc="' + esc(r.id) + '"' + (prog.exceptionnelle ? " checked" : "") + '> Date exceptionnelle <span class="muted">(le rappel prévient d’un changement de jour)</span></label>' +
               '<div class="row" style="flex:1 1 100%"><button type="button" class="btn primary small" data-action="rep-save" data-id="' + esc(r.id) + '">Enregistrer</button>' +
               '<button type="button" class="btn small" data-action="rep-fermer">Fermer</button>' +
@@ -1200,10 +1203,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     });
     return l.sort(function (a, b) { return a.date === b.date ? (a.type < b.type ? -1 : 1) : (a.date < b.date ? -1 : 1); });
   }
-  function lieuParDefaut() {
-    var l = Object.keys(programmes).sort().reverse().map(function (k) { return programmes[k].lieu; }).filter(Boolean);
-    return l[0] || LIEU_DEFAUT;
-  }
+  /* Lieu habituel des répétitions : réglé dans Réglages (reglages/repetitions.lieu). Une répétition ne garde son
+     propre lieu que s'il est différent : c'est alors un « lieu inhabituel », signalé sur la carte et dans le rappel. */
+  function lieuParDefaut() { return (reglagesRep.lieu || "").trim() || LIEU_DEFAUT; }
+  function lieuInhabituel(p) { return !!p.lieu && p.lieu.trim() !== lieuParDefaut(); }
+
   var LIEU_DEFAUT = "65 Rue Belvédère Nord";
   var MOT_DEFAUT = {
     k1: "Écoutez l’enregistrement avant de venir : nous travaillerons les xàjj et le souffle collectif.",
@@ -1262,7 +1266,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     L.push("🔔 *RAPPEL · " + titreRepetition(ty) + "*");
     L.push("");
     L.push("*" + jourLong(date).replace(/ \d{4}$/, "") + "*" + (p.horaire ? " · " + p.horaire : ""));
-    if (p.lieu) L.push("📍 " + p.lieu);
+    if (p.lieu) L.push(lieuInhabituel(p) ? "📍 *Attention, lieu inhabituel :* " + p.lieu : "📍 " + p.lieu);
     L.push("");
     if (p.exceptionnelle) { L.push("⚠️ _Date exceptionnelle : attention au changement de jour._"); L.push(""); }
     if (ty === "rg") { L.push("_Kourels 1 et 2 ensemble, pour préparer la prestation du Kourel général._"); L.push(""); }
@@ -1309,7 +1313,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       '<section class="panel"><h2>Rappel · ' + esc(jourLong(date)) + '</h2><span class="chip">' + esc(TYPES[ty]) + "</span>" + (p.exceptionnelle ? ' <span class="pill e">Date exceptionnelle</span>' : "") +
       '<div class="row" style="margin-top:14px">' +
       '<label class="field" style="flex:0 1 140px">Horaire<input type="text" id="r-heure" value="' + esc(p.horaire) + '" placeholder="18h - 21h"></label>' +
-      '<label class="field" style="flex:1 1 220px">Lieu (facultatif)<input type="text" id="r-lieu" value="' + esc(p.lieu) + '" placeholder="Adresse ou salle"></label></div>' +
+      '<label class="field" style="flex:1 1 220px">Lieu de cette répétition<input type="text" id="r-lieu" value="' + esc(p.lieu) + '" placeholder="Adresse ou salle"></label></div>' +
       '<h3 class="group">Au programme</h3><div class="row">' +
       '<label class="field" style="flex:1 1 220px">Khassida<select id="r-kh"><option value="">Aucun khassida précisé</option>' +
       kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (p.khassida === k.id ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") + "</select></label>" +
@@ -1340,6 +1344,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (!kh) { p.tout = false; p.de = 1; p.a = null; }
     if (p.a && p.de > p.a) p.a = p.de;
     if (!p.a && n) p.a = n;
+    if (!lieuInhabituel(p)) p.lieu = null;
     db.doc("programmes/" + id).set(p).catch(echec);
   }
 
@@ -2255,7 +2260,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
     else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
     if (vue === "moi") app.insertAdjacentHTML("beforeend", blocMessagesMembre());
-    if (vue === "reglages") vueDieuwrignes();
+    if (vue === "reglages") { vueLieuHabituel(); vueDieuwrignes(); }
     if (vue === "reglages" && comptesApi) vueAcces();
   }
   function lireHash() {
@@ -2418,12 +2423,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         if (!nd) { toast("Choisissez une date."); return; }
         var nid = nd + "-" + nt;
         editRep = null;
-        if (nid === rid) { enregistrerRappel(rid, { horaire: nh }); toast("Horaire enregistré."); return; }
+        var nl = lire("e-lieu");
+        if (nid === rid) { enregistrerRappel(rid, { horaire: nh, lieu: nl }); toast(nl && nl !== lieuParDefaut() ? "Enregistré : lieu inhabituel pour cette répétition." : "Enregistré."); return; }
         if (programmes[nid] && !programmes[nid].annulee) { toast("Il y a déjà une répétition " + TYPES[nt] + " ce jour-là."); return; }
         var ancien = progDe(rid), copie = {};
         Object.keys(ancien).forEach(function (k) { copie[k] = ancien[k]; });
         copie.horaire = nh; copie.extra = true; copie.annulee = false; copie.deplaceeVers = null; copie.deplaceeDe = rid; copie.envoye = false; copie.motifAnnulation = "";
         copie.masquee = false; copie.exceptionnelle = !jourHabituel(nd, nt);
+        copie.lieu = nl && nl !== lieuParDefaut() ? nl : null;
         db.doc("programmes/" + nid).set(copie).then(function () {
           var fin = ancien.extra ? db.doc("programmes/" + rid).delete() : db.doc("programmes/" + rid).set(Object.assign({}, ancien, { annulee: true, deplaceeVers: nid }));
           return fin;
@@ -2439,7 +2446,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         editRep = null;
         if (programmes[aid] && (programmes[aid].annulee || programmes[aid].masquee)) { enregistrerRappel(aid, { annulee: false, masquee: false, deplaceeVers: null, horaire: ah }); toast("Répétition rétablie."); return; }
         if (estDefaut || (programmes[aid] && programmes[aid].extra)) { toast("Cette répétition est déjà prévue."); afficher(); return; }
-        db.doc("programmes/" + aid).set({ horaire: ah, lieu: lieuParDefaut(), extra: true, exceptionnelle: !jourHabituel(ad, at) }).then(function () { toast("Répétition ajoutée : " + jourCourt(ad) + "."); }, echec);
+        db.doc("programmes/" + aid).set({ horaire: ah, extra: true, exceptionnelle: !jourHabituel(ad, at) }).then(function () { toast("Répétition ajoutée : " + jourCourt(ad) + "."); }, echec);
         return;
       }
     }
@@ -2636,6 +2643,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       toast(t.checked ? "Marquée comme date exceptionnelle : le rappel préviendra du changement de jour." : "Ce n’est plus une date exceptionnelle.");
       return;
     }
+    if (t.dataset && t.dataset.lieuHabituel !== undefined && peutModifier) {
+      var lh = t.value.trim();
+      db.doc("reglages/repetitions").set({ lieu: lh }).then(function () { toast(lh ? "Lieu habituel : " + lh + "." : "Lieu habituel effacé : « " + LIEU_DEFAUT + " » par défaut."); }, echec);
+      return;
+    }
     if (t.dataset && t.dataset.dieuwrigne && peutModifier) {
       var dw = Object.assign({}, reglagesKourels.dieuwrigne || {}), kd = t.dataset.dieuwrigne;
       dw[kd] = t.value;
@@ -2718,7 +2730,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   /* ---------- Programme de chant : répétitions et dahiras ----------
      chants/{clé} (voir serveur.mjs) : khassidas retenus (et propositions, visibles du Conservatoire seulement).
      Le dieuwrigne de chaque kourel (reglages/kourels.dieuwrigne) et l'admin décident ; les autres membres du Conservatoire proposent. */
-  var chants = {}, reglagesKourels = {}, programmeApi = null, progForm = null;
+  var chants = {}, reglagesKourels = {}, reglagesRep = {}, programmeApi = null, progForm = null;
   var prgCol = (function () { try { return localStorage.getItem("prg-col") === "dz" ? "dz" : "rep"; } catch (e) { return "rep"; } })();
   function kourelsDe(k) { return k === "k1" ? ["k1"] : k === "k2" ? ["k2"] : ["k1", "k2"]; }
   function dieuwrigneDe(k) { var id = (reglagesKourels.dieuwrigne || {})[k]; return id && membres[id] ? membres[id] : null; }
@@ -2798,7 +2810,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var h = '<article class="panel ev ev-rep ev-' + x.k + (p.annulee ? " ev-annulee" : "") + '"><div class="ev-tete">' + dateBloc(x.date) +
       '<div class="ev-titre"><b>' + (x.k === "rg" ? "Répétition générale" : esc(TYPES[x.k] || "")) + "</b>" +
       '<span class="muted">' + esc(jourLong(x.date).replace(/ \d{4}$/, "")) + (p.horaire ? " · " + esc(p.horaire) : "") + "</span>" +
-      (p.lieu && !p.annulee ? '<span class="ev-lieu">📍 ' + esc(p.lieu) + "</span>" : "") + "</div>" +
+      (p.lieu && !p.annulee ? (lieuInhabituel(p) ? '<span class="ev-lieu inhabituel">📍 Lieu inhabituel : ' + esc(p.lieu) + "</span>" : '<span class="ev-lieu">📍 ' + esc(p.lieu) + "</span>") : "") + "</div>" +
       (p.exceptionnelle && !p.annulee ? '<span class="pill e">Date exceptionnelle</span>' : "") + "</div>";
     if (p.annulee) return h + '<p class="ev-note">' + (p.deplaceeVers ? "Déplacée au " + esc(jourCourt(p.deplaceeVers.slice(0, 10))) + "." : "Annulée" + (p.motifAnnulation ? " : " + esc(p.motifAnnulation) : "") + ".") + "</p></article>";
     return h + blocProgramme(x.cle, x.k, { dieuwrigne: dw }) + "</article>";
@@ -2858,6 +2870,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       return true;
     }
     return false;
+  }
+  function vueLieuHabituel() {
+    if (!peutModifier) return;
+    app.insertAdjacentHTML("afterbegin", '<section class="panel"><h2>Lieu des répétitions</h2><p class="muted">Le lieu habituel, repris pour chaque répétition. Pour une répétition ailleurs, changez seulement son lieu dans Répétitions → Modifier : elle sera signalée « lieu inhabituel ».</p>' +
+      '<div class="row" style="margin-top:12px"><label class="field" style="flex:1 1 320px">Lieu habituel<input type="text" data-lieu-habituel value="' + esc(lieuParDefaut()) + '" placeholder="65 Rue Belvédère Nord"></label></div></section>');
   }
   /* Réglages : qui est le dieuwrigne de chaque kourel (parmi les membres du Conservatoire et les admins). */
   function vueDieuwrignes() {
@@ -3217,7 +3234,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       majPastilleProg(); afficher();
     }, function () { /* pas encore de programme */ });
     db.collection("reglages").onSnapshot(function (snap) {
-      snap.docs.forEach(function (d) { if (d.id === "kourels") reglagesKourels = d.data() || {}; });
+      snap.docs.forEach(function (d) { if (d.id === "kourels") reglagesKourels = d.data() || {}; if (d.id === "repetitions") reglagesRep = d.data() || {}; });
       majPastilleProg(); afficher();
     }, function () { /* pas de réglage */ });
     db.collection("dahiras").onSnapshot(function (snap) {
