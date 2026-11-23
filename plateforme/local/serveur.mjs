@@ -10,6 +10,7 @@ import http from "node:http";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { ouvrirStockage, nomValide } from "./stockage.mjs";
 import { creerComptes, COOKIE, DUREE_SESSION } from "./comptes.mjs";
@@ -104,6 +105,13 @@ function tropDEchecs(req) {
 function noterEchec(req) {
   const ip = ipDe(req), e = echecs.get(ip) || { n: 0, t: Date.now() };
   e.n++; echecs.set(ip, e);
+}
+/* Boîte à idées et support : 15 envois par heure et par membre. */
+const envois = new Map();
+function tropDenvois(membre) {
+  const e = envois.get(membre);
+  if (!e || Date.now() - e.t > 3600000) { envois.set(membre, { n: 1, t: Date.now() }); return false; }
+  return ++e.n > 15;
 }
 /* Limite des demandes d'inscription : 10 par heure et par adresse. */
 const inscriptions = new Map();
@@ -250,6 +258,46 @@ async function api(req, res, parts, sess) {
     const battement = setInterval(() => res.write(": \n\n"), 25000);
     req.on("close", () => { clearInterval(battement); clients.delete(c); });
     return;
+  }
+
+  /* --- Boîte à idées et support ---
+     Idées (_idees) : tout membre envoie, signé ou anonyme. Le Conservatoire et l'administrateur les lisent et répondent ;
+     l'auteur d'une idée anonyme n'est jamais envoyé au Conservatoire, seul l'administrateur (le dieuwrigne) le voit.
+     Support (_support) : un membre signale un souci ; seul l'administrateur le lit et répond.
+     Chacun retrouve ses propres envois (avec la réponse) dans Mon espace. */
+  if ((parts[0] === "idees" || parts[0] === "support") && !sess.temporaire) {
+    const col = "_" + parts[0], id = parts[1], lecteur = parts[0] === "idees" ? peut(sess, "suivi") : sess.admin;
+    const noms = Object.fromEntries((await stock.lireCollection("membres")).map((d) => [d.id, d.data.nom]));
+    const vue = (d) => {
+      const x = { id: d.id, ...d.data, moi: d.data.auteur === sess.membre };
+      if (!sess.admin && x.anonyme && !x.moi) delete x.auteur;
+      if (x.auteur) x.nom = noms[x.auteur] || x.auteur;
+      return x;
+    };
+    if (!id && req.method === "GET") {
+      const docs = (await stock.lireCollection(col)).filter((d) => lecteur || d.data.auteur === sess.membre);
+      return json(res, 200, { docs: docs.map(vue).sort((a, b) => b.creeLe - a.creeLe), lecteur });
+    }
+    if (!id && req.method === "POST") {
+      const c = await lireCorps(req), texte = String(c.texte || "").trim().slice(0, 3000);
+      if (texte.length < 3) return json(res, 400, { code: "court", message: "Écrivez votre message avant d’envoyer." });
+      if (tropDenvois(sess.membre)) return json(res, 429, { code: "trop", message: "Trop d’envois rapprochés : réessayez dans une heure." });
+      const nid = Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
+      const doc = parts[0] === "idees"
+        ? { auteur: sess.membre, anonyme: !!c.anonyme, type: ["idee", "suggestion", "positif", "ameliorer"].includes(c.type) ? c.type : "idee", texte, creeLe: Date.now(), statut: "nouveau" }
+        : { auteur: sess.membre, texte, contexte: String(c.contexte || "").slice(0, 300), creeLe: Date.now(), statut: "ouvert" };
+      await stock.ecrireDoc(col, nid, doc); prevenir(col);
+      return json(res, 200, { ok: true, id: nid });
+    }
+    if (id && req.method === "PATCH") {
+      if (!lecteur || !nomValide(id)) return json(res, 403, { code: "invalid_argument", message: "Réservé au Conservatoire." });
+      const c = await lireCorps(req), maj = {};
+      if (["nouveau", "lu", "traite", "ouvert", "resolu"].includes(c.statut)) maj.statut = c.statut;
+      if (typeof c.reponse === "string") { maj.reponse = c.reponse.trim().slice(0, 3000); maj.reponduLe = Date.now(); maj.reponduPar = noms[sess.membre] || sess.membre; }
+      if (!(await stock.fusionnerDoc(col, id, maj))) return json(res, 404, { code: "not_found" });
+      prevenir(col); return json(res, 200, { ok: true });
+    }
+    return json(res, 405, { code: "invalid_argument" });
   }
 
   /* --- Comptes des membres (administrateur) --- */

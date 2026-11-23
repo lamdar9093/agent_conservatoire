@@ -661,7 +661,7 @@ dialog.ms::backdrop { background: var(--scrim); }
       ph: ["Dhallat li-’izzati rabbin anzalas-souwarâ", "Djamâ’atoul-khalqi wahwal-mouhsinous-souwarâ"],
       fr: "L’ensemble des créatures s’est soumis à la puissance d’un Seigneur qui a révélé les sourates ; c’est Lui qui a embelli les formes.",
       k2: "« Dhallat » : " + AR("ذ") + " comme le th anglais de « this », l doublé. « ’Izzati » : " + AR("ع") + " puis z doublé. « Mouhsinou » : " + AR("ح") + " soufflé. « Souwarâ » (sourates) et « souwarâ » (formes) : " + AR("س") + " puis " + AR("ص") + " emphatique.",
-      deroule: "chanté trois fois. Le dieuwrigne lance seul le début du beuyite, le kourel répond avec la suite, puis tout le kourel reprend le beuyite deux fois ensemble." },
+      deroule: "chanté deux fois : le dieuwrigne lance seul le début du beuyite, le kourel répond avec la suite, puis le beuyite est repris une fois avant de passer au beuyite 2." },
 
     { id: "v2", type: "vers", n: 2, page: 1,
       ar: ["وَجَّهْتُ وَجْهِي لَهُ عَبْدًا لَهُ أَبَدَا", "ذَا خِدْمَةٍ لِرَسُولِ اللَّهِ كَالْكُبَرَا"],
@@ -857,15 +857,15 @@ dialog.ms::backdrop { background: var(--scrim); }
     });
     document.body.classList.toggle("no-calage", ordre.length === 0);
   }
-  /* Calage automatique : blocs de deux respirations (16,5 s). Le beuyite 1 occupe les trois premiers blocs
-     (le dieuwrigne lance, le kourel répond, puis deux fois ensemble), ensuite un beuyite par bloc. */
+  /* Calage automatique : blocs de deux respirations (16,4 s). Dans cet enregistrement, le beuyite 1 n'est chanté
+     que deux fois (deux premiers blocs, 0:00 à 0:33), ensuite un beuyite par bloc ; le dernier va jusqu'à la fin. */
   function autoTemps(dec) {
     var u = [];
     for (var i = 0; i + 1 < CYCLES.length; i += 2) u.push(CYCLES[i]);
     var t = {};
     SEGMENTS.forEach(function (s) {
       if (s.type !== "vers") { t[s.id] = null; return; }
-      var idx = s.n === 1 ? 0 : 3 + dec + (s.n - 2);
+      var idx = s.n === 1 ? 0 : 2 + dec + (s.n - 2);
       t[s.id] = idx >= 0 && idx < u.length ? u[idx] : null;
     });
     return t;
@@ -909,7 +909,7 @@ dialog.ms::backdrop { background: var(--scrim); }
       return;
     }
     if (state.mode === "auto") {
-      html = "<p><b>Le texte suit le chant en temps réel.</b> Le beuyite 1 est chanté trois fois (le dieuwrigne lance, le kourel répond, puis deux fois ensemble), puis vient le yeukeuti et un beuyite toutes les 16 secondes environ. Le demi-beuyite chanté s’éclaire. Si les beuyites arrivent décalés, corrigez d’un beuyite.</p>" +
+      html = "<p><b>Le texte suit le chant en temps réel.</b> Le beuyite 1 est chanté deux fois (le dieuwrigne lance, le kourel répond, puis une reprise), puis vient le yeukeuti et un beuyite toutes les 16 secondes environ. Le demi-beuyite chanté s’éclaire. Si les beuyites arrivent décalés, corrigez d’un beuyite.</p>" +
         '<div class="row"><button type="button" class="btn" data-action="tot">Le texte est en retard d’un beuyite</button>' +
         '<button type="button" class="btn" data-action="tard">Le texte est en avance d’un beuyite</button>' +
         '<button type="button" class="btn ghost" data-action="calage">Caler à la main</button></div>';

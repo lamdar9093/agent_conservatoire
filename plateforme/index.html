@@ -227,6 +227,29 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
 .tour-passer:hover { color: var(--ink); }
 .tour-fleche { position: absolute; width: 14px; height: 14px; background: var(--surface); transform: rotate(45deg); }
 @media (prefers-reduced-motion: reduce) { .tour-spot, .tour-bulle, .tour-voile { transition: none; } .tour-spot::after { animation: none; } }
+/* Boîte à idées et support */
+.msg-choix { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.msg-choix button { display: grid; gap: 4px; text-align: left; padding: 14px; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper); color: var(--ink); font: inherit; cursor: pointer; }
+.msg-choix button:hover, .msg-choix button[aria-pressed="true"] { border-color: var(--accent); }
+.msg-choix button[aria-pressed="true"] { background: var(--accent-soft); }
+.msg-choix .msg-ico { font-size: 22px; }
+.msg-choix b { font-size: 15px; }
+.msg-choix small { color: var(--ink-soft); font-size: 12.5px; line-height: 1.4; }
+@media (max-width: 480px) { .msg-choix { grid-template-columns: 1fr; } }
+.msg-form { display: grid; gap: 10px; margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--paper); border: 1px solid var(--rule); }
+.msg-form textarea { width: 100%; min-height: 110px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; resize: vertical; }
+.msg-form .lbl { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+.msg-note { font-size: 12.5px; color: var(--ink-soft); margin: 0; }
+.msg-liste { display: grid; gap: 10px; margin-top: 12px; }
+.msg { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+.msg.nouveau { border-color: var(--accent); }
+.msg-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12.5px; color: var(--ink-soft); }
+.msg-tete .qui { font-weight: 600; color: var(--ink); }
+.msg-texte { margin: 0; white-space: pre-wrap; font-size: 14.5px; }
+.msg-rep { margin: 0; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 8px 8px 0; font-size: 13.5px; white-space: pre-wrap; }
+.msg-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.msg-actions textarea { flex: 1 1 100%; min-height: 60px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; resize: vertical; }
+.pill.anon { background: var(--paper); color: var(--ink-soft); border: 1px dashed var(--rule); }
 dialog.refus { width: min(92vw, 400px); padding: 0; border: 1px solid var(--rule); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 dialog.refus::backdrop { background: rgba(10, 20, 18, 0.45); }
 dialog.refus form { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 24px 20px 20px; }
@@ -1779,7 +1802,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   var moiCourant = lireMoi();
   function vueMoi() {
     var liste = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) !== "parti"; }).sort(triNom);
-    var html = '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
+    var html = lienMessages() + '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
       (monCompte
         ? '<section class="panel compte"><div><h2>' + esc((membres[monCompte.membre] || {}).nom || monCompte.nom || "Mon espace") + '</h2><p class="muted">' + ROLES_NOMS[monRole] + " · " + esc(tagsKourel(membres[monCompte.membre] || {})) + "</p></div>" +
           '<div class="row"><a class="btn small" href="/connexion.html?changer=1">Changer mon mot de passe</a><button type="button" class="btn ghost small" data-action="revoir-tour">Revoir la visite</button><button type="button" class="btn ghost small" data-action="deconnexion">Se déconnecter</button></div></section>'
@@ -2068,12 +2091,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (!peutSuivi && ["seances", "bilan", "reglages"].indexOf(vue) > -1) vue = "moi";
     /* Le Conservatoire n'a pas les réglages (accès, membres, khassidas, sauvegardes). */
     if (!peutModifier && vue === "reglages") vue = "seances";
-    var actif = vue === "khassida" ? "khassidas" : vue === "chartes" ? "moi" : vue;
+    if (vue === "messages" && !peutSuivi) vue = "moi";
+    var actif = vue === "khassida" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi" : vue;
     document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     document.body.classList.toggle("lecture", vue === "khassida");
     if (vue === "khassida") return vueLecture();
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
-    else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else vueSeances();
+    else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
+    if (vue === "moi") app.insertAdjacentHTML("beforeend", blocMessagesMembre());
     if (vue === "reglages" && comptesApi) vueAcces();
   }
   function lireHash() {
@@ -2081,7 +2106,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (h === "membres") h = "reglages";
     var mk = /^khassida\/([^\/]+)(?:\/v(\d+))?$/.exec(h);
     if (mk) { vue = "khassida"; lecture = { id: decodeURIComponent(mk[1]), vers: mk[2] ? Number(mk[2]) : null }; return; }
-    vue = ["seances", "bilan", "reglages", "moi", "khassidas", "dahira", "chartes"].indexOf(h) > -1 ? h : "seances";
+    vue = ["seances", "bilan", "reglages", "moi", "khassidas", "dahira", "chartes", "messages"].indexOf(h) > -1 ? h : "seances";
   }
   window.addEventListener("hashchange", function () { lireHash(); window.scrollTo(0, 0); seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null; afficher(); });
 
@@ -2089,6 +2114,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (e.target.closest("[data-refus-seance]")) { refusSeance("modifier"); return; }
     var b = e.target.closest("button");
     if (!b) return;
+    if (clicMessages(b)) return;
     if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.hasAttribute("data-back")) { seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.dataset.rappel) { rappelOuvert = b.dataset.rappel; afficher(); window.scrollTo(0, 0); return; }
@@ -2481,6 +2507,147 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   });
 
 
+
+  /* ---------- Boîte à idées et support ---------- */
+  var messagesApi = null, msgIdees = null, msgSupport = null, msgOuvert = null, msgOnglet = "idees";
+  var TYPES_IDEE = { idee: "💡 Idée", suggestion: "🧭 Suggestion", positif: "👍 Point positif", ameliorer: "🛠️ À améliorer" };
+  function chargerMessages() {
+    if (!messagesApi) return;
+    Promise.all([messagesApi.liste("idees").catch(function () { return null; }), messagesApi.liste("support").catch(function () { return null; })]).then(function (r) {
+      msgIdees = r[0]; msgSupport = r[1]; majPastilleMsg();
+      if (vue === "moi" || vue === "messages") afficher();
+    });
+  }
+  window.addEventListener("conservatoire-messages", chargerMessages);
+  function nbNouveaux() {
+    var n = 0;
+    if (msgIdees && msgIdees.lecteur) n += msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length;
+    if (msgSupport && msgSupport.lecteur) n += msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length;
+    return n;
+  }
+  function majPastilleMsg() {
+    var n = nbNouveaux();
+    document.querySelectorAll('a[data-view="moi"]').forEach(function (a) {
+      var p = a.querySelector(".pastille");
+      if (!n) { if (p) p.remove(); return; }
+      if (!p) { p = document.createElement("span"); p.className = "pastille"; a.appendChild(p); }
+      p.textContent = n; p.setAttribute("aria-label", n + " message" + (n > 1 ? "s" : "") + " à lire");
+    });
+  }
+  function quand(ms) { return ms ? new Date(ms).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : ""; }
+  /* Mon espace : envoyer une idée ou signaler un souci, et retrouver ses envois. */
+  function blocMessagesMembre() {
+    if (!messagesApi || !monCompte) return "";
+    var h = '<section class="panel" id="boite"><h2>Boîte à idées et assistance</h2><p class="muted">Une idée pour le kourel, une remarque, ou un souci sur la plateforme : écrivez-nous.</p>' +
+      '<div class="msg-choix">' +
+        '<button type="button" data-msg-ouvrir="idees" aria-pressed="' + (msgOuvert === "idees") + '"><span class="msg-ico" aria-hidden="true">💡</span><b>Boîte à idées</b><small>Idée, suggestion, remarque positive ou à améliorer sur la vie du kourel. Signée ou anonyme.</small></button>' +
+        '<button type="button" data-msg-ouvrir="support" aria-pressed="' + (msgOuvert === "support") + '"><span class="msg-ico" aria-hidden="true">🛟</span><b>Signaler un souci</b><small>Quelque chose ne marche pas dans votre espace ? Le dieuwrigne vous aidera.</small></button>' +
+      "</div>";
+    if (msgOuvert === "idees") {
+      h += '<div class="msg-form"><span class="lbl">C’est plutôt…</span><span class="seg seg-full" role="group" aria-label="Type de message">' +
+        Object.keys(TYPES_IDEE).map(function (k) { return '<button type="button" data-idee-type="' + k + '" aria-pressed="' + ((msgBrouillon.type || "idee") === k) + '">' + TYPES_IDEE[k] + "</button>"; }).join("") + "</span>" +
+        '<textarea id="msg-texte" placeholder="Votre idée ou votre remarque…" maxlength="3000">' + esc(msgBrouillon.texte || "") + "</textarea>" +
+        '<span class="lbl">Signer ?</span><span class="seg seg-full" role="group" aria-label="Signer le message">' +
+          '<button type="button" data-idee-anon="0" aria-pressed="' + !msgBrouillon.anonyme + '">Avec mon nom</button>' +
+          '<button type="button" data-idee-anon="1" aria-pressed="' + !!msgBrouillon.anonyme + '">Anonyme</button></span>' +
+        '<p class="msg-note">' + (msgBrouillon.anonyme
+          ? "🔒 Anonyme : le Conservatoire lira votre message sans voir votre nom. Seul le dieuwrigne (administrateur) peut savoir qui l’a écrit."
+          : "Le Conservatoire verra votre nom avec votre message.") + "</p>" +
+        '<div class="row"><button type="button" class="btn primary" data-msg-envoyer="idees">Envoyer au Conservatoire</button><button type="button" class="btn ghost" data-msg-ouvrir="">Annuler</button></div></div>';
+    } else if (msgOuvert === "support") {
+      h += '<div class="msg-form"><span class="lbl">Décrivez le souci</span>' +
+        '<textarea id="msg-texte" placeholder="Ex. : je ne vois pas mes Taris, la page du khassida ne s’ouvre pas…" maxlength="3000">' + esc(msgBrouillon.texte || "") + "</textarea>" +
+        '<p class="msg-note">Votre nom, la page où vous êtes et votre appareil sont joints au message, pour que le dieuwrigne vous aide plus vite.</p>' +
+        '<div class="row"><button type="button" class="btn primary" data-msg-envoyer="support">Envoyer au dieuwrigne</button><button type="button" class="btn ghost" data-msg-ouvrir="">Annuler</button></div></div>';
+    }
+    var miens = [].concat(
+      (msgIdees ? msgIdees.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "idees"; return d; }) : []),
+      (msgSupport ? msgSupport.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "support"; return d; }) : [])
+    ).sort(function (a, b) { return b.creeLe - a.creeLe; }).slice(0, 10);
+    if (miens.length) {
+      h += '<h3 class="group">Mes envois</h3><div class="msg-liste">' + miens.map(function (d) {
+        var etat = d._t === "support" ? (d.statut === "resolu" ? '<span class="pill p">Résolu</span>' : '<span class="pill r">En cours</span>')
+          : (d.reponse ? '<span class="pill p">Réponse reçue</span>' : d.statut === "nouveau" ? '<span class="pill n">Envoyé</span>' : '<span class="pill p">Lu par le Conservatoire</span>');
+        return '<div class="msg"><div class="msg-tete"><span>' + (d._t === "support" ? "🛟 Souci" : esc(TYPES_IDEE[d.type] || "Idée")) + "</span><span>· " + quand(d.creeLe) + "</span>" +
+          (d.anonyme ? '<span class="pill anon">Anonyme</span>' : "") + etat + "</div>" +
+          '<p class="msg-texte">' + esc(d.texte) + "</p>" +
+          (d.reponse ? '<p class="msg-rep"><b>Réponse' + (d.reponduPar && d._t === "support" ? " de " + esc(d.reponduPar) : " du Conservatoire") + " :</b> " + esc(d.reponse) + "</p>" : "") + "</div>";
+      }).join("") + "</div>";
+    }
+    return h + "</section>";
+  }
+  /* Accès à la lecture (Conservatoire et administrateur), en haut de Mon espace. */
+  function lienMessages() {
+    if (!messagesApi || !(msgIdees && msgIdees.lecteur)) return "";
+    var ni = msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length;
+    var ns = msgSupport && msgSupport.lecteur ? msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
+    return '<a class="chartes-lien" href="#messages"><span aria-hidden="true">📬</span><span><b>Boîte à idées' + (msgSupport && msgSupport.lecteur ? " et support" : "") + "</b><small>" +
+      (ni ? ni + " nouvelle" + (ni > 1 ? "s" : "") + " idée" + (ni > 1 ? "s" : "") : "Aucune nouvelle idée") +
+      (msgSupport && msgSupport.lecteur ? " · " + (ns ? ns + " souci" + (ns > 1 ? "s" : "") + " à traiter" : "aucun souci en cours") : "") +
+      '</small></span>' + (ni + ns ? '<span class="pastille">' + (ni + ns) + "</span>" : "") + '<span aria-hidden="true">›</span></a>';
+  }
+  function vueMessages() {
+    if (!msgIdees) { app.innerHTML = '<div class="empty">Chargement…</div>'; chargerMessages(); return; }
+    var support = msgSupport && msgSupport.lecteur;
+    if (!support) msgOnglet = "idees";
+    var l = msgOnglet === "support" ? msgSupport.docs : msgIdees.docs;
+    var ni = msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length, ns = support ? msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
+    var html = '<div><a class="btn ghost" href="#moi">← Mon espace</a></div><section class="panel"><h2>' + (msgOnglet === "support" ? "Support" : "Boîte à idées") + "</h2>" +
+      '<p class="muted">' + (msgOnglet === "support" ? "Les soucis signalés par les membres. Répondez-leur ici : ils voient votre réponse dans Mon espace."
+        : "Les idées et remarques des membres sur le kourel. Les messages anonymes ne montrent pas le nom" + (peutModifier ? " au Conservatoire (vous seul le voyez)." : " de leur auteur.") + " Votre réponse est visible par l’auteur.") + "</p>" +
+      (support ? '<span class="seg seg-full" role="group" aria-label="Messages" style="margin-top:12px"><button type="button" data-msg-onglet="idees" aria-pressed="' + (msgOnglet === "idees") + '">Boîte à idées' + (ni ? " · " + ni : "") + '</button><button type="button" data-msg-onglet="support" aria-pressed="' + (msgOnglet === "support") + '">Support' + (ns ? " · " + ns : "") + "</button></span>" : "") +
+      '<div class="msg-liste">' + (l.length ? l.map(function (d) {
+        var neuf = msgOnglet === "support" ? d.statut === "ouvert" : d.statut === "nouveau";
+        var qui = d.anonyme ? (d.nom ? 'Anonyme <span class="muted">(' + esc(d.nom) + ", visible par vous seul)</span>" : "Anonyme") : esc(d.nom || "Membre");
+        return '<div class="msg' + (neuf ? " nouveau" : "") + '"><div class="msg-tete"><span class="qui">' + qui + "</span><span>· " + quand(d.creeLe) + "</span>" +
+          (msgOnglet === "support" ? (d.statut === "resolu" ? '<span class="pill p">Résolu</span>' : '<span class="pill r">À traiter</span>') : '<span class="pill n">' + esc(TYPES_IDEE[d.type] || "Idée") + "</span>" + (neuf ? '<span class="pill e">Nouveau</span>' : "")) + "</div>" +
+          '<p class="msg-texte">' + esc(d.texte) + "</p>" +
+          (d.contexte ? '<p class="msg-note">' + esc(d.contexte) + "</p>" : "") +
+          (d.reponse ? '<p class="msg-rep"><b>Réponse de ' + esc(d.reponduPar || "") + " :</b> " + esc(d.reponse) + "</p>" : "") +
+          '<div class="msg-actions"><textarea data-msg-rep="' + esc(d.id) + '" placeholder="' + (d.reponse ? "Modifier la réponse…" : "Répondre (visible par l’auteur)…") + '"></textarea>' +
+            '<button type="button" class="btn small primary" data-msg-repondre="' + esc(d.id) + '">Envoyer la réponse</button>' +
+            (msgOnglet === "support"
+              ? '<button type="button" class="btn small" data-msg-statut="' + esc(d.id) + "|" + (d.statut === "resolu" ? "ouvert" : "resolu") + '">' + (d.statut === "resolu" ? "Rouvrir" : "Marquer résolu") + "</button>"
+              : (neuf ? '<button type="button" class="btn small" data-msg-statut="' + esc(d.id) + '|lu">Marquer comme lu</button>' : "")) + "</div></div>";
+      }).join("") : '<div class="empty">Rien pour l’instant.</div>') + "</div></section>";
+    app.innerHTML = html;
+  }
+  var msgBrouillon = {};
+  function clicMessages(b) {
+    if (b.dataset.msgOuvrir !== undefined) { msgOuvert = b.dataset.msgOuvrir || null; msgBrouillon = {}; afficher(); var t = document.getElementById("msg-texte"); if (t) t.focus(); return true; }
+    if (b.dataset.ideeType) { msgBrouillon.type = b.dataset.ideeType; garderTexte(); afficher(); return true; }
+    if (b.dataset.ideeAnon) { msgBrouillon.anonyme = b.dataset.ideeAnon === "1"; garderTexte(); afficher(); return true; }
+    if (b.dataset.msgOnglet) { msgOnglet = b.dataset.msgOnglet; afficher(); return true; }
+    if (b.dataset.msgEnvoyer && messagesApi) {
+      var type = b.dataset.msgEnvoyer, texte = (document.getElementById("msg-texte") || {}).value || "";
+      if (texte.trim().length < 3) { toast("Écrivez votre message avant d’envoyer."); return true; }
+      var data = type === "idees" ? { texte: texte, type: msgBrouillon.type || "idee", anonyme: !!msgBrouillon.anonyme }
+        : { texte: texte, contexte: "Page : " + (location.hash || "#") + " · " + navigator.userAgent.slice(0, 160) };
+      b.disabled = true;
+      messagesApi.envoyer(type, data).then(function () {
+        msgOuvert = null; msgBrouillon = {};
+        toast(type === "idees" ? "Merci ! Votre message est arrivé au Conservatoire." : "Merci ! Le dieuwrigne a reçu votre message et vous répondra ici.");
+        chargerMessages();
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Envoi impossible. Réessayez."); });
+      return true;
+    }
+    if ((b.dataset.msgRepondre || b.dataset.msgStatut) && messagesApi) {
+      var col = msgOnglet === "support" ? "support" : "idees", maj = {}, mid;
+      if (b.dataset.msgRepondre) {
+        mid = b.dataset.msgRepondre;
+        var ta = document.querySelector('[data-msg-rep="' + mid + '"]');
+        if (!ta || !ta.value.trim()) { toast("Écrivez d’abord votre réponse."); return true; }
+        maj.reponse = ta.value; if (col === "idees") maj.statut = "traite";
+      } else { var ps = b.dataset.msgStatut.split("|"); mid = ps[0]; maj.statut = ps[1]; }
+      b.disabled = true;
+      messagesApi.maj(col, mid, maj).then(function () { toast(maj.reponse != null ? "Réponse envoyée : l’auteur la verra dans Mon espace." : "C’est noté."); chargerMessages(); },
+        function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
+      return true;
+    }
+    return false;
+  }
+  function garderTexte() { var t = document.getElementById("msg-texte"); if (t) msgBrouillon.texte = t.value; }
+
   /* ---------- Visite guidée des onglets (première connexion) ---------- */
   var tourEtat = null;
   function iconeOnglet(v) {
@@ -2501,7 +2668,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       : "Créez la séance du jour et faites l’appel : retards, absences, motifs, sanctions et Taris." });
     e.push({ vue: "dahira", titre: "Dahira", texte: peutSuivi ? "Qui entre dans le kourel au dahira du samedi, et les Taris encore en attente." : "Le dahira du samedi : qui entre dans le kourel, et les Taris encore en attente." });
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
-    e.push({ vue: "moi", titre: "Mon espace", texte: "Vos présences, vos Taris, vos progrès et les chartes du Conservatoire. C’est aussi ici que vous changez votre mot de passe." });
+    e.push({ vue: "moi", titre: "Mon espace", texte: "Vos présences, vos Taris, vos progrès et les chartes. C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
     if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Les accès des membres et leur rôle, la liste des membres, les khassidas et la sauvegarde des données." });
     e.push({ fin: true, titre: "C’est parti !", texte: "Vous pourrez revoir cette visite à tout moment depuis Mon espace." });
     return e;
@@ -2606,8 +2773,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     Promise.all([
       user ? user.canEdit().catch(function () { return false; }) : Promise.resolve(false),
       user && typeof user.compte === "function" ? user.compte().catch(function () { return null; }) : Promise.resolve(null),
-      claudeApi.use("comptes").catch(function () { return null; })
+      claudeApi.use("comptes").catch(function () { return null; }),
+      claudeApi.use("messages").catch(function () { return null; })
     ]).then(function (rr) {
+      messagesApi = rr[1] ? rr[3] : null;
+      if (messagesApi) chargerMessages();
       peutModifier = !!rr[0];
       monCompte = rr[1];
       monRole = peutModifier ? "admin" : monCompte && monCompte.role === "conservatoire" ? "conservatoire" : "membre";

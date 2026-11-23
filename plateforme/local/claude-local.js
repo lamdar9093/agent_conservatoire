@@ -44,7 +44,9 @@
       try {
         var col = JSON.parse(ev.data).collection;
         // Comptes et demandes d'accès : la page administrateur se met à jour d'elle-même.
-        if (col === "_comptes") window.dispatchEvent(new Event("conservatoire-comptes")); else rafraichir(col);
+        if (col === "_comptes") window.dispatchEvent(new Event("conservatoire-comptes"));
+        else if (col === "_idees" || col === "_support") window.dispatchEvent(new Event("conservatoire-messages"));
+        else rafraichir(col);
       } catch (e) { /* message ignoré */ }
     };
   } catch (e) { /* sans EventSource : pas de mise à jour en direct */ }
@@ -117,7 +119,14 @@
     }
   });
 
-  var caps = { db: db, user: user, downloads: downloads };
+  /* Boîte à idées et support (voir serveur.mjs) */
+  var messages = Object.freeze({
+    liste: function (type) { return appel("GET", type); },
+    envoyer: function (type, data) { return appel("POST", type, data); },
+    maj: function (type, id, data) { return appel("PATCH", type + "/" + encodeURIComponent(id), data); }
+  });
+
+  var caps = { db: db, user: user, downloads: downloads, messages: messages };
   window.claude = Object.freeze({
     use: function (nom) {
       if (nom === "comptes") return admin().then(function (a) { return a ? comptes : null; });
