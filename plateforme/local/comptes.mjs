@@ -62,7 +62,7 @@ export function creerComptes(stock) {
       const compte = await fiche(s.membre);
       if (!compte) return null;
       cache.set(id, { session: s, lu: Date.now() });
-      return { id, membre: s.membre, admin: !!compte.admin, temporaire: !!compte.temporaire };
+      return { id, membre: s.membre, admin: !!compte.admin, conservatoire: !compte.admin && !!compte.conservatoire, temporaire: !!compte.temporaire };
     },
 
     /* Connexion : identifiant (lamine-dieng), nom (Lamine Dieng) ou numéro de téléphone. */
@@ -161,7 +161,7 @@ export function creerComptes(stock) {
       if (!d) return { erreur: "demande" };
       const avant = await fiche(membre);
       await stock.ecrireDoc("_comptes", membre, {
-        hash: d.hash, temporaire: false, expireTemp: null, admin: !!(avant && avant.admin),
+        hash: d.hash, temporaire: false, expireTemp: null, admin: !!(avant && avant.admin), conservatoire: !!(avant && avant.conservatoire),
         creeLe: (avant && avant.creeLe) || Date.now(), modifieLe: Date.now(), envoyeLe: null, inscrit: true,
         derniereConnexion: (avant && avant.derniereConnexion) || null,
         // Reste « à prévenir » dans Réglages tant que l'administrateur n'a pas envoyé le message WhatsApp.
@@ -177,7 +177,7 @@ export function creerComptes(stock) {
     async liste() {
       const r = {};
       for (const d of await stock.lireCollection("_comptes")) {
-        r[d.id] = { admin: !!d.data.admin, temporaire: !!d.data.temporaire, expireTemp: d.data.expireTemp || null,
+        r[d.id] = { admin: !!d.data.admin, conservatoire: !d.data.admin && !!d.data.conservatoire, temporaire: !!d.data.temporaire, expireTemp: d.data.expireTemp || null,
           derniereConnexion: d.data.derniereConnexion || null, envoyeLe: d.data.envoyeLe || null, creeLe: d.data.creeLe || null,
           inscrit: !!d.data.inscrit, reinitialisation: !!d.data.reinitialisation, valideLe: d.data.valideLe || null,
           // Comptes validés avant ce champ : à prévenir s'ils n'ont jamais été prévenus ni connectés.
@@ -189,9 +189,10 @@ export function creerComptes(stock) {
     },
     async genererTemporaire(membre, admin) {
       const mdp = motDePasseTemporaire(), avant = await fiche(membre);
+      const estAdmin = admin === undefined ? !!(avant && avant.admin) : !!admin;
       await stock.ecrireDoc("_comptes", membre, {
         hash: await chiffrer(mdp), temporaire: true, expireTemp: Date.now() + DUREE_TEMPORAIRE,
-        admin: admin === undefined ? !!(avant && avant.admin) : !!admin,
+        admin: estAdmin, conservatoire: !estAdmin && !!(avant && avant.conservatoire),
         creeLe: (avant && avant.creeLe) || Date.now(), modifieLe: Date.now(), envoyeLe: null,
         derniereConnexion: (avant && avant.derniereConnexion) || null
       });
@@ -199,11 +200,13 @@ export function creerComptes(stock) {
       return { motDePasse: mdp, expire: Date.now() + DUREE_TEMPORAIRE };
     },
     async marquerEnvoye(membre) { return stock.fusionnerDoc("_comptes", membre, { envoyeLe: Date.now(), aPrevenir: false }); },
-    async definirAdmin(membre, admin) {
+    /* Rôle d'un compte : « membre », « conservatoire » ou « admin » (voir ROLES dans serveur.mjs). */
+    async definirRole(membre, role) {
+      if (!["membre", "conservatoire", "admin"].includes(role)) return { erreur: "role" };
       const f = await fiche(membre);
       if (!f) return { erreur: "compte" };
-      if (!admin && f.admin && (await nombreAdmins()) <= 1) return { erreur: "dernier-admin" };
-      await stock.fusionnerDoc("_comptes", membre, { admin: !!admin });
+      if (role !== "admin" && f.admin && (await nombreAdmins()) <= 1) return { erreur: "dernier-admin" };
+      await stock.fusionnerDoc("_comptes", membre, { admin: role === "admin", conservatoire: role === "conservatoire" });
       cache.clear();
       return { ok: true };
     },

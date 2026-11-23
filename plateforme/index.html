@@ -11,9 +11,9 @@
   --ink: #151a18;
   --ink-soft: #59615d;
   --rule: #dfe2dc;
-  --accent: #0b6a4c;
+  --accent: #0c5d60;
   --accent-ink: #ffffff;
-  --accent-soft: #e0eee7;
+  --accent-soft: #def0ee;
   --good: #1d7a45;
   --good-soft: #e3f2e8;
   --warn: #9a5a00;
@@ -29,7 +29,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #0f1312; --surface: #161b19; --ink: #eaece7; --ink-soft: #a2aaa6; --rule: #29302d;
-    --accent: #6cc7a0; --accent-ink: #0b1a14; --accent-soft: #15302a;
+    --accent: #6cc4bd; --accent-ink: #0b1a14; --accent-soft: #132f2f;
     --good: #6fd39a; --good-soft: #143222; --warn: #efb65e; --warn-soft: #33260f; --bad: #f28b82; --bad-soft: #3a1714; --info: #8fb6ea; --info-soft: #172840;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.42);
     color-scheme: dark;
@@ -37,7 +37,7 @@
 }
 :root[data-theme="dark"] {
   --paper: #0f1312; --surface: #161b19; --ink: #eaece7; --ink-soft: #a2aaa6; --rule: #29302d;
-  --accent: #6cc7a0; --accent-ink: #0b1a14; --accent-soft: #15302a;
+  --accent: #6cc4bd; --accent-ink: #0b1a14; --accent-soft: #132f2f;
   --good: #6fd39a; --good-soft: #143222; --warn: #efb65e; --warn-soft: #33260f; --bad: #f28b82; --bad-soft: #3a1714; --info: #8fb6ea; --info-soft: #172840;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.42);
   color-scheme: dark;
@@ -55,13 +55,15 @@ button, input, select { font: inherit; color: inherit; }
 .top .wrap { padding-block: 12px 0; display: grid; gap: 10px; }
 .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .brand-name { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; min-width: 0; }
-.brand-name .logo { flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: "Harmattan", serif; font-size: 17px; font-weight: 700; line-height: 1; }
+.brand-name .logo { flex: none; width: 46px; height: 46px; display: block; filter: drop-shadow(0 1px 2px rgba(10, 60, 62, 0.22)); transition: transform 0.25s ease; }
+.brand-name:hover .logo { transform: rotate(-6deg) scale(1.04); }
+@media (prefers-reduced-motion: reduce) { .brand-name .logo { transition: none; } .brand-name:hover .logo { transform: none; } }
 .brand-name b { display: block; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
 .brand-name small { display: block; font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brand-name > span:last-child { min-width: 0; }
 .brand-side { display: flex; align-items: center; gap: 8px; flex: none; }
 .gear { display: none; color: var(--ink-soft); padding: 6px; border-radius: 8px; }
-@media (max-width: 720px) { .brand-side .role { display: none; } .brand-name b { font-size: 17px; } }
+@media (max-width: 720px) { .brand-side .role { display: none; } .brand-name b { font-size: 17px; } .brand-name .logo { width: 42px; height: 42px; } }
 .gear[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
 .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .brand .role { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
@@ -96,7 +98,8 @@ html:has(body.lecture), body.lecture { overflow: hidden; height: 100%; }
 body.lecture main { padding: 0 !important; }
 body.lecture::before { background: var(--surface); }
 .lecture-bar { display: flex; align-items: center; gap: 10px; padding: 6px max(12px, env(safe-area-inset-left, 0px)); padding-top: calc(6px + env(safe-area-inset-top, 0px)); border-bottom: 1px solid var(--rule); background: var(--surface); }
-.lecture-bar .logo-mini { flex: none; width: 28px; height: 28px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: "Harmattan", serif; font-size: 12px; font-weight: 700; text-decoration: none; }
+.lecture-bar .logo-mini { flex: none; display: block; width: 32px; height: 32px; border-radius: 50%; }
+.lecture-bar .logo-mini img { display: block; width: 100%; height: 100%; }
 .lecture-bar b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lecture-frame { display: block; width: 100%; border: 0; background: var(--paper); }
 
@@ -340,7 +343,11 @@ h3.group .linkish { text-decoration: none; text-transform: uppercase; letter-spa
 .chartes-lien > span:nth-child(2) { flex: 1; display: grid; }
 .chartes-lien small { color: var(--ink-soft); font-size: 12.5px; }
 body.vue-membre .tabs a[data-view="seances"], body.vue-membre .tabs a[data-view="bilan"], body.vue-membre .tabs a[data-view="reglages"],
-body.vue-membre .bottom-nav a[data-view="seances"], body.vue-membre .bottom-nav a[data-view="bilan"], body.vue-membre .gear { display: none !important; }
+body.vue-membre .bottom-nav a[data-view="seances"], body.vue-membre .bottom-nav a[data-view="bilan"], body.vue-membre .gear,
+body.vue-conservatoire .tabs a[data-view="reglages"], body.vue-conservatoire .gear { display: none !important; }
+.role-choix { display: grid; gap: 6px; }
+.role-choix .lbl { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+.role-choix .role-aide { font-size: 12.5px; margin: 0; }
 .panel.compte { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
 .acces-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
 .acces-row .who { flex: 1 1 220px; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
@@ -372,7 +379,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
 <header class="top">
   <div class="wrap">
     <div class="brand">
-      <a class="brand-name" href="#khassidas"><span class="logo" lang="ar" aria-hidden="true">مفاتح</span><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></a>
+      <a class="brand-name" href="#khassidas"><img class="logo" src="/marque/logo.webp" width="46" height="46" alt="" decoding="async"><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></a>
       <span class="brand-side"><span class="role" id="role">Chargement…</span><a class="gear" href="#reglages" data-view="reglages" aria-label="Réglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/></svg></a></span>
     </div>
     <nav class="tabs" aria-label="Sections">
@@ -416,7 +423,15 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return (p.motif || "") + (p.motif && p.note ? " : " + p.note : "");
   }
   var app = document.getElementById("app");
-  var db = null, peutModifier = false;
+  /* Droits : peutModifier = administrateur (tout) ; peutSuivi = administrateur ou Conservatoire
+     (séances, appel, motifs d’absence, sanctions, Tari, évaluations, bilan). */
+  var db = null, peutModifier = false, peutSuivi = false, monRole = "membre";
+  var ROLES_NOMS = { membre: "Membre", conservatoire: "Conservatoire", admin: "Administrateur" };
+  var ROLES_AIDE = {
+    membre: "Consulte les khassidas, le dahira, les chartes et son propre espace.",
+    conservatoire: "Fait l’appel, note les retards, motifs d’absence et sanctions, suit les Taris, évalue les membres et voit le bilan. Ne voit pas les numéros WhatsApp ni les réglages.",
+    admin: "Tous les droits : accès des membres, numéros WhatsApp, membres, rappels, dahira, khassidas et réglages."
+  };
   var membres = {}, seances = [], charge = { m: false, s: false, r: false };
   var utilisateur = null, monCompte = null, comptesApi = null, comptesEtat = null, accesOuvert = null;
   var vue = "seances", seanceOuverte = null, confirmerSuppression = false;
@@ -521,7 +536,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (!s.tari || s.tari === "aucun") return "";
     var td = s.tariDetail || {};
     var h = "";
-    if (peutModifier) {
+    if (peutSuivi) {
       var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
       h += '<div class="row" style="margin-top:8px">' +
         '<label class="field" style="flex:1 1 220px">Khassida à envoyer<select id="t-kh"><option value="">Choisir…</option>' +
@@ -530,7 +545,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         '<label class="field" style="flex:1 1 240px">Consigne (facultatif)<input type="text" id="t-cons" value="' + esc(td.consigne || "") + '" placeholder="Xàjj du dieuwrigne, chaque vers deux fois…"></label></div>';
     }
     var t = tariTexte(td);
-    h += t ? '<p style="margin-top:8px">À envoyer : ' + t + "</p>" : (peutModifier ? "" : '<p class="muted" style="margin-top:6px">Le contenu du Tari n’a pas encore été précisé.</p>');
+    h += t ? '<p style="margin-top:8px">À envoyer : ' + t + "</p>" : (peutSuivi ? "" : '<p class="muted" style="margin-top:6px">Le contenu du Tari n’a pas encore été précisé.</p>');
     return h;
   }
   function samediLong(iso) { return "samedi " + asDate(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }); }
@@ -548,7 +563,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   function triNom(a, b) { return (a.nom || "").localeCompare(b.nom || "", "fr"); }
   var toastTimer = 0;
   function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3500); }
-  function echec(e) { toast(e && e.code === "invalid_argument" ? "Modification refusée : seul l’administrateur peut modifier les présences." : "La modification n’a pas pu être enregistrée. Réessayez."); }
+  function echec(e) { toast(e && e.code === "invalid_argument" ? "Modification refusée : votre rôle ne permet pas de modifier ceci." : "La modification n’a pas pu être enregistrée. Réessayez."); }
 
   function compter(s) {
     var c = { P: 0, R: 0, A: 0, E: 0 };
@@ -569,7 +584,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (dahiraOuvert) return vueDahira(dahiraOuvert);
     if (seanceOuverte) return vueSeance(seances.filter(function (s) { return s.id === seanceOuverte; })[0]);
     var html = "";
-    if (peutModifier) {
+    if (peutSuivi) {
       var d = today();
       html += '<section class="panel"><h2>Nouvelle séance</h2><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
         '<form class="row" id="f-seance" style="margin-top:12px">' +
@@ -621,7 +636,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       html += "</section>";
     }
     if (!seances.length) {
-      html += '<div class="empty">Aucune séance enregistrée pour l’instant.' + (peutModifier ? " Créez la première ci-dessus." : "") + "</div>";
+      html += '<div class="empty">Aucune séance enregistrée pour l’instant.' + (peutSuivi ? " Créez la première ci-dessus." : "") + "</div>";
     } else {
       html += '<section class="list" aria-label="Séances">' + seances.map(function (s) {
         var tc = tariCompte(s);
@@ -663,7 +678,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var noms = (s.participants || []).map(function (id) { return { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé", m: membres[id] }; }).sort(triNom);
     var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
       '<section class="panel"><div class="detail-head"><div><h2>' + esc(jourLong(s.date)) + '</h2><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
-      (peutModifier
+      (peutSuivi
         ? ' <input type="text" class="date-inline" id="s-horaire" value="' + esc(horaireDe(s)) + '" placeholder="Horaire" aria-label="Horaire de la répétition" style="width:110px">'
         : (horaireDe(s) ? ' <span class="muted">' + esc(horaireDe(s)) + "</span>" : "")) + "</div>" +
       '<div class="counts">' + countsHTML(c) + "</div></div>";
@@ -673,7 +688,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var tariHtml = "";
         if (requis(s, p.id) && tariConcerne(s, p.id)) {
           var et = etatTari(s, p.id), indiv = !!(s.tariIndividuel || {})[p.id] && (s.tari || "aucun") !== "tous" && v !== "A" && v !== "E";
-          tariHtml = peutModifier
+          tariHtml = peutSuivi
             ? '<div class="tari-etat"><span class="lbl">' + (indiv ? "Partie à retravailler" : "Tari") + '</span><span class="seg" role="group" aria-label="Tari de ' + esc(p.nom) + '">' + Object.keys(ETATS_TARI).map(function (k) {
                 return '<button type="button" data-tarietat="' + esc(p.id) + "|" + k + '" data-te="' + k + '" aria-pressed="' + (et === k) + '">' + ETATS_TARI[k] + "</button>";
               }).join("") + "</span>" + (indiv ? '<button type="button" class="linkish" data-indiv="' + esc(p.id) + '">Retirer</button>' : "") + "</div>"
@@ -683,7 +698,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         if (requis(s, p.id) && v !== "A" && v !== "E") {
           var mq = marquesDe(s, p.id), cs = consequences(s, p.id);
           disc = (cs.length ? '<div class="disc-pills">' + cs.map(function (c) { return '<span class="pill ' + c.cls + '">' + esc(c.txt) + "</span>"; }).join("") + "</div>" : "") +
-            (peutModifier && discOuvert === p.id ? '<div class="disc">' +
+            (peutSuivi && discOuvert === p.id ? '<div class="disc">' +
               ((s.tari || "aucun") === "absents" ? '<button type="button" class="toggle indiv" data-indiv="' + esc(p.id) + '" aria-pressed="' + !!(s.tariIndividuel || {})[p.id] + '">Partie à retravailler (Tari)</button>' : "") +
               '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|tenue" aria-pressed="' + !!mq.tenue + '">Tenue non conforme</button>' +
               '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|coiffure" aria-pressed="' + !!mq.coiffure + '">Coiffure non conforme</button>' +
@@ -691,7 +706,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         }
         var ctrl = !requis(s, p.id)
           ? '<span class="pill">Présence non requise</span>'
-          : peutModifier
+          : peutSuivi
           ? '<span class="seg" role="group" aria-label="Statut de ' + esc(p.nom) + '">' + Object.keys(CHOIX).map(function (k) {
               return '<button type="button" data-set="' + esc(p.id) + '" data-v="' + k + '" aria-pressed="' + (v === k) + '">' + CHOIX[k] + "</button>";
             }).join("") + "</span>"
@@ -699,7 +714,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         var motifs = "";
         if (v === "E" && requis(s, p.id)) {
           var pv = (s.prevenus || {})[p.id] || {};
-          motifs = peutModifier
+          motifs = peutSuivi
             ? '<div class="motifs"><span class="lbl">Motif :</span>' + MOTIFS.map(function (mo) {
                 return '<button type="button" class="toggle" data-motif="' + esc(p.id) + '" data-m="' + mo + '" aria-pressed="' + (pv.motif === mo) + '">' + mo + "</button>";
               }).join("") +
@@ -708,11 +723,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         }
         var etat = p.m && statutMembre(p.m) !== "actif" ? " · " + (statutMembre(p.m) === "pause" ? "en pause" : "parti") : "";
         return '<div class="person' + (v === "E" ? " prev" : "") + '"><span class="name">' + esc(p.nom) + (p.m ? ' <span class="tags">' + esc(tagsKourel(p.m) + etat) + "</span>" : "") +
-          (peutModifier && ajusterListe ? ' <button type="button" class="linkish" data-action="retirer" data-id="' + esc(p.id) + '">Retirer</button>' : "") +
-          (peutModifier && requis(s, p.id) && v !== "A" && v !== "E" ? ' <button type="button" class="plus-btn" data-action="' + (discOuvert === p.id ? "disc-fermer" : "disc-ouvrir") + '" data-id="' + esc(p.id) + '" aria-label="Tari individuel, tenue, coiffure" aria-expanded="' + (discOuvert === p.id) + '">⋯</button>' : "") +
+          (peutSuivi && ajusterListe ? ' <button type="button" class="linkish" data-action="retirer" data-id="' + esc(p.id) + '">Retirer</button>' : "") +
+          (peutSuivi && requis(s, p.id) && v !== "A" && v !== "E" ? ' <button type="button" class="plus-btn" data-action="' + (discOuvert === p.id ? "disc-fermer" : "disc-ouvrir") + '" data-id="' + esc(p.id) + '" aria-label="Tari individuel, tenue, coiffure" aria-expanded="' + (discOuvert === p.id) + '">⋯</button>' : "") +
           "</span>" + ctrl + motifs + tariHtml + disc + "</div>";
       }).join("") + "</div>";
-    if (peutModifier) {
+    if (peutSuivi) {
       html += '<div style="margin-top:10px"><button type="button" class="btn ghost small" data-action="ajuster">' + (ajusterListe ? "Terminer l’ajustement" : "Ajuster la liste : ajouter ou retirer quelqu’un") + "</button></div>";
       if (ajusterListe) {
         var dispo = Object.keys(membres).map(function (k) { return membres[k]; })
@@ -725,8 +740,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       }
     }
     html += '<div class="tari-box"><div class="row" style="align-items:center;justify-content:space-between"><b>Tari</b>' +
-      (peutModifier && !tariEdition ? '<button type="button" class="btn ghost small" data-action="edit-tari">' + (tmode === "aucun" ? "Demander un Tari" : "Modifier") + "</button>" : "") + "</div>";
-    if (peutModifier && tariEdition) {
+      (peutSuivi && !tariEdition ? '<button type="button" class="btn ghost small" data-action="edit-tari">' + (tmode === "aucun" ? "Demander un Tari" : "Modifier") + "</button>" : "") + "</div>";
+    if (peutSuivi && tariEdition) {
       html += '<p class="muted" style="margin-top:6px">Qui doit envoyer son Tari ?</p><span class="seg" role="group" aria-label="Qui doit envoyer son Tari">' + Object.keys(TARI).map(function (k) {
           return '<button type="button" data-tari="' + k + '" aria-pressed="' + (tmode === k) + '">' + TARI[k] + "</button>";
         }).join("") + "</span>" + tariDetailHTML(s) +
@@ -742,7 +757,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " maîtrisé" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + (tc.retravail ? " · " + tc.retravail + " à retravailler" : "") + " · à maîtriser avant la répétition du " + esc(jourEcheance(echeanceTari(s))) + "</p>";
     }
     html += "</div>";
-    if (peutModifier) {
+    if (peutSuivi) {
       html += confirmerSuppression
         ? '<div class="confirm"><b>Supprimer cette séance et ses présences ?</b><div class="row"><button type="button" class="btn danger" data-del>Oui, supprimer</button><button type="button" class="btn" data-nodel>Annuler</button></div></div>'
         : '<div style="margin-top:14px"><button type="button" class="btn ghost" data-askdel>Supprimer la séance</button></div>';
@@ -876,7 +891,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     html += "</section>";
     if (nb) {
       html += '<section class="panel"><h2>Tari en attente · ' + nb + "</h2>" +
-        '<p class="muted">' + (peutModifier ? "Selon les chartes, seul un Tari « Maîtrisé » permet de rejoindre le kourel. Reçu mais pas encore au point : « À retravailler »." : "Ces membres doivent encore envoyer ou maîtriser leur Tari.") + "</p>" +
+        '<p class="muted">' + (peutSuivi ? "Selon les chartes, seul un Tari « Maîtrisé » permet de rejoindre le kourel. Reçu mais pas encore au point : « À retravailler »." : "Ces membres doivent encore envoyer ou maîtriser leur Tari.") + "</p>" +
         '<div class="list" style="margin-top:12px">' + e.tariBloques.map(function (x) {
           return '<div class="wait-card"><div><b>' + esc(x.m.nom) + '</b> <span class="muted" style="font-size:13px">· ne peut pas entrer dans le ' + esc(x.kourels.join(" ni dans le ")) + "</span></div>" +
             x.seances.map(function (s) {
@@ -884,7 +899,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
               var et2 = etatTari(s, x.m.id);
               return '<div class="wait-row"><span class="what">' + (t || "Contenu à préciser") + "<br>Demandé à la " + (s.type === "rg" ? "répétition générale du " + esc(dimancheLong(s.date)) : "répétition du " + esc(seanceCourte(s))) +
                 ' · <span class="pill ' + (et2 === "recu" ? "e" : "r") + '">' + ETATS_TARI[et2] + "</span></span>" +
-                (peutModifier ? (et2 === "attendu" ? '<button type="button" class="btn small" data-tetat="' + esc(s.id) + "|" + esc(x.m.id) + '|recu">Reçu, à retravailler</button>' : "") +
+                (peutSuivi ? (et2 === "attendu" ? '<button type="button" class="btn small" data-tetat="' + esc(s.id) + "|" + esc(x.m.id) + '|recu">Reçu, à retravailler</button>' : "") +
                   '<button type="button" class="btn small primary" data-tetat="' + esc(s.id) + "|" + esc(x.m.id) + '|maitrise">Maîtrisé ✓</button>' : "") + "</div>";
             }).join("") + "</div>";
         }).join("") + "</div></section>";
@@ -1152,7 +1167,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       tuile(r.ok.eval, "Évaluation", evTxt, !r.evalue) + "</div>" +
       (r.ev.commentaire && evalOuvert !== m.id ? '<p class="muted" style="font-size:13px;margin-top:8px">« ' + esc(r.ev.commentaire) + " »</p>" : "") +
       '<div class="row" style="margin-top:10px"><button type="button" class="btn small" data-action="eval-open" data-id="' + esc(m.id) + '">' + (evalOuvert === m.id ? "Fermer l’évaluation" : r.evalue ? "Modifier l’évaluation" : "Évaluer") + "</button>" +
-      (m.k2 && !m.k1 && (r.niveau === "pret" || r.niveau === "bientot") ? '<button type="button" class="btn small' + (r.niveau === "pret" ? " primary" : "") + '" data-action="promo-open" data-id="' + esc(m.id) + '">Passer au Kourel 1</button>' : "") + "</div>";
+      (peutModifier && m.k2 && !m.k1 && (r.niveau === "pret" || r.niveau === "bientot") ? '<button type="button" class="btn small' + (r.niveau === "pret" ? " primary" : "") + '" data-action="promo-open" data-id="' + esc(m.id) + '">Passer au Kourel 1</button>' : "") + "</div>";
     if (evalOuvert === m.id) h += formEval(m);
     if (promoOuvert === m.id) {
       h += '<div class="confirm promo"><b>Passer ' + esc(m.nom) + " au Kourel 1 ?</b>" +
@@ -1230,13 +1245,13 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return "Depuis le début";
   }
   function ongletBilan() {
-    if (!peutModifier) return "";
+    if (!peutSuivi) return "";
     return '<span class="seg seg-full seg-tabs" role="group" aria-label="Vue du bilan">' +
       '<button type="button" data-bilan="presences" aria-pressed="' + (bilanMode === "presences") + '">Présences</button>' +
       '<button type="button" data-bilan="suivi" aria-pressed="' + (bilanMode === "suivi") + '">Suivi des membres</button></span>';
   }
   function vueBilan() {
-    if (bilanMode === "suivi" && peutModifier) return vueSuivi();
+    if (bilanMode === "suivi" && peutSuivi) return vueSuivi();
     var moisCourant = today().slice(0, 7);
     var moisPrec = (function () { var d = asDate(moisCourant + "-15"); d.setMonth(d.getMonth() - 1); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); })();
     if (filtre.periode.indexOf("seance:") === 0 && !seanceChoisie()) filtre.periode = "mois";
@@ -1254,11 +1269,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       Object.keys(mois).sort().reverse().filter(function (m) { return m !== moisCourant && m !== moisPrec; }).map(function (m) { return '<option value="' + m + '">' + esc(moisLabel(m)) + "</option>"; }).join("") +
       '<option value="tout">Depuis le début</option></optgroup></select></label>' +
       (seanceChoisie() ? "" : '<label class="field">Répétitions<select id="b-kourel"><option value="tous">Toutes</option><option value="k1">Kourel 1</option><option value="k2">Kourel 2</option><option value="rg">Répétition générale</option></select></label>') +
-      '<button type="button" class="btn primary" id="b-apercu">' + (apercu ? "Masquer le message" : "Préparer le message WhatsApp") + "</button></div>";
+      /* Messages WhatsApp : administrateur seulement (un seul numéro envoie au nom du dahira). */
+      (peutModifier ? '<button type="button" class="btn primary" id="b-apercu">' + (apercu ? "Masquer le message" : "Préparer le message WhatsApp") + "</button>" : "") + "</div>";
     if (!liste.length) {
       html += '<div class="empty" style="margin-top:12px">Aucune séance sur cette période.</div></section>';
     } else {
-      if (apercu) {
+      if (apercu && peutModifier) {
         var msg = texteWhatsApp(liste, stats);
         html += '<div class="wa"><p class="muted" style="margin:0 0 8px">Aperçu du message, tel qu’il s’affichera dans WhatsApp :</p>' +
           '<div class="wa-bulle">' + waHtml(msg) + "</div>" +
@@ -1282,7 +1298,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var bk = document.getElementById("b-kourel");
     if (bk) { bk.value = filtre.kourel; bk.addEventListener("change", function (e) { filtre.kourel = e.target.value; afficher(); }); }
     document.getElementById("b-periode").addEventListener("change", function (e) { filtre.periode = e.target.value; afficher(); });
-    document.getElementById("b-apercu").addEventListener("click", function () { apercu = !apercu; afficher(); });
+    var ba = document.getElementById("b-apercu");
+    if (ba) ba.addEventListener("click", function () { apercu = !apercu; afficher(); });
     var bc = document.getElementById("b-copier");
     if (bc) bc.addEventListener("click", function () {
       var txt = texteWhatsApp(liste, stats);
@@ -1633,7 +1650,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
           : c.temporaire ? (c.expireTemp && c.expireTemp < Date.now() ? '<span class="pill a">Mot de passe expiré</span>' : '<span class="pill r">' + (c.envoyeLe ? "Envoyé le " + dateCourte(c.envoyeLe) : "Pas encore envoyé") + "</span>")
           : '<span class="pill p">' + (c.derniereConnexion ? "Connecté · " + dateCourte(c.derniereConnexion) : "Accès validé") + "</span>";
         if (comptesEtat.demandes && comptesEtat.demandes[m.id]) etat += ' <span class="pill r">Demande à valider</span>';
-        var h = '<div class="acces-row"><span class="who"><b>' + esc(m.nom) + "</b> " + etat + (c && c.admin ? ' <span class="chip">Admin</span>' : "") + "</span>" +
+        var h = '<div class="acces-row"><span class="who"><b>' + esc(m.nom) + "</b> " + etat + (c && c.admin ? ' <span class="chip">Admin</span>' : c && c.conservatoire ? ' <span class="chip">Conservatoire</span>' : "") + "</span>" +
           '<input type="tel" class="tel" data-tel="' + esc(m.id) + '" value="' + esc(tel) + '" placeholder="+1 819 555 1234" aria-label="WhatsApp de ' + esc(m.nom) + '">' +
           '<span class="actions"><button type="button" class="btn small ' + (c ? "" : "primary") + '" data-acces="' + esc(m.id) + '">' + (c ? "Nouveau mot de passe" : "Créer l’accès") + "</button>" +
           (c ? '<button type="button" class="btn ghost small" data-acces-plus="' + esc(m.id) + '" aria-label="Plus d’options">⋯</button>' : "") + "</span>";
@@ -1647,9 +1664,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
             '<p class="muted" style="font-size:12.5px">Ce mot de passe ne sera plus affiché après fermeture : envoyez-le maintenant.</p></div>';
         }
         if (accesOuvert && accesOuvert.id === m.id && accesOuvert.plus && c) {
-          h += '<div class="acces-envoi"><div class="row">' +
+          var roleC = c.admin ? "admin" : c.conservatoire ? "conservatoire" : "membre";
+          h += '<div class="acces-envoi"><div class="role-choix"><span class="lbl">Rôle</span><span class="seg" role="group" aria-label="Rôle de ' + esc(m.nom) + '">' +
+            Object.keys(ROLES_NOMS).map(function (k) { return '<button type="button" data-acces-role="' + esc(m.id) + "|" + k + '" aria-pressed="' + (roleC === k) + '">' + ROLES_NOMS[k] + "</button>"; }).join("") +
+            '</span><p class="muted role-aide">' + esc(ROLES_AIDE[roleC]) + "</p></div>" +
+            (accesOuvert.roleAdmin ? '<div class="confirm"><b>Donner tous les droits à ' + esc(m.nom) + " ?</b><span>" + esc(ROLES_AIDE.admin) + "</span>" +
+              '<div class="row"><button type="button" class="btn danger" data-acces-role-ok="' + esc(m.id) + '">Oui, le nommer administrateur</button><button type="button" class="btn" data-acces-plus-retour="' + esc(m.id) + '">Annuler</button></div></div>' : "") +
+            '<div class="row">' +
             (!c.temporaire ? lienPrevenir(m.id, "📲 Renvoyer ses identifiants", "small") : "") +
-            '<button type="button" class="btn small" data-acces-admin="' + esc(m.id) + '" data-v="' + (c.admin ? "0" : "1") + '">' + (c.admin ? "Retirer les droits d’administrateur" : "Donner les droits d’administrateur") + "</button>" +
             (accesOuvert.confirmer ? '<button type="button" class="btn danger small" data-acces-revoquer="' + esc(m.id) + '">Oui, supprimer l’accès</button><button type="button" class="btn ghost small" data-action="acces-fermer">Annuler</button>'
               : '<button type="button" class="btn danger small" data-acces-confirmer="' + esc(m.id) + '">Supprimer l’accès</button>') + "</div>" +
             (accesOuvert.confirmer ? '<p class="muted" style="font-size:12.5px">Le membre sera déconnecté partout et ne pourra plus se connecter. Ses présences et Taris restent.</p>' : "") + "</div>";
@@ -1668,7 +1690,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var liste = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) !== "parti"; }).sort(triNom);
     var html = '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
       (monCompte
-        ? '<section class="panel compte"><div><h2>' + esc((membres[monCompte.membre] || {}).nom || monCompte.nom || "Mon espace") + '</h2><p class="muted">' + (monCompte.admin ? "Administrateur" : "Membre") + " · " + esc(tagsKourel(membres[monCompte.membre] || {})) + "</p></div>" +
+        ? '<section class="panel compte"><div><h2>' + esc((membres[monCompte.membre] || {}).nom || monCompte.nom || "Mon espace") + '</h2><p class="muted">' + ROLES_NOMS[monRole] + " · " + esc(tagsKourel(membres[monCompte.membre] || {})) + "</p></div>" +
           '<div class="row"><a class="btn small" href="/connexion.html?changer=1">Changer mon mot de passe</a><button type="button" class="btn ghost small" data-action="deconnexion">Se déconnecter</button></div></section>'
         : '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
           '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 240px">Je suis<select id="moi"><option value="">Choisir mon nom…</option>' +
@@ -1799,7 +1821,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var cle = kh.page + "|" + (lecture.vers || "");
     var exist = app.querySelector(".lecture-frame");
     if (exist && exist.dataset.cle === cle) { ajusterLecture(); return; }
-    app.innerHTML = '<div class="lecture-bar"><a class="logo-mini" href="#seances" lang="ar" aria-label="Accueil du Conservatoire">مفاتح</a><a class="btn ghost small" href="#khassidas">← Khassidas</a><b>' + esc(kh.titre) + "</b></div>" +
+    app.innerHTML = '<div class="lecture-bar"><a class="logo-mini" href="#seances" aria-label="Accueil du Conservatoire"><img src="/marque/logo.webp" width="32" height="32" alt=""></a><a class="btn ghost small" href="#khassidas">← Khassidas</a><b>' + esc(kh.titre) + "</b></div>" +
       '<iframe class="lecture-frame" title="' + esc(kh.titre) + '" data-cle="' + esc(cle) + '" src="' + esc(kh.page + (lecture.vers ? "?v=" + lecture.vers + "#v" + lecture.vers : "")) + '" allow="autoplay"></iframe>';
     ajusterLecture();
   }
@@ -1908,7 +1930,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (!db) return;
     if (!charge.m || !charge.s || !charge.r) { app.innerHTML = '<div class="empty">Chargement…</div>'; return; }
     /* Un membre (non administrateur) ne voit ni les séances de tous, ni le bilan, ni les réglages. */
-    if (!peutModifier && ["seances", "bilan", "reglages"].indexOf(vue) > -1) vue = "moi";
+    if (!peutSuivi && ["seances", "bilan", "reglages"].indexOf(vue) > -1) vue = "moi";
+    /* Le Conservatoire n'a pas les réglages (accès, membres, khassidas, sauvegardes). */
+    if (!peutModifier && vue === "reglages") vue = "seances";
     var actif = vue === "khassida" ? "khassidas" : vue === "chartes" ? "moi" : vue;
     document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     document.body.classList.toggle("lecture", vue === "khassida");
@@ -1996,10 +2020,21 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (b.dataset.accesPlus) { accesOuvert = accesOuvert && accesOuvert.id === b.dataset.accesPlus && accesOuvert.plus ? null : { id: b.dataset.accesPlus, plus: true }; afficher(); return; }
     if (b.dataset.accesConfirmer) { accesOuvert = { id: b.dataset.accesConfirmer, plus: true, confirmer: true }; afficher(); return; }
     if (b.dataset.action === "acces-fermer") { accesOuvert = null; afficher(); return; }
-    if (b.dataset.accesAdmin && comptesApi) {
-      comptesApi.admin(b.dataset.accesAdmin, b.dataset.v === "1").then(function () { accesOuvert = null; chargerComptes(); toast("Droits mis à jour."); }, function (e) { toast(e && e.message ? e.message : "Modification impossible."); });
+    if ((b.dataset.accesRole || b.dataset.accesRoleOk) && comptesApi) {
+      var pr2 = b.dataset.accesRoleOk ? [b.dataset.accesRoleOk, "admin"] : b.dataset.accesRole.split("|");
+      var cr = (comptesEtat.comptes || {})[pr2[0]] || {}, avantR = cr.admin ? "admin" : cr.conservatoire ? "conservatoire" : "membre";
+      if (pr2[1] === avantR) return;
+      /* Nommer un administrateur se confirme : c'est lui donner tous les droits. */
+      if (pr2[1] === "admin" && !b.dataset.accesRoleOk) { accesOuvert = { id: pr2[0], plus: true, roleAdmin: true }; afficher(); return; }
+      var nomR2 = membres[pr2[0]] ? membres[pr2[0]].nom : "Le membre";
+      b.disabled = true;
+      comptesApi.role(pr2[0], pr2[1]).then(function () {
+        accesOuvert = { id: pr2[0], plus: true }; chargerComptes();
+        toast(nomR2 + " est maintenant " + (pr2[1] === "membre" ? "simple membre" : pr2[1] === "admin" ? "administrateur" : "au Conservatoire") + ". Le changement s’applique à sa prochaine ouverture de la page.");
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
       return;
     }
+    if (b.dataset.accesPlusRetour) { accesOuvert = { id: b.dataset.accesPlusRetour, plus: true }; afficher(); return; }
     if (b.dataset.accesRevoquer && comptesApi) {
       comptesApi.revoquer(b.dataset.accesRevoquer).then(function () { accesOuvert = null; chargerComptes(); toast("Accès supprimé."); }, function (e) { toast(e && e.message ? e.message : "Suppression impossible."); });
       return;
@@ -2010,7 +2045,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       return;
     }
     if (b.dataset.bilan) { bilanMode = b.dataset.bilan; evalOuvert = null; promoOuvert = null; afficher(); return; }
-    if (b.dataset.eval && peutModifier) {
+    if (b.dataset.eval && peutSuivi) {
       var pe = b.dataset.eval.split("|"), cur = evaluations[pe[0]] || {}, nv2 = {};
       Object.keys(CRITERES).forEach(function (k) { nv2[k] = cur[k] || 0; });
       nv2.commentaire = cur.commentaire || "";
@@ -2018,8 +2053,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("evaluations/" + pe[0]).set(nv2).catch(echec);
       return;
     }
-    if (peutModifier && b.dataset.action === "eval-open") { evalOuvert = evalOuvert === b.dataset.id ? null : b.dataset.id; promoOuvert = null; afficher(); return; }
-    if (peutModifier && b.dataset.action === "eval-fin") { evalOuvert = null; afficher(); toast("Évaluation enregistrée."); return; }
+    if (peutSuivi && b.dataset.action === "eval-open") { evalOuvert = evalOuvert === b.dataset.id ? null : b.dataset.id; promoOuvert = null; afficher(); return; }
+    if (peutSuivi && b.dataset.action === "eval-fin") { evalOuvert = null; afficher(); toast("Évaluation enregistrée."); return; }
     if (peutModifier && b.dataset.action === "promo-open") { promoOuvert = b.dataset.id; evalOuvert = null; afficher(); return; }
     if (peutModifier && b.dataset.action === "promo-non") { promoOuvert = null; afficher(); return; }
     if (peutModifier && b.dataset.action === "promo-ok") {
@@ -2093,7 +2128,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       try { navigator.clipboard.writeText(txd).then(function () { toast("Message copié : collez-le dans le groupe WhatsApp."); }, function () { montrer(tad, txd); }); } catch (er) { montrer(tad, txd); }
       return;
     }
-    if (b.dataset.tetat && peutModifier) {
+    if (b.dataset.tetat && peutSuivi) {
       var parts = b.dataset.tetat.split("|"), nomR = membres[parts[1]] ? membres[parts[1]].nom : "Membre";
       majEtatTari(parts[0], parts[1], parts[2]).then(function () {
         if (parts[2] !== "maitrise") { toast("Tari reçu : " + nomR + " doit le retravailler et le renvoyer jusqu’à maîtrise."); return; }
@@ -2103,12 +2138,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       }, echec);
       return;
     }
-    if (b.dataset.tarietat && peutModifier && seanceOuverte) {
+    if (b.dataset.tarietat && peutSuivi && seanceOuverte) {
       var pt = b.dataset.tarietat.split("|");
       majEtatTari(seanceOuverte, pt[0], pt[1]).catch(echec);
       return;
     }
-    if (b.dataset.indiv && peutModifier && seanceOuverte) {
+    if (b.dataset.indiv && peutSuivi && seanceOuverte) {
       var si = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {}, iv = {};
       iv[b.dataset.indiv] = !(si.tariIndividuel || {})[b.dataset.indiv];
       db.doc("seances/" + seanceOuverte).update({ tariIndividuel: iv }).then(function () {
@@ -2116,9 +2151,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       }, echec);
       return;
     }
-    if (b.dataset.action === "disc-ouvrir" && peutModifier) { discOuvert = b.dataset.id; afficher(); return; }
+    if (b.dataset.action === "disc-ouvrir" && peutSuivi) { discOuvert = b.dataset.id; afficher(); return; }
     if (b.dataset.action === "disc-fermer") { discOuvert = null; afficher(); return; }
-    if (b.dataset.disc && peutModifier && seanceOuverte) {
+    if (b.dataset.disc && peutSuivi && seanceOuverte) {
       var pd = b.dataset.disc.split("|"), sd2 = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
       var cur = marquesDe(sd2, pd[0]), mj = {}; mj[pd[0]] = {}; mj[pd[0]][pd[1]] = !cur[pd[1]];
       db.doc("seances/" + seanceOuverte).update({ discipline: mj }).then(function () {
@@ -2129,7 +2164,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       }, echec);
       return;
     }
-    if (b.dataset.set && peutModifier) {
+    if (b.dataset.set && peutSuivi) {
       var sv = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
       var pid = b.dataset.set, nv = b.dataset.v;
       if (choixDe(sv, pid) === nv) return;
@@ -2140,7 +2175,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("seances/" + seanceOuverte).update(maj).catch(echec);
       return;
     }
-    if (b.dataset.motif && peutModifier) {
+    if (b.dataset.motif && peutSuivi) {
       var sm2 = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
       var cur = (sm2.prevenus || {})[b.dataset.motif] || {};
       var pm = {}; pm[b.dataset.motif] = { motif: cur.motif === b.dataset.m ? "" : b.dataset.m, note: cur.motif === b.dataset.m ? (cur.note || "") : "" };
@@ -2154,12 +2189,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("seances/" + id).delete().then(function () { seanceOuverte = null; confirmerSuppression = false; afficher(); toast("Séance supprimée."); }, echec);
       return;
     }
-    if (b.dataset.tari && peutModifier) { db.doc("seances/" + seanceOuverte).update({ tari: b.dataset.tari }).catch(echec); return; }
+    if (b.dataset.tari && peutSuivi) { db.doc("seances/" + seanceOuverte).update({ tari: b.dataset.tari }).catch(echec); return; }
 
     var act = b.dataset.action, mid = b.dataset.id;
     if (act === "voir-partis") { voirPartis = !voirPartis; afficher(); return; }
-    if (act && peutModifier) {
+    if (act && peutSuivi) {
       var val = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; };
+      /* Statut des membres (pause, départ, réintégration) : administrateur seulement. */
+      if (!peutModifier && ["pause", "parti", "ok-pause", "ok-parti", "reactiver"].indexOf(act) > -1) return;
       if (act === "pause" || act === "parti") { formOuvert = { id: mid, type: act }; afficher(); var mo = document.getElementById("p-motif"); if (mo) mo.focus(); return; }
       if (act === "annuler") { formOuvert = null; afficher(); return; }
       if (act === "ajuster") { ajusterListe = !ajusterListe; afficher(); return; }
@@ -2217,7 +2254,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("membres/" + t.dataset.depuis).update({ depuis: t.value }).then(function () { toast("Date de pause modifiée : les séances à partir de cette date ne lui sont plus comptées."); }, echec);
       return;
     }
-    if (t.dataset && t.dataset.note && peutModifier && seanceOuverte) {
+    if (t.dataset && t.dataset.note && peutSuivi && seanceOuverte) {
       var pn = {}; pn[t.dataset.note] = { note: t.value.trim() };
       db.doc("seances/" + seanceOuverte).update({ prevenus: pn }).catch(echec);
       return;
@@ -2237,7 +2274,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       db.doc("membres/" + t.dataset.tel).update({ telephone: t.value.trim() }).then(function () { toast("Numéro enregistré."); }, echec);
       return;
     }
-    if (t.dataset && t.dataset.evcom && peutModifier) {
+    if (t.dataset && t.dataset.evcom && peutSuivi) {
       var ce = evaluations[t.dataset.evcom] || {}, nv3 = {};
       Object.keys(CRITERES).forEach(function (k) { nv3[k] = ce[k] || 0; });
       nv3.commentaire = t.value.trim(); nv3.date = today();
@@ -2249,12 +2286,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       if (sel) sel.value = nty; if (hh) hh.value = HORAIRE[nty] || "";
       return;
     }
-    if (t.id === "s-horaire" && peutModifier && seanceOuverte) {
+    if (t.id === "s-horaire" && peutSuivi && seanceOuverte) {
       db.doc("seances/" + seanceOuverte).update({ horaire: t.value.trim() }).then(function () { toast("Horaire enregistré."); }, echec);
       return;
     }
     if (t.id === "moi") { moiCourant = t.value; ecrireMoi(moiCourant); afficher(); return; }
-    if (["t-kh", "t-de", "t-a", "t-cons", "t-tout"].indexOf(t.id) > -1 && peutModifier && seanceOuverte) {
+    if (["t-kh", "t-de", "t-a", "t-cons", "t-tout"].indexOf(t.id) > -1 && peutSuivi && seanceOuverte) {
       var kid = document.getElementById("t-kh").value;
       var nb = khassidas[kid] ? (khassidas[kid].vers || null) : null;
       var elDe = document.getElementById("t-de"), elA = document.getElementById("t-a"), elTout = document.getElementById("t-tout");
@@ -2295,11 +2332,14 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     ]).then(function (rr) {
       peutModifier = !!rr[0];
       monCompte = rr[1];
+      monRole = peutModifier ? "admin" : monCompte && monCompte.role === "conservatoire" ? "conservatoire" : "membre";
+      peutSuivi = peutModifier || monRole === "conservatoire";
       comptesApi = rr[2];
       if (comptesApi) chargerComptes();
       if (monCompte) { moiCourant = monCompte.membre; }
-      document.getElementById("role").textContent = peutModifier ? "Administrateur" : monCompte ? (monCompte.nom || "Membre") : "Consultation seule";
-      document.body.classList.toggle("vue-membre", !peutModifier);
+      document.getElementById("role").textContent = peutSuivi ? ROLES_NOMS[monRole] : monCompte ? (monCompte.nom || "Membre") : "Consultation seule";
+      document.body.classList.toggle("vue-membre", !peutSuivi);
+      document.body.classList.toggle("vue-conservatoire", peutSuivi && !peutModifier);
       charge.r = true;
       afficher();
     });

@@ -24,12 +24,24 @@ const TYPES = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".mjs": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8", ".mp3": "audio/mpeg",
   ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp",
-  ".pdf": "application/pdf", ".md": "text/markdown; charset=utf-8", ".ico": "image/x-icon"
+  ".pdf": "application/pdf", ".md": "text/markdown; charset=utf-8", ".ico": "image/x-icon",
+  ".webmanifest": "application/manifest+json; charset=utf-8"
 };
+/* Rôles et permissions. Chaque fonctionnalité réservée a sa permission ; un rôle reçoit la liste de ses permissions.
+   Pour une nouvelle fonctionnalité : créer sa permission ici, l'attribuer aux rôles voulus, et la vérifier côté serveur.
+   - membre        : lecture seule de ce qui le concerne
+   - conservatoire : « suivi » = séances (appel, retards, motifs d'absence, sanctions, Tari), évaluations, bilan
+   - admin         : tout (accès des membres, numéros WhatsApp, membres, rappels, dahira, khassidas, réglages) */
+const ROLES = { membre: new Set(), conservatoire: new Set(["suivi"]), admin: null };
+// Collection -> permission nécessaire pour la modifier et la lire en entier (sinon : administrateur seulement).
+const PERMISSION_COLLECTION = { seances: "suivi", evaluations: "suivi" };
+const roleDe = (sess) => (sess.admin ? "admin" : sess.conservatoire ? "conservatoire" : "membre");
+const peut = (sess, perm) => { const r = ROLES[roleDe(sess)]; return r === null || (!!perm && r.has(perm)); };
 // Collections lisibles par un membre (les autres sont réservées à l'administrateur).
 const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations"]);
-// Fichiers accessibles sans connexion.
+// Fichiers accessibles sans connexion (le logo et les icônes de /marque/ aussi : page de connexion, onglet, écran d'accueil).
 const PUBLICS = new Set(["/connexion.html", "/local/connexion.js", "/favicon.ico"]);
+const estPublic = (rel) => PUBLICS.has(rel) || /^\/marque\/[\w.-]+$/.test(rel);
 
 // En production (Docker sur le VPS), les données doivent être dans PostgreSQL : un conteneur n'a pas de disque durable.
 if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
@@ -101,6 +113,17 @@ function filtrerPourMembre(col, docs, moi) {
   return docs;
 }
 
+/* Ce qu'un compte voit d'une collection selon son rôle. */
+function filtrerPour(sess, col, docs) {
+  if (sess.admin) return docs;
+  if (peut(sess, "suivi")) {
+    // Conservatoire : tout le suivi, mais jamais les numéros WhatsApp des membres.
+    if (col === "membres") return docs.map((d) => { const { telephone, ...data } = d.data; return { id: d.id, data }; });
+    return docs;
+  }
+  return filtrerPourMembre(col, docs, sess.membre);
+}
+
 /* Départ définitif : l'accès du membre est supprimé (déconnecté partout, demande en cours effacée).
    S'il revient, il refait une demande avec le lien du groupe. */
 async function apresMembre(col, id) {
@@ -153,7 +176,7 @@ async function api(req, res, parts, sess) {
   if (parts[0] === "moi") {
     if (!sess) return json(res, 200, { connecte: false, aucunCompte: await comptes.aucunCompte() });
     const m = await stock.lireDoc("membres", sess.membre);
-    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, doitChanger: sess.temporaire });
+    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire });
   }
   if (parts[0] === "deconnexion" && req.method === "POST") {
     if (sess) await comptes.deconnecter(sess.id);
@@ -209,9 +232,10 @@ async function api(req, res, parts, sess) {
     }
     if (action === "refuser" && req.method === "POST") { await comptes.refuser(membre); prevenir("_comptes"); return json(res, 200, { ok: true }); }
     if (action === "envoye" && req.method === "POST") { await comptes.marquerEnvoye(membre); return json(res, 200, { ok: true }); }
-    if (action === "admin" && req.method === "POST") {
-      const r = await comptes.definirAdmin(membre, !!(await lireCorps(req)).admin);
-      return r.erreur ? json(res, 400, { code: r.erreur, message: r.erreur === "dernier-admin" ? "Il faut garder au moins un administrateur." : "Ce membre n’a pas encore d’accès." }) : json(res, 200, { ok: true });
+    if (action === "role" && req.method === "POST") {
+      const r = await comptes.definirRole(membre, String((await lireCorps(req)).role || ""));
+      if (!r.erreur) prevenir("_comptes");
+      return r.erreur ? json(res, 400, { code: r.erreur, message: r.erreur === "dernier-admin" ? "Il faut garder au moins un administrateur." : r.erreur === "role" ? "Rôle inconnu." : "Ce membre n’a pas encore d’accès." }) : json(res, 200, { ok: true });
     }
     if (!action && req.method === "DELETE") {
       const r = await comptes.revoquer(membre);
@@ -226,11 +250,11 @@ async function api(req, res, parts, sess) {
   if (req.method === "GET") {
     if (!sess.admin && !LECTURE_MEMBRE.has(col)) return json(res, 403, { code: "invalid_argument" });
     let docs = id ? [{ id, data: await stock.lireDoc(col, id) }].filter((d) => d.data) : await stock.lireCollection(col);
-    if (!sess.admin) docs = filtrerPourMembre(col, docs, sess.membre);
+    docs = filtrerPour(sess, col, docs);
     if (id) return docs[0] ? json(res, 200, docs[0]) : json(res, 404, { code: "not_found" });
     return json(res, 200, { docs });
   }
-  if (!sess.admin) return json(res, 403, { code: "invalid_argument", message: "Seul l’administrateur peut modifier." });
+  if (!peut(sess, PERMISSION_COLLECTION[col])) return json(res, 403, { code: "invalid_argument", message: "Vous n’avez pas le droit de modifier ceci." });
   if (req.method === "PUT") { await stock.ecrireDoc(col, id, await lireCorps(req)); prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true }); }
   if (req.method === "PATCH") {
     if (!(await stock.fusionnerDoc(col, id, await lireCorps(req)))) return json(res, 404, { code: "not_found" });
@@ -239,6 +263,12 @@ async function api(req, res, parts, sess) {
   if (req.method === "DELETE") { await stock.supprimerDoc(col, id); prevenir(col); return json(res, 200, { ok: true }); }
   return json(res, 405, { code: "invalid_argument" });
 }
+
+// Icône d'onglet, écran d'accueil du téléphone et couleur de la barre du navigateur.
+const ICONES = '<link rel="icon" href="/marque/favicon.ico" sizes="any"><link rel="icon" type="image/png" href="/marque/favicon-96.png" sizes="96x96">' +
+  '<link rel="apple-touch-icon" href="/marque/apple-touch-icon.png"><link rel="manifest" href="/marque/site.webmanifest">' +
+  '<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#161b19" media="(prefers-color-scheme: dark)">' +
+  '<meta name="apple-mobile-web-app-title" content="Conservatoire">';
 
 async function fichier(req, res, urlPath, sess) {
   let rel = decodeURIComponent(urlPath);
@@ -250,7 +280,8 @@ async function fichier(req, res, urlPath, sess) {
     return res.end();
   }
   // Connexion obligatoire pour tout le reste (pages, audio, images).
-  if (!PUBLICS.has(rel) && (!sess || sess.temporaire)) {
+  if (rel === "/favicon.ico") rel = "/marque/favicon.ico";
+  if (!estPublic(rel) && (!sess || sess.temporaire)) {
     if (rel.endsWith(".html")) {
       const dest = "/connexion.html" + (sess ? "?changer=1" : "");
       res.writeHead(302, { Location: dest, "Cache-Control": "no-store" });
@@ -269,7 +300,7 @@ async function fichier(req, res, urlPath, sess) {
   if (cible === path.join(PLATEFORME, "index.html")) {
     const html = await fsp.readFile(cible, "utf8");
     res.writeHead(200, { "Content-Type": type, "Cache-Control": "no-store" });
-    return res.end('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><script src="/local/claude-local.js"></script></head><body>' + html + "</body></html>");
+    return res.end('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' + ICONES + '<script src="/local/claude-local.js"></script></head><body>' + html + "</body></html>");
   }
   // Lecture par morceaux (Range) : indispensable pour avancer dans l'audio.
   const range = req.headers.range && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
@@ -281,7 +312,8 @@ async function fichier(req, res, urlPath, sess) {
     res.writeHead(206, { "Content-Type": type, "Accept-Ranges": "bytes", "Content-Range": `bytes ${debut}-${fin}/${st.size}`, "Content-Length": fin - debut + 1 });
     return fs.createReadStream(cible, { start: debut, end: fin }).pipe(res);
   }
-  res.writeHead(200, { "Content-Type": type, "Accept-Ranges": "bytes", "Content-Length": st.size, "Cache-Control": "no-cache" });
+  const cache = rel.startsWith("/marque/") ? "public, max-age=604800" : "no-cache";
+  res.writeHead(200, { "Content-Type": type, "Accept-Ranges": "bytes", "Content-Length": st.size, "Cache-Control": cache });
   fs.createReadStream(cible).pipe(res);
 }
 

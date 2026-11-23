@@ -3,28 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Connexion · Conservatoire</title>
+<title>Connexion · Conservatoire MBTE</title>
+<link rel="icon" href="/marque/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/marque/favicon-96.png" sizes="96x96">
+<link rel="apple-touch-icon" href="/marque/apple-touch-icon.png">
+<link rel="manifest" href="/marque/site.webmanifest">
+<meta name="theme-color" content="#f7f8f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1312" media="(prefers-color-scheme: dark)">
+<link rel="preload" as="image" href="/marque/logo.webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Harmattan:wght@700&display=swap">
 <style>
 :root {
   --paper: #f7f8f5; --surface: #ffffff; --ink: #151a18; --ink-soft: #59615d; --rule: #dfe2dc;
-  --accent: #0b6a4c; --accent-ink: #ffffff; --accent-soft: #e0eee7; --bad: #b3261e; --bad-soft: #fbe5e3; --good: #1d7a45;
+  --accent: #0c5d60; --accent-ink: #ffffff; --accent-soft: #def0ee; --bad: #b3261e; --bad-soft: #fbe5e3; --good: #1d7a45;
   --shadow: 0 1px 2px rgba(18, 28, 24, 0.06), 0 8px 28px rgba(18, 28, 24, 0.10);
 }
 @media (prefers-color-scheme: dark) {
-  :root { --paper: #0f1312; --surface: #161b19; --ink: #eaece7; --ink-soft: #a2aaa6; --rule: #29302d; --accent: #6cc7a0; --accent-ink: #0b1a14; --accent-soft: #15302a; --bad: #f28b82; --bad-soft: #3a1714; --good: #6fd39a; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.42); color-scheme: dark; }
+  :root { --paper: #0f1312; --surface: #161b19; --ink: #eaece7; --ink-soft: #a2aaa6; --rule: #29302d; --accent: #6cc4bd; --accent-ink: #0b1a14; --accent-soft: #132f2f; --bad: #f28b82; --bad-soft: #3a1714; --good: #6fd39a; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.42); color-scheme: dark; }
 }
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; min-height: 100%; }
 body { background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.5; display: grid; place-items: center; min-height: 100vh; padding: 24px 16px; }
 .carte { width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--rule); border-radius: 16px; padding: 28px 24px; box-shadow: var(--shadow); }
-.marque { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-.logo { width: 46px; height: 46px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: "Harmattan", serif; font-size: 19px; font-weight: 700; flex: none; }
-.marque b { display: block; font-size: 19px; font-weight: 600; }
-.marque small { display: block; font-size: 12px; color: var(--ink-soft); }
+.marque { display: grid; justify-items: center; text-align: center; gap: 10px; margin: -6px 0 24px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
+.logo { position: relative; width: 116px; height: 116px; flex: none; }
+.logo::before { content: ""; position: absolute; inset: -14px; border-radius: 50%; background: radial-gradient(closest-side, rgba(245, 215, 135, 0.55), rgba(245, 215, 135, 0)); }
+.logo img { position: relative; display: block; width: 100%; height: 100%; filter: drop-shadow(0 6px 14px rgba(10, 60, 62, 0.28)); animation: logo-entree 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes logo-entree { from { opacity: 0; transform: scale(0.86) rotate(-8deg); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .logo img { animation: none; } }
+@media (prefers-color-scheme: dark) { .logo::before { background: radial-gradient(closest-side, rgba(245, 215, 135, 0.16), rgba(245, 215, 135, 0)); } }
+.marque b { display: block; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+.marque small { display: block; font-size: 12.5px; color: var(--ink-soft); }
+@media (max-height: 640px) { .logo { width: 84px; height: 84px; } }
 h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
 p { margin: 0; }
 .muted { color: var(--ink-soft); font-size: 14px; }
@@ -63,7 +76,7 @@ button.principal:disabled { opacity: .6; cursor: default; }
 </head>
 <body>
 <main class="carte">
-  <div class="marque"><span class="logo" lang="ar" aria-hidden="true">مفاتح</span><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></div>
+  <div class="marque"><span class="logo"><img src="/marque/logo.webp" width="116" height="116" alt="Logo du Dahira Mafatihul Bichri Touba Estrie"></span><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></div>
 
   <section id="v-connexion" hidden>
     <h1>Connexion</h1>

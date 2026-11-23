@@ -3,7 +3,7 @@
    - use("db")   : collection(nom).onSnapshot(cb, erreur), doc("col/id").set / update / delete
    - use("user") : canEdit(), compte(), deconnexion()
    - use("downloads") : save({ filename, data })
-   - use("comptes") : accès des membres (administrateur) : liste, temporaire, envoye, admin, revoquer,
+   - use("comptes") : accès des membres (administrateur) : liste, temporaire, envoye, role, revoquer,
      valider / refuser (demandes d'inscription), invitation (nouveau lien d'inscription)
    Chargé automatiquement par plateforme/local/serveur.mjs ; index.html n'est pas modifié. */
 (function () {
@@ -86,8 +86,8 @@
     canEdit: admin,
     isOwner: admin,
     can: function () { return admin(); },
-    /* Compte connecté : { membre, nom, admin } */
-    compte: function () { return moi().then(function (r) { return r.connecte ? { membre: r.membre, nom: r.nom, admin: !!r.admin } : null; }); },
+    /* Compte connecté : { membre, nom, admin, role } (role : membre, conservatoire ou admin) */
+    compte: function () { return moi().then(function (r) { return r.connecte ? { membre: r.membre, nom: r.nom, admin: !!r.admin, role: r.role || (r.admin ? "admin" : "membre") } : null; }); },
     deconnexion: function () { return appel("POST", "deconnexion").then(function () { location.href = "/connexion.html"; }); }
   });
 
@@ -95,7 +95,7 @@
     liste: function () { return appel("GET", "comptes"); },
     temporaire: function (id, opts) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/temporaire", opts || {}); },
     envoye: function (id) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/envoye", {}); },
-    admin: function (id, oui) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/admin", { admin: !!oui }); },
+    role: function (id, role) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/role", { role: role }); },
     revoquer: function (id) { return appel("DELETE", "comptes/" + encodeURIComponent(id)); },
     valider: function (id) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/valider", {}); },
     refuser: function (id) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/refuser", {}); },
