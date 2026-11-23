@@ -1551,7 +1551,17 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return "le " + dateCourte(ms);
   }
   function memeNumero(a, b) { a = chiffresTel(a); b = chiffresTel(b); return a.slice(-10) === b.slice(-10); }
-  var accesValides = [], invitationConfirmer = false;
+  /* Accès validés à annoncer au membre : l'état « à prévenir » est gardé sur le serveur (survit à l'actualisation). */
+  var prevenusSession = {}, telsValides = {}, invitationConfirmer = false;
+  function infoConnexion(id) {
+    var m = membres[id] || {}, c = (comptesEtat && comptesEtat.comptes || {})[id] || {}, tel = m.telephone || telsValides[id] || "";
+    return { id: id, telephone: tel, reinitialisation: !!c.reinitialisation,
+      lien: ((comptesEtat && comptesEtat.adresse) || location.origin) + "/connexion.html?u=" + encodeURIComponent(tel || id) };
+  }
+  function lienPrevenir(id, libelle, classe) {
+    var m = membres[id] || { nom: id }, v = infoConnexion(id);
+    return '<a class="btn ' + classe + '" target="_blank" rel="noopener" data-prevenir="' + esc(id) + '" href="https://wa.me/' + chiffresTel(v.telephone) + "?text=" + encodeURIComponent(messageValide(m, v)) + '">' + libelle + "</a>";
+  }
   function majPastille() {
     var n = comptesEtat && comptesEtat.demandes ? Object.keys(comptesEtat.demandes).length : 0;
     document.querySelectorAll('a[data-view="reglages"]').forEach(function (a) {
@@ -1571,13 +1581,18 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var ds = comptesEtat.demandes || {}, ids = Object.keys(ds).filter(function (id) { return membres[id]; })
       .sort(function (a, b) { return ds[a].creeLe - ds[b].creeLe; });
     var html = "";
-    if (accesValides.length) html += accesValides.map(function (v) {
-      var m = membres[v.id] || { nom: v.id }, num = chiffresTel(v.telephone);
-      return '<div class="acces-row valide"><span class="who"><b>✓ ' + esc(m.nom) + "</b> " + (v.reinitialisation ? "a son nouveau mot de passe." : "a maintenant accès à la plateforme.") + "</span>" +
-        '<span class="actions">' + (v.prevenu ? '<span class="pill p">Prévenu</span>'
-          : '<a class="btn primary small" target="_blank" rel="noopener" data-prevenir="' + esc(v.id) + '" href="https://wa.me/' + num + "?text=" + encodeURIComponent(messageValide(m, v)) + '">📲 Le prévenir sur WhatsApp</a>') +
-        '<button type="button" class="btn ghost small" data-valide-fermer="' + esc(v.id) + '" aria-label="Fermer">✕</button></span></div>';
-    }).join("");
+    var aPrev = Object.keys(cs).filter(function (id) { return membres[id] && statutMembre(membres[id]) !== "parti" && (cs[id].aPrevenir || prevenusSession[id]); })
+      .sort(function (a, b) { return (cs[b].valideLe || 0) - (cs[a].valideLe || 0); });
+    var restants = aPrev.filter(function (id) { return !prevenusSession[id]; }).length;
+    if (aPrev.length) {
+      html += '<h3 class="group">À prévenir sur WhatsApp' + (restants ? '<span class="compte">' + restants + "</span>" : "") + "</h3>";
+      html += aPrev.map(function (id) {
+        var m = membres[id], c = cs[id], fait = !!prevenusSession[id];
+        return '<div class="acces-row valide"><span class="who"><b>✓ ' + esc(m.nom) + "</b> " + (c.reinitialisation ? "a son nouveau mot de passe." : "a maintenant accès à la plateforme.") + "</span>" +
+          '<span class="actions">' + (fait ? '<span class="pill p">Prévenu</span>' : lienPrevenir(id, "📲 Le prévenir sur WhatsApp", "primary small")) +
+          '<button type="button" class="btn ghost small" data-valide-fermer="' + esc(id) + '" aria-label="' + (fait ? "Fermer" : "Masquer : déjà prévenu") + '" title="' + (fait ? "Fermer" : "Déjà prévenu : masquer") + '">✕</button></span></div>';
+      }).join("");
+    }
     if (ids.length) {
       html += '<h3 class="group">Demandes à valider<span class="compte">' + ids.length + "</span></h3>";
       html += ids.map(function (id) {
@@ -1633,6 +1648,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         }
         if (accesOuvert && accesOuvert.id === m.id && accesOuvert.plus && c) {
           h += '<div class="acces-envoi"><div class="row">' +
+            (!c.temporaire ? lienPrevenir(m.id, "📲 Renvoyer ses identifiants", "small") : "") +
             '<button type="button" class="btn small" data-acces-admin="' + esc(m.id) + '" data-v="' + (c.admin ? "0" : "1") + '">' + (c.admin ? "Retirer les droits d’administrateur" : "Donner les droits d’administrateur") + "</button>" +
             (accesOuvert.confirmer ? '<button type="button" class="btn danger small" data-acces-revoquer="' + esc(m.id) + '">Oui, supprimer l’accès</button><button type="button" class="btn ghost small" data-action="acces-fermer">Annuler</button>'
               : '<button type="button" class="btn danger small" data-acces-confirmer="' + esc(m.id) + '">Supprimer l’accès</button>') + "</div>" +
@@ -1939,8 +1955,10 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       var idv = b.dataset.accesValider, dv = (comptesEtat.demandes || {})[idv] || {};
       b.disabled = true;
       comptesApi.valider(idv).then(function (r) {
-        accesValides = accesValides.filter(function (x) { return x.id !== idv; });
-        accesValides.unshift({ id: idv, telephone: r.telephone, lien: r.lien, reinitialisation: dv.reinitialisation });
+        if (r.telephone) telsValides[idv] = r.telephone;
+        delete prevenusSession[idv];
+        comptesEtat.comptes = comptesEtat.comptes || {};
+        comptesEtat.comptes[idv] = Object.assign({}, comptesEtat.comptes[idv], { temporaire: false, inscrit: true, aPrevenir: true, valideLe: Date.now(), reinitialisation: !!dv.reinitialisation });
         if (comptesEtat.demandes) delete comptesEtat.demandes[idv];
         majPastille(); afficher(); chargerComptes();
         toast("Accès validé pour " + (membres[idv] ? membres[idv].nom : "le membre") + ".");
@@ -1957,7 +1975,13 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Refus impossible."); });
       return;
     }
-    if (b.dataset.valideFermer) { accesValides = accesValides.filter(function (x) { return x.id !== b.dataset.valideFermer; }); afficher(); return; }
+    if (b.dataset.valideFermer) {
+      var idf = b.dataset.valideFermer, cf = (comptesEtat.comptes || {})[idf];
+      if (!prevenusSession[idf] && comptesApi) comptesApi.envoye(idf).then(chargerComptes, function () {});
+      delete prevenusSession[idf];
+      if (cf) cf.aPrevenir = false;
+      afficher(); return;
+    }
     if (b.dataset.action === "invitation-confirmer") { invitationConfirmer = true; afficher(); return; }
     if (b.dataset.action === "invitation-annuler") { invitationConfirmer = false; afficher(); return; }
     if (b.dataset.action === "invitation-nouveau" && comptesApi) {
@@ -2180,7 +2204,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     var a = e.target.closest("a[data-envoye]");
     if (a && comptesApi) comptesApi.envoye(a.dataset.envoye).then(chargerComptes, function () {});
     var pv = e.target.closest("a[data-prevenir]");
-    if (pv) { accesValides.forEach(function (x) { if (x.id === pv.dataset.prevenir) x.prevenu = true; }); setTimeout(afficher, 300); }
+    if (pv) {
+      var idp = pv.dataset.prevenir, cp = (comptesEtat && comptesEtat.comptes || {})[idp];
+      if (cp && cp.aPrevenir) { prevenusSession[idp] = true; cp.aPrevenir = false; }
+      if (comptesApi) comptesApi.envoye(idp).then(chargerComptes, function () {});
+      setTimeout(afficher, 300);
+    }
   });
   app.addEventListener("change", function (e) {
     var t = e.target;
