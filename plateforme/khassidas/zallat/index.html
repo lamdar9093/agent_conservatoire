@@ -1,0 +1,1478 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden] { display: none !important; } html, body { margin: 0; }body.calage-admin-seul [data-action="calage"], body.calage-admin-seul [data-action="publier"], body.calage-admin-seul [data-action="copier"] { display: none !important; }
+</style>
+<title>Zallat (Dhallat li-’izzati rabbin)</title>
+<link rel="icon" href="/marque/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="/marque/favicon-96.png" sizes="96x96">
+<link rel="apple-touch-icon" href="/marque/apple-touch-icon.png">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;1,400&family=Harmattan:wght@500;700&display=swap">
+<style>
+/* Mise en page : une colonne de lecture. La frise des beuyites reste en haut, le lecteur audio en bas. */
+:root {
+  --paper: #f7f8f5;
+  --surface: #ffffff;
+  --ink: #151a18;
+  --ink-soft: #59615d;
+  --rule: #dfe2dc;
+  --accent: #0c5d60;
+  --accent-ink: #ffffff;
+  --accent-soft: #def0ee;
+  --warn: #8a5200;
+  --warn-soft: #fbf0dc;
+  --scan: #ffffff;
+  --scrim: rgba(14, 20, 18, 0.55);
+  --shadow: 0 1px 2px rgba(18, 28, 24, 0.06), 0 8px 28px rgba(18, 28, 24, 0.10);
+  --font-ar: "Harmattan", "Noto Naskh Arabic", "Geeza Pro", sans-serif;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-text: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --player-h: 140px;
+  --strip-h: 54px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1312;
+    --surface: #161b19;
+    --ink: #eaece7;
+    --ink-soft: #a2aaa6;
+    --rule: #29302d;
+    --accent: #6cc4bd;
+    --accent-ink: #0b1a14;
+    --accent-soft: #132f2f;
+    --warn: #efb65e;
+    --warn-soft: #33260f;
+    --scrim: rgba(0, 0, 0, 0.62);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.42);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1312;
+  --surface: #161b19;
+  --ink: #eaece7;
+  --ink-soft: #a2aaa6;
+  --rule: #29302d;
+  --accent: #6cc4bd;
+  --accent-ink: #0b1a14;
+  --accent-soft: #132f2f;
+  --warn: #efb65e;
+  --warn-soft: #33260f;
+  --scrim: rgba(0, 0, 0, 0.62);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.42);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: calc(var(--strip-h) + 20px); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 40;
+  background: var(--paper);
+}
+.wrap {
+  width: 100%;
+  max-width: 860px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--ink-soft); }
+[lang="ar"] { font-family: var(--font-ar); }
+.note [lang="ar"], .consignes [lang="ar"], .now-label [lang="ar"], .context [lang="ar"], .calage-next [lang="ar"] {
+  font-size: 1.32em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Frise de l'acrostiche */
+.strip {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 30;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.strip .wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: var(--strip-h);
+  padding-block: 9px;
+}
+.strip-label {
+  font-size: 11.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.chips {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  direction: rtl;
+  gap: 10px;
+}
+.chip-word {
+  display: flex;
+  gap: 3px;
+  flex: var(--n) 1 0;
+  min-width: 0;
+}
+.chip {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-ar);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background-color 0.25s, color 0.25s, border-color 0.25s, transform 0.25s;
+}
+.chip.chip-num { font-family: var(--font-ui, system-ui, sans-serif); font-size: 15px; font-weight: 600; }
+.chip.is-past { background: var(--accent-soft); border-color: transparent; }
+.chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  transform: translateY(-2px);
+}
+@media (max-width: 560px) {
+  .strip-label { display: none; }
+  .chips { gap: 6px; }
+  .chip-word { gap: 2px; }
+  .chip { height: 32px; font-size: 18px; border-radius: 5px; }
+}
+
+/* En-tête */
+.hero { padding-block: 26px 4px; display: grid; gap: 4px; }
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.ar-title {
+  margin: 2px 0 0;
+  font-family: var(--font-ar);
+  font-weight: 700;
+  font-size: clamp(42px, 9.5vw, 66px);
+  line-height: 1.55;
+  text-align: right;
+  text-wrap: balance;
+}
+.title-latin { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+.title-fr { margin: 0; font-family: var(--font-text); font-style: italic; font-size: 17px; color: var(--ink-soft); }
+.facts {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.facts li + li::before { content: "·"; padding-inline: 10px; }
+.verify {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--warn-soft);
+  font-size: 14px;
+}
+.verify strong { color: var(--warn); }
+.context {
+  margin-top: 18px;
+  padding-block: 14px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.section-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.context p { margin: 0; max-width: 65ch; font-family: var(--font-text); font-size: 16px; line-height: 1.7; }
+
+/* Réglages */
+.controls {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+.seg-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.seg-group button {
+  border: 0;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.seg-group button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.toggles { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.toggle {
+  border: 1px solid var(--rule);
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.toggle[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.consignes {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+}
+.consignes ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.consignes .small { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
+.calage {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+}
+.calage p { margin: 0; font-size: 14px; max-width: 65ch; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.copy-box { display: grid; gap: 8px; }
+.copy-box textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 10px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Le poème */
+.poeme { display: grid; gap: 14px; padding-block: 22px 28px; }
+.card {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.card.is-active { border-color: var(--accent); box-shadow: var(--shadow); }
+.card.is-next { border-color: var(--accent); border-style: dashed; }
+.card-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.letter {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-ar);
+  font-size: 21px;
+  line-height: 1;
+  transition: background-color 0.3s, color 0.3s;
+}
+.card.is-active .letter { background: var(--accent); color: var(--accent-ink); }
+.num { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+.tag-doubt {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.head-actions { margin-left: auto; display: flex; gap: 6px; }
+.mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.mini svg { width: 13px; height: 13px; }
+body.no-calage .play-seg { display: none; }
+.ar {
+  margin-top: 10px;
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-ar);
+  font-size: clamp(27px, 6.2vw, 38px);
+  font-weight: 500;
+  line-height: 2.05;
+}
+.ar p { margin: 0; }
+.card[data-type="prose"] .ar { font-size: clamp(24px, 5.4vw, 31px); line-height: 2; }
+.card[data-type="prose"] .ar p + p { margin-top: 6px; }
+.card[data-type="vers"] .ar { display: grid; grid-template-columns: 1fr 1fr; column-gap: clamp(12px, 4vw, 32px); }
+.card[data-type="vers"] .ar p { white-space: nowrap; min-width: 0; }
+.card[data-type="vers"] .ar p.wrap { white-space: normal; }
+.card[data-type="vers"] .ar.pile { grid-template-columns: 1fr; }
+.card[data-type="vers"] .ar p:last-child { text-align: left; }
+@media (max-width: 679px) {
+  .card { padding-inline: 10px; }
+  .card[data-type="vers"] .ar { font-size: clamp(30px, 8.6vw, 36px); line-height: 2; column-gap: 10px; }
+  .card[data-type="prose"] .ar { font-size: clamp(26px, 7vw, 31px); }
+}
+.ph { margin-top: 6px; font-size: 15px; font-weight: 500; line-height: 1.6; }
+.ph p { margin: 0; }
+.card[data-type="vers"] .ph p:last-child { padding-left: 1.4em; }
+.fr { margin: 10px 0 0; max-width: 65ch; font-family: var(--font-text); font-size: 15.5px; line-height: 1.65; color: var(--ink-soft); }
+.note {
+  margin: 10px 0 0;
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 13.5px;
+  line-height: 1.55;
+  max-width: 70ch;
+}
+.note b { font-weight: 600; }
+.note-doubt { background: var(--warn-soft); }
+.note-doubt b { color: var(--warn); }
+body.k1 .note-k2, body.k2 .note-k1 { display: none; }
+body.hide-ar .ar, body.hide-ph .ph, body.hide-fr .fr { display: none; }
+.progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; }
+.progress span { display: block; width: 0; height: 100%; background: var(--accent); }
+.ar p, .ph p, .scene-ar p, .scene-ph p { transition: opacity 0.3s; }
+.card.is-active.h1 .ar p:nth-child(2), .card.is-active.h1 .ph p:nth-child(2),
+.card.is-active.h2 .ar p:nth-child(1), .card.is-active.h2 .ph p:nth-child(1),
+#scene-body.h1 .scene-ar p:nth-child(2), #scene-body.h1 .scene-ph p:nth-child(2),
+#scene-body.h2 .scene-ar p:nth-child(1), #scene-body.h2 .scene-ph p:nth-child(1) { opacity: 0.38; }
+
+.foot {
+  padding-block: 18px calc(var(--player-h) + 28px);
+  border-top: 1px solid var(--rule);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.foot p { margin: 0 0 6px; max-width: 70ch; }
+
+/* Lecteur */
+.player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 35;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface);
+  border-top: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+}
+.player .wrap { padding-block: 10px 12px; display: grid; gap: 8px; }
+.player-row { display: flex; align-items: center; gap: 12px; }
+.play {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.play svg { width: 20px; height: 20px; }
+.now { flex: 1; min-width: 0; display: grid; }
+.now-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; font-weight: 600; }
+.now-time { font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.tools { display: flex; gap: 6px; }
+.tool {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.tool svg { width: 18px; height: 18px; }
+.tool[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+#seek { width: 100%; margin: 0; accent-color: var(--accent); }
+@media (max-width: 430px) {
+  .player-row { gap: 8px; }
+  .tools { gap: 4px; }
+  .tool { min-width: 34px; height: 34px; padding: 0 6px; }
+  .play { width: 42px; height: 42px; }
+}
+.calage-panel {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+.calage-kicker { font-size: 11.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); }
+.calage-next { font-size: 14px; }
+.calage-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.calage-actions .btn.primary { flex: 1 1 180px; }
+
+/* Mode scène */
+.scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--player-h);
+  z-index: 34;
+  overflow-y: auto;
+  background: var(--paper);
+  padding: calc(env(safe-area-inset-top, 0px) + 60px) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+.scene-close { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: max(16px, env(safe-area-inset-right, 0px)); }
+.scene-body { display: grid; justify-items: center; gap: 14px; max-width: 900px; animation: rise 0.45s ease both; }
+.scene-label { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); }
+.scene-letter { font-family: var(--font-ar); font-size: 60px; line-height: 1.1; color: var(--accent); }
+.scene-ar { direction: rtl; font-family: var(--font-ar); font-size: clamp(30px, 6.4vw, 60px); line-height: 1.9; }
+.scene-ar.prose { font-size: clamp(22px, 4vw, 34px); }
+.scene-ar p { margin: 0; }
+.scene-ph { font-size: clamp(16px, 2.6vw, 22px); font-weight: 500; }
+.scene-ph p { margin: 0; }
+.scene-fr { margin: 0; max-width: 52ch; font-family: var(--font-text); font-style: italic; font-size: clamp(15px, 2.2vw, 19px); color: var(--ink-soft); }
+@keyframes rise { from { opacity: 0.35; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* Manuscrit */
+dialog.ms {
+  width: min(94vw, 720px);
+  max-width: 94vw;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+dialog.ms::backdrop { background: var(--scrim); }
+.ms-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+.ms-head p { margin: 0; font-weight: 600; font-size: 14px; }
+.ms-body { max-height: 76vh; overflow: auto; background: var(--scan); }
+.ms-body img { display: block; width: 100%; height: auto; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--player-h) + 12px);
+  z-index: 50;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: min(92vw, 520px);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
+  box-shadow: var(--shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+
+<nav class="strip" aria-label="Frise : un bouton par beuyite">
+  <div class="wrap">
+    <span class="strip-label">Beuyites</span>
+    <div class="chips" id="chips"></div>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="eyebrow">Khassida de Cheikh Ahmadou Bamba · Conservatoire du Dahira MBTE</p>
+  <h1 class="ar-title" lang="ar" dir="rtl">ذَلَّتْ لِعِزَّةِ رَبٍّ</h1>
+  <p class="title-latin">Dhallat li-’izzati rabbin · Zallat</p>
+  <p class="title-fr">« L’ensemble des créatures s’est soumis à la puissance du Seigneur »</p>
+  <ul class="facts">
+    <li>9 beuyites</li>
+    <li>mètre basît</li>
+    <li>rime en « -arâ »</li>
+    <li>audio 2 min 59</li>
+  </ul>
+  <section class="context" aria-labelledby="ctx-title">
+    <h2 class="section-title" id="ctx-title">Contexte</h2>
+    <p>Poème de louange et de supplication. Cheikh Ahmadou Bamba y proclame que toutes les créatures se soumettent à la puissance de Dieu, se tourne vers Lui en serviteur pour toujours, consacré au service du Prophète ﷺ, et lui offre ses louanges et ses prières. Il demande ensuite à Dieu de retourner le cœur des ennemis, la sécurité dans les deux demeures et des ouvertures (foutoûh) par les œuvres qui Lui plaisent. <i>Contexte historique (date, circonstances) à compléter par le Conservatoire.</i></p>
+  </section>
+  <section class="controls" aria-label="Réglages d’affichage">
+    <div class="seg-group" role="group" aria-label="Consignes du Kourel">
+      <button type="button" id="btn-k1" aria-pressed="false">Kourel 1 · avancés</button>
+      <button type="button" id="btn-k2" aria-pressed="true">Kourel 2 · débutants</button>
+    </div>
+    <div class="toggles" role="group" aria-label="Afficher">
+      <button type="button" class="toggle" id="t-ar" aria-pressed="true">Arabe</button>
+      <button type="button" class="toggle" id="t-ph" aria-pressed="true">Phonétique</button>
+      <button type="button" class="toggle" id="t-fr" aria-pressed="true">Traduction</button>
+    </div>
+  </section>
+  <section class="consignes" id="consignes" aria-live="polite"></section>
+  <section class="calage" id="calage-status"></section>
+</header>
+
+<main class="poeme wrap" id="poeme" aria-label="Texte du khassida"></main>
+
+<footer class="foot wrap">
+  <p>Cellule Conservatoire du Dahira Mafatihul Bichri Touba Estrie.</p>
+</footer>
+
+<div class="scene" id="scene-view" hidden>
+  <button type="button" class="btn scene-close" id="scene-close">Fermer</button>
+  <div id="scene-body"></div>
+</div>
+
+<dialog class="ms" id="ms" aria-labelledby="ms-cap">
+  <div class="ms-head">
+    <p id="ms-cap">Manuscrit</p>
+    <button type="button" class="btn" id="ms-close">Fermer</button>
+  </div>
+  <div class="ms-body"><img id="ms-img" alt=""></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<div class="player" id="player">
+  <div class="wrap">
+    <div class="calage-panel" id="calage-panel" hidden>
+      <span class="calage-kicker">Calage en cours</span>
+      <span class="calage-next" id="calage-next"></span>
+      <div class="calage-actions">
+        <button type="button" class="btn primary" id="mark">Le passage commence</button>
+        <button type="button" class="btn" id="skip">Pas chanté</button>
+        <button type="button" class="btn" id="undo">Annuler</button>
+        <button type="button" class="btn ghost" id="stop">Terminer ici</button>
+      </div>
+    </div>
+    <div class="player-row">
+      <button type="button" class="play" id="play" aria-label="Lire"></button>
+      <div class="now">
+        <span class="now-label" id="now-label">Audio de référence</span>
+        <span class="now-time" id="now-time">0:00 / 2:59</span>
+      </div>
+      <div class="tools">
+        <button type="button" class="tool" id="speed" aria-label="Vitesse de lecture">1×</button>
+        <button type="button" class="tool" id="loop" aria-pressed="false" aria-label="Répéter le beuyite en cours"></button>
+        <button type="button" class="tool" id="follow" aria-pressed="true" aria-label="Faire défiler le texte avec l’audio"></button>
+        <button type="button" class="tool" id="scene" aria-pressed="false" aria-label="Mode plein écran pour la répétition"></button>
+      </div>
+    </div>
+    <input type="range" id="seek" min="0" max="179" step="0.1" value="0" aria-label="Position dans l’audio">
+  </div>
+  <audio id="audio" src="audio/zallat.mp3" preload="metadata"></audio>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DUREE = 178.99;
+  /* Respirations du chant repérées dans l'enregistrement (une toutes les 8,2 s environ). */
+  var CYCLES = [0, 8.5, 16.55, 24.6, 32.9, 41.3, 49.7, 57.95, 66.25, 74.4, 82.55, 90.65, 98.8, 106.7, 114.8, 122.9, 131, 138.95, 147.05, 155.2, 163.1, 171.2, 178.99];
+  var AR = function (s) { return '<span lang="ar" dir="rtl">' + s + "</span>"; };
+
+  var SEGMENTS = [
+    { id: "ouverture", type: "prose", titre: "Bismillah", page: 1,
+      ar: ["بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ"],
+      ph: ["Bismillâhir-rahmânir-rahîm."],
+      fr: "Au nom de Dieu, le Tout Miséricordieux, le Très Miséricordieux.",
+      deroule: "non chantée ; le kourel commence directement par le beuyite 1." },
+
+    { id: "v1", type: "vers", n: 1, page: 1,
+      ar: ["ذَلَّتْ لِعِزَّةِ رَبٍّ أَنْزَلَ السُّوَرَا", "جَمَاعَةُ الْخَلْقِ وَهْوَ الْمُحْسِنُ الصُّوَرَا"],
+      ph: ["Dhallat li-’izzati rabbin anzalas-souwarâ", "Djamâ’atoul-khalqi wahwal-mouhsinous-souwarâ"],
+      fr: "L’ensemble des créatures s’est soumis à la puissance d’un Seigneur qui a révélé les sourates ; c’est Lui qui a embelli les formes.",
+      k2: "« Dhallat » : " + AR("ذ") + " comme le th anglais de « this », l doublé. « ’Izzati » : " + AR("ع") + " puis z doublé. « Mouhsinou » : " + AR("ح") + " soufflé. « Souwarâ » (sourates) et « souwarâ » (formes) : " + AR("س") + " puis " + AR("ص") + " emphatique.",
+      deroule: "chanté trois fois. Le dieuwrigne lance seul le début du beuyite, le kourel répond avec la suite, puis tout le kourel reprend le beuyite deux fois ensemble." },
+
+    { id: "v2", type: "vers", n: 2, page: 1,
+      ar: ["وَجَّهْتُ وَجْهِي لَهُ عَبْدًا لَهُ أَبَدَا", "ذَا خِدْمَةٍ لِرَسُولِ اللَّهِ كَالْكُبَرَا"],
+      ph: ["Waddjahtou wadjhî lahoû ’abdan lahoû abadâ", "Dhâ khidmatin li-rassoûlillâhi kal-koubarâ"],
+      fr: "J’ai tourné ma face vers Lui, Son serviteur pour toujours, au service du Messager de Dieu, comme les grands avant moi.",
+      k2: "« Waddjahtou » : dj doublé, appuyez-le. « Khidmatin » : " + AR("خ") + " comme le x wolof de « xàjj »." },
+
+    { id: "v3", type: "vers", n: 3, page: 1,
+      ar: ["أُهْدِي لَهُ بِهَدَايَا الْمَدْحِ نَافِلَةً", "وَبِالصَّلَاةِ بِحُبٍّ يُورِثُ الْكُبَرَا"],
+      ph: ["Ouhdî lahoû bi-hadâyal-madhi nâfilatan", "Wa bis-salâti bi-houbbin yoûrithoul-koubarâ"],
+      fr: "Je lui offre en surplus des présents de louange, et des prières sur lui, avec un amour qui fait hériter des grandeurs.",
+      doute: "second hémistiche : « bi-houbbin » (avec amour) pourrait aussi se lire « mouhibbin » (en amoureux) ; sens à valider.",
+      k2: "« Madhi » : " + AR("ح") + " soufflé. « Salâti » : " + AR("ص") + " emphatique. « Yoûrithou » : " + AR("ث") + " comme le th anglais de « think »." },
+
+    { id: "v4", type: "vers", n: 4, page: 1,
+      ar: ["لَهُ عَمَلِي لِوَجْهِ اللَّهِ لَا لِغِنًى", "ذِي يُمْنِ مَدْحٍ يَزِيدُ الشَّيْبَ وَالْعُمُرَا"],
+      ph: ["Lahoû ’amalî li-wadjhillâhi lâ lighinan", "Dhî youmni madhin yazîdouch-chayba wal-’oumourâ"],
+      fr: "Mon œuvre pour lui est pour la Face de Dieu, et non pour la richesse (second hémistiche : sens à préciser par le Conservatoire).",
+      doute: "« ’amalî » est peu lisible ; le second hémistiche (« dhî youmni madhin… ») est une lecture incertaine des deux manuscrits : à valider.",
+      k2: "« ’Amalî » : " + AR("ع") + " au fond de la gorge. « Lighinan » : " + AR("غ") + " grasseyé, comme un r français." },
+
+    { id: "v5", type: "vers", n: 5, page: 1,
+      ar: ["قَلِّبْ قُلُوبَ الْعِدَى يَا رَبِّ فِي عُمُرِي", "لِنُصْرَتِي وَلْتُرْضِ لِي جُمْلَةَ الْأُمَرَا"],
+      ph: ["Qallib qouloûbal-’idâ yâ rabbi fî ’oumourî", "Li-nousratî wal-tourdi lî djoumlatal-oumarâ"],
+      fr: "Retourne, Seigneur, le cœur des ennemis, ma vie durant, pour qu’ils me viennent en aide ; et rends-moi favorables tous les dirigeants.",
+      k2: "« Qallib », « qouloûba » : " + AR("ق") + " au fond de la gorge, l doublé. « Nousratî » : " + AR("ص") + " emphatique. « Tourdi » : " + AR("ض") + " emphatique." },
+
+    { id: "v6", type: "vers", n: 6, page: 1,
+      ar: ["عَلَيْهِ صَلِّ وَسَلِّمْ بِالْكِرَامِ وَهَبْ", "بِهِ لِيَ الْأَمْنَ فِي الدَّارَيْنِ وَالْبُشْرَا"],
+      ph: ["’Alayhi salli wa sallim bil-kirâmi wa hab", "Bihî liyal-amna fid-dârayni wal-bouchrâ"],
+      fr: "Prie sur lui et salue-le, avec les nobles, et accorde-moi par lui la sécurité dans les deux demeures, et la bonne nouvelle.",
+      k2: "« Salli », « sallim » : " + AR("ص") + " emphatique puis " + AR("س") + " simple, l doublé dans les deux. « Dârayni » : r roulé." },
+
+    { id: "v7", type: "vers", n: 7, page: 1,
+      ar: ["دَعَوْتُكَ الْيَوْمَ سَخِّرْ لِي الْعِدَى أَبَدَا", "رَضِّ لِيَ الثَّقَلَيْنِ الْجِنَّ وَالْبَشَرَا"],
+      ph: ["Da’awtoukal-yawma sakhkhir lil-’idâ abadâ", "Raddi liyath-thaqalayni-l-djinna wal-bacharâ"],
+      fr: "Je T’invoque aujourd’hui : soumets-moi les ennemis pour toujours, et rends-moi favorables les deux mondes, les djinns et les humains.",
+      doute: "second hémistiche : les manuscrits semblent porter un mot de plus (« wa raddi lî… ») ; lecture à valider.",
+      k2: "« Da’awtouka » : " + AR("ع") + ". « Sakhkhir » : " + AR("خ") + " doublé. « Thaqalayni » : " + AR("ث") + " (th de « think ») puis " + AR("ق") + " profond." },
+
+    { id: "v8", type: "vers", n: 8, page: 1,
+      ar: ["تَرَكْتُ مِنْ وَاجِبٍ مَا أَنْتَ تَعْلَمُهُ", "فَلْتَكْفِنِيهَا وَهَبْ لِيَ الْأَجْرَ وَالسُّوَرَا"],
+      ph: ["Taraktou min wâdjibin mâ anta ta’lamouhoû", "Faltakfinîhâ wa hab liyal-adjra was-souwarâ"],
+      fr: "J’ai délaissé, de mes obligations, ce que Tu sais : épargne-m’en les suites, et accorde-moi la récompense et les sourates.",
+      doute: "« al-adjra » (la récompense) est une lecture incertaine du mot avant « was-souwarâ » : à valider.",
+      k2: "« Ta’lamouhoû » : " + AR("ع") + ". « Faltakfinîhâ » : un seul souffle, sans couper le mot." },
+
+    { id: "v9", type: "vers", n: 9, page: 1,
+      ar: ["هَبْ لِي فُتُوحًا بِمَا تَرْضَاهُ مِنْ عَمَلٍ", "أَبْقَيْتَ لِيَ الْعُمْرَ يَا مَنْ أَحْسَنَ الصُّوَرَا"],
+      ph: ["Hab lî foutoûhan bimâ tardâhou min ’amalin", "Abqayta liyal-’oumra yâ man ahsanas-souwarâ"],
+      fr: "Accorde-moi des ouvertures par les œuvres qui Te plaisent, et garde-moi en vie, ô Toi qui as embelli les formes.",
+      doute: "« abqayta » est peu lisible : à valider.",
+      k2: "« Foutoûhan » : " + AR("ح") + " soufflé. « Tardâhou » : " + AR("ض") + " emphatique. « Ahsana » : " + AR("ح") + " soufflé ; « souwarâ » : " + AR("ص") + " emphatique.",
+      k1: "Dernier beuyite : il reprend la fin du beuyite 1 (« … ahsanas-souwarâ ») ; refermez le poème avec ampleur." }
+  ];
+
+  var PAGES = { 1: "Beuyites 1 à 9" };
+  var GROUPES = [[1, 2, 3, 4, 5], [6, 7, 8, 9]];
+  var CONSIGNES = {
+    k1: { titre: "Consignes · Kourel 1 (avancés)", items: [
+      "Mètre basît sur les 9 beuyites : gardez la même carrure d’un beuyite à l’autre.",
+      "Rime en « -arâ » sur tout le poème : posez le « â » final sans le couper.",
+      "Enchaînez les deux hémistiches d’un beuyite d’un seul souffle ; respirez entre les beuyites, en décalé si besoin.",
+      "Dans l’enregistrement, Zallat vient juste après Khalo liyarkane : sa page est à part."
+    ] },
+    k2: { titre: "Consignes · Kourel 2 (débutants et intermédiaires)", items: [
+      "Écoutez d’abord à vitesse 0,75× en suivant la phonétique.",
+      "Apprenez beuyite par beuyite avec la boucle, puis enchaînez deux beuyites.",
+      "Lettres à soigner dans ce khassida : " + AR("ع ح خ ص ض ق ث ذ") + ". Ne confondez pas « souwarâ » (" + AR("السُّوَر") + ", les sourates) et « souwarâ » (" + AR("الصُّوَر") + ", les formes)."
+    ] }
+  };
+  var ICON = {
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/></svg>',
+    loop: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l3 3-3 3"/><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H20"/><path d="M7 21l-3-3 3-3"/><path d="M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H4"/></svg>',
+    follow: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M5 20h14"/></svg>',
+    scene: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></svg>'
+  };
+
+  function $(s) { return document.querySelector(s); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage indisponible */ } }
+  };
+  function fmt(t, precis) {
+    if (!isFinite(t) || t < 0) t = 0;
+    var m = Math.floor(t / 60);
+    var s = t - m * 60;
+    var ss = precis ? s.toFixed(1) : String(Math.floor(s));
+    if (s < 10) ss = "0" + ss;
+    return m + ":" + ss;
+  }
+  function nom(s) { return s.type === "vers" ? "Beuyite " + s.n : s.titre; }
+  function byId(id) { for (var i = 0; i < SEGMENTS.length; i++) if (SEGMENTS[i].id === id) return SEGMENTS[i]; return null; }
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var audio = $("#audio");
+  var prefs = store.get("zallat-prefs", {});
+  var state = {
+    kourel: prefs.kourel === "k1" ? "k1" : "k2",
+    ar: prefs.ar !== false, ph: prefs.ph !== false, fr: prefs.fr !== false,
+    speed: [1, 0.75, 0.5].indexOf(prefs.speed) > -1 ? prefs.speed : 1,
+    follow: prefs.follow !== false,
+    loop: false, temps: {}, demi: {}, mode: null, decalage: 0, majLe: null, source: null, pendingSave: false,
+    calage: null, scene: false
+  };
+  var ordre = [];
+  var activeId = null;
+  var lastUserScroll = 0;
+  var rafId = 0;
+  var lastLbl = "";
+
+  function savePrefs() {
+    store.set("zallat-prefs", { kourel: state.kourel, ar: state.ar, ph: state.ph, fr: state.fr, speed: state.speed, follow: state.follow });
+  }
+
+  /* ---------- Rendu ---------- */
+  function cardHTML(s) {
+    var vers = s.type === "vers";
+    var ar = s.ar.map(function (l) { return "<p>" + esc(l) + "</p>"; }).join("");
+    var ph = s.ph.map(function (l) { return "<p>" + esc(l) + "</p>"; }).join("");
+    return '<article class="card" id="' + s.id + '" data-type="' + (vers ? "vers" : "prose") + '">' +
+      '<header class="card-head">' +
+        (vers && s.lettre ? '<span class="letter" lang="ar" aria-hidden="true">' + esc(s.lettre) + "</span>" : "") +
+        '<span class="num">' + esc(nom(s)) + "</span>" +
+        '<span class="head-actions">' +
+          '<button type="button" class="mini play-seg" data-play="' + s.id + '" aria-label="Écouter : ' + esc(nom(s)) + '">' + ICON.play + "Écouter</button>" +
+          '<button type="button" class="mini" data-page="' + s.page + '" aria-label="Voir le manuscrit : ' + esc(PAGES[s.page]) + '">Manuscrit</button>' +
+        "</span>" +
+      "</header>" +
+      '<div class="ar" lang="ar" dir="rtl">' + ar + "</div>" +
+      '<div class="ph" lang="ar-Latn">' + ph + "</div>" +
+      '<p class="fr">' + esc(s.fr) + "</p>" +
+      '<div class="progress" aria-hidden="true"><span></span></div>' +
+    "</article>";
+  }
+
+  function render() {
+    $("#poeme").innerHTML = SEGMENTS.map(cardHTML).join("");
+    $("#chips").innerHTML = GROUPES.map(function (g) {
+      return '<span class="chip-word" style="--n:' + g.length + '">' + g.map(function (n) {
+        var s = SEGMENTS.filter(function (x) { return x.n === n; })[0];
+        return '<button type="button" class="chip chip-num" data-chip="' + s.id + '" aria-label="Beuyite ' + n + '">' + n + "</button>";
+      }).join("") + "</span>";
+    }).join("");
+    $("#loop").innerHTML = ICON.loop;
+    $("#follow").innerHTML = ICON.follow;
+    $("#scene").innerHTML = ICON.scene;
+  }
+
+  function applyView() {
+    var b = document.body;
+    b.classList.toggle("k1", state.kourel === "k1");
+    b.classList.toggle("k2", state.kourel === "k2");
+    b.classList.toggle("hide-ar", !state.ar);
+    b.classList.toggle("hide-ph", !state.ph);
+    b.classList.toggle("hide-fr", !state.fr);
+    $("#btn-k1").setAttribute("aria-pressed", String(state.kourel === "k1"));
+    $("#btn-k2").setAttribute("aria-pressed", String(state.kourel === "k2"));
+    $("#t-ar").setAttribute("aria-pressed", String(state.ar));
+    $("#t-ph").setAttribute("aria-pressed", String(state.ph));
+    $("#t-fr").setAttribute("aria-pressed", String(state.fr));
+    $("#follow").setAttribute("aria-pressed", String(state.follow));
+    $("#loop").setAttribute("aria-pressed", String(state.loop));
+    $("#speed").textContent = state.speed === 1 ? "1×" : String(state.speed).replace(".", ",") + "×";
+    audio.playbackRate = state.speed;
+    var c = CONSIGNES[state.kourel];
+    $("#consignes").innerHTML = '<h2 class="section-title">' + esc(c.titre) + "</h2><ul>" +
+      c.items.map(function (i) { return "<li>" + i + "</li>"; }).join("") +
+      "</ul>";
+    if (state.scene) renderScene();
+  }
+
+  /* ---------- Calage : temps de début de chaque passage ---------- */
+  function recompute() {
+    ordre = SEGMENTS.filter(function (s) { return typeof state.temps[s.id] === "number"; })
+      .map(function (s) { return { id: s.id, t: state.temps[s.id] }; })
+      .sort(function (a, b) { return a.t - b.t; });
+    state.demi = {};
+    ordre.forEach(function (o, i) {
+      var s = byId(o.id);
+      if (!s || s.type !== "vers") return;
+      var a = o.t, b = i + 1 < ordre.length ? ordre[i + 1].t : DUREE, mid = (a + b) / 2, best = null;
+      CYCLES.forEach(function (c) {
+        if (c > a + 2 && c < b - 2 && (best === null || Math.abs(c - mid) < Math.abs(best - mid))) best = c;
+      });
+      state.demi[s.id] = best === null ? mid : best;
+    });
+    document.body.classList.toggle("no-calage", ordre.length === 0);
+  }
+  /* Calage automatique : blocs de deux respirations (16,5 s). Le beuyite 1 occupe les trois premiers blocs
+     (le dieuwrigne lance, le kourel répond, puis deux fois ensemble), ensuite un beuyite par bloc. */
+  function autoTemps(dec) {
+    var u = [];
+    for (var i = 0; i + 1 < CYCLES.length; i += 2) u.push(CYCLES[i]);
+    var t = {};
+    SEGMENTS.forEach(function (s) {
+      if (s.type !== "vers") { t[s.id] = null; return; }
+      var idx = s.n === 1 ? 0 : 3 + dec + (s.n - 2);
+      t[s.id] = idx >= 0 && idx < u.length ? u[idx] : null;
+    });
+    return t;
+  }
+  function cycleIndex(t) {
+    var i = 0;
+    while (i + 1 < CYCLES.length && CYCLES[i + 1] <= t + 0.05) i++;
+    return i;
+  }
+  function snap(t) {
+    var best = t, ecart = 1.5;
+    CYCLES.forEach(function (c) { var d = Math.abs(c - t); if (d < ecart) { ecart = d; best = c; } });
+    return best;
+  }
+  function segmentAt(t) {
+    var cur = null;
+    for (var i = 0; i < ordre.length; i++) { if (ordre[i].t <= t + 0.05) cur = ordre[i]; else break; }
+    return cur;
+  }
+  function bounds(id) {
+    for (var i = 0; i < ordre.length; i++) {
+      if (ordre[i].id === id) {
+        return { start: ordre[i].t, end: i + 1 < ordre.length ? ordre[i + 1].t : (audio.duration || DUREE) };
+      }
+    }
+    return null;
+  }
+
+  function renderCalageStatus() {
+    var el = $("#calage-status");
+    var n = ordre.length;
+    if (state.calage) {
+      el.innerHTML = "<p><b>Calage en cours.</b> Touchez « Beuyite suivant », dans le lecteur en bas, quand le kourel passe à un nouveau beuyite. Ignorez les reprises du même beuyite.</p>";
+      return;
+    }
+    var html;
+    if (n === 0) {
+      html = "<p><b>Le texte n’est pas encore calé sur l’audio.</b> Une seule écoute suffit, une fois pour tous. Le beuyite 1 est placé d’office au début. Touchez ensuite « Beuyite suivant » uniquement quand le kourel passe à un nouveau beuyite, pas à chaque reprise : 8 appuis en tout. Chaque appui se cale tout seul sur la respiration du kourel la plus proche.</p>" +
+        '<div class="row"><button type="button" class="btn primary" data-action="calage">Caler le texte sur l’audio</button></div>';
+      el.innerHTML = html;
+      return;
+    }
+    if (state.mode === "auto") {
+      html = "<p><b>Le texte suit le chant en temps réel.</b> Le beuyite 1 est chanté trois fois (le dieuwrigne lance, le kourel répond, puis deux fois ensemble), puis vient le yeukeuti et un beuyite toutes les 16 secondes environ. Le demi-beuyite chanté s’éclaire. Si les beuyites arrivent décalés, corrigez d’un beuyite.</p>" +
+        '<div class="row"><button type="button" class="btn" data-action="tot">Le texte est en retard d’un beuyite</button>' +
+        '<button type="button" class="btn" data-action="tard">Le texte est en avance d’un beuyite</button>' +
+        '<button type="button" class="btn ghost" data-action="calage">Caler à la main</button></div>';
+    } else if (state.pendingSave) {
+      html = "<p><b>Calage terminé : " + n + " passages.</b> Il n’est enregistré que sur cet appareil.</p>" +
+        '<div class="row"><button type="button" class="btn ghost" data-action="calage">Refaire le calage</button></div>';
+    } else {
+      html = "<p><b>Le texte suit le chant en temps réel.</b> Calage partagé avec tous les membres. Touchez « Écouter » sur un beuyite, ou son numéro dans la frise, pour l’entendre.</p>" +
+        '<div class="row"><button type="button" class="btn ghost" data-action="calage">Refaire le calage</button></div>';
+    }
+    if (state.pendingSave) {
+      html += "<p>Cette correction n’est enregistrée que sur cet appareil : enregistrez-la pour que tous les membres en profitent.</p>" +
+        '<div class="row"><button type="button" class="btn primary" data-action="publier">Enregistrer pour tout le monde</button>' +
+        '<button type="button" class="btn" data-action="copier">Copier les temps</button></div>' +
+        '<div class="copy-box" id="copy-box" hidden><p class="muted" id="copy-hint"></p><textarea id="copy-text" readonly aria-label="Temps du calage"></textarea></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  function startCalage() {
+    state.calage = { idx: 2, debut: 2, fin: SEGMENTS[SEGMENTS.length - 1].type === "vers" ? SEGMENTS.length : SEGMENTS.length - 1, temps: { ouverture: null, v1: 0 } };
+    state.loop = false;
+    setActive(null);
+    applyView();
+    $("#calage-panel").hidden = false;
+    renderCalageStatus();
+    renderCalagePanel();
+    try { audio.currentTime = 0; } catch (e) { /* audio pas encore prêt */ }
+    var p = audio.play();
+    if (p && p.catch) p.catch(function () { toast("Touchez le bouton de lecture pour lancer l’audio."); });
+  }
+  function renderCalagePanel() {
+    var c = state.calage;
+    var prev = document.querySelectorAll(".card.is-next");
+    for (var i = 0; i < prev.length; i++) prev[i].classList.remove("is-next");
+    var s = SEGMENTS[c.idx];
+    if (!s) return;
+    $("#calage-next").innerHTML = "Au début du <b>" + esc(nom(s)) + "</b>" +
+      (s.lettre ? " " + AR(esc(s.lettre)) : "") +
+      ' <span class="muted">(' + (c.idx - c.debut + 1) + " sur " + (c.fin - c.debut) + ")</span>";
+    $("#mark").textContent = "Beuyite suivant : " + nom(s);
+    $("#undo").disabled = c.idx === c.debut;
+    var card = document.getElementById(s.id);
+    card.classList.add("is-next");
+    card.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+    if (state.scene) renderScene();
+  }
+  function markCalage(valeur) {
+    var c = state.calage;
+    if (!c) return;
+    var s = SEGMENTS[c.idx];
+    c.temps[s.id] = valeur;
+    c.idx++;
+    if (c.idx >= c.fin) finishCalage(); else renderCalagePanel();
+  }
+  function undoCalage() {
+    var c = state.calage;
+    if (!c || c.idx === c.debut) return;
+    c.idx--;
+    delete c.temps[SEGMENTS[c.idx].id];
+    renderCalagePanel();
+  }
+  function finishCalage() {
+    var c = state.calage;
+    state.calage = null;
+    var prev = document.querySelectorAll(".card.is-next");
+    for (var i = 0; i < prev.length; i++) prev[i].classList.remove("is-next");
+    $("#calage-panel").hidden = true;
+    var temps = {};
+    var compte = 0;
+    SEGMENTS.forEach(function (s) {
+      var v = c.temps[s.id];
+      temps[s.id] = typeof v === "number" ? v : null;
+      if (typeof v === "number") compte++;
+    });
+    if (compte <= 1) { recompute(); renderCalageStatus(); toast("Calage abandonné : aucun passage n’a été marqué."); return; }
+    state.temps = temps;
+    state.mode = "manuel";
+    state.majLe = new Date().toISOString();
+    state.source = "local";
+    state.pendingSave = true;
+    store.set("zallat-calage-v1", { version: 2, mode: "manuel", decalage: 0, majLe: state.majLe, temps: temps, partage: false });
+    recompute();
+    renderCalageStatus();
+    tick();
+    toast("Calage terminé : le texte suit maintenant l’audio sur cet appareil.");
+    $("#calage-status").scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  function calageTexte() {
+    var lignes = SEGMENTS.map(function (s) {
+      var v = state.temps[s.id];
+      return nom(s) + " : " + (typeof v === "number" ? fmt(v, true) : "non chanté");
+    });
+    return "Calage « Zallat »\n" + lignes.join("\n") + "\n\n" + JSON.stringify({ version: 1, temps: state.temps });
+  }
+  function showCopy(hint) {
+    var box = $("#copy-box");
+    if (!box) return;
+    box.hidden = false;
+    $("#copy-hint").textContent = hint;
+    var ta = $("#copy-text");
+    ta.value = calageTexte();
+    ta.focus();
+    ta.select();
+  }
+  function copierTemps() {
+    var texte = calageTexte();
+    var ok = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texte).then(function () {
+          toast("Temps copiés : collez-les dans votre message au Conservatoire.");
+        }, function () { showCopy("Sélectionnez le texte ci-dessous et copiez-le."); });
+        ok = true;
+      }
+    } catch (e) { ok = false; }
+    if (!ok) showCopy("Sélectionnez le texte ci-dessous et copiez-le.");
+  }
+
+  var artifactPromise = null;
+  function artifactCap() {
+    if (!artifactPromise) {
+      artifactPromise = (window.claude && typeof window.claude.use === "function")
+        ? window.claude.use("artifact").then(function (a) { return a; }, function () { return null; })
+        : Promise.resolve(null);
+    }
+    return artifactPromise;
+  }
+  function publierCalage(btn) {
+    btn.disabled = true;
+    btn.textContent = "Enregistrement…";
+    var payload = { version: 2, mode: state.mode || "manuel", decalage: state.decalage, majLe: state.majLe || new Date().toISOString(), temps: state.temps };
+    function reset() { btn.disabled = false; btn.textContent = "Enregistrer pour tout le monde"; }
+    artifactCap().then(function (cap) {
+      if (!cap) {
+        reset();
+        showCopy("L’enregistrement partagé n’est pas disponible ici. Copiez les temps et envoyez-les au Conservatoire.");
+        return;
+      }
+      return cap.publish({ "khassidas/zallat/data/calage.json": { content: JSON.stringify(payload), contentType: "application/json" } }).then(function () {
+        store.set("zallat-calage-v1", { version: 2, mode: payload.mode, decalage: payload.decalage, majLe: payload.majLe, temps: payload.temps, partage: true });
+        state.source = "partage";
+        state.pendingSave = false;
+        renderCalageStatus();
+        toast("Calage enregistré : tous les membres verront le texte suivre l’audio.");
+      }, function (e) {
+        var code = e && e.code;
+        reset();
+        if (code === "conflict") { toast("Une version plus récente de la page vient d’arriver : elle se recharge."); return; }
+        if (code === "rate_limited") { toast("Trop d’enregistrements rapprochés : réessayez dans une minute."); return; }
+        var lecture = ["not_writer", "not_granted", "not_declared", "capability_disabled", "capability_removed", "consent_required"].indexOf(code) > -1;
+        showCopy(lecture
+          ? "Vous ne pouvez pas enregistrer pour tout le monde depuis cette page (lecture seule ou lien public). Copiez les temps et envoyez-les au Conservatoire."
+          : "L’enregistrement a échoué. Copiez les temps pour ne pas les perdre.");
+      });
+    });
+  }
+
+  function loadCalage() {
+    var local = store.get("zallat-calage-v1", null);
+    function valide(d) {
+      if (d && d.mode === "auto") return true;
+      if (!d || !d.temps) return false;
+      for (var k in d.temps) if (typeof d.temps[k] === "number") return true;
+      return false;
+    }
+    function appliquer(remote) {
+      var choix = null;
+      if (valide(remote)) { choix = remote; state.source = "partage"; }
+      if (valide(local) && (!choix || String(local.majLe || "") > String(choix.majLe || ""))) {
+        choix = local;
+        state.source = local.partage ? "partage" : "local";
+      }
+      if (choix) {
+        state.mode = choix.mode || "manuel";
+        state.decalage = Number(choix.decalage) || 0;
+        state.temps = state.mode === "auto" ? autoTemps(state.decalage) : choix.temps;
+        state.majLe = choix.majLe || null;
+        state.pendingSave = state.source === "local";
+      }
+      recompute();
+      renderCalageStatus();
+      tick();
+    }
+    fetch("data/calage.json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(appliquer, function () { appliquer(null); });
+  }
+
+  /* ---------- Lecture et animation ---------- */
+  function setPlayIcon(lecture) {
+    $("#play").innerHTML = lecture ? ICON.pause : ICON.play;
+    $("#play").setAttribute("aria-label", lecture ? "Pause" : "Lire");
+  }
+  function updateTime(t) {
+    var d = audio.duration || DUREE;
+    $("#now-time").textContent = fmt(t) + " / " + fmt(Math.round(d));
+    if (document.activeElement !== $("#seek")) $("#seek").value = String(Math.min(t, d));
+  }
+  function setActive(id) {
+    var prev = activeId;
+    activeId = id;
+    if (prev) {
+      var pc = document.getElementById(prev);
+      if (pc) { pc.classList.remove("is-active", "h1", "h2"); pc.querySelector(".progress span").style.width = "0"; }
+    }
+    var idx = -1;
+    if (id) {
+      var c = document.getElementById(id);
+      if (c) {
+        c.classList.add("is-active");
+        if (state.follow && !state.scene && Date.now() - lastUserScroll > 3500) {
+          c.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+        }
+      }
+      for (var i = 0; i < SEGMENTS.length; i++) if (SEGMENTS[i].id === id) idx = i;
+    }
+    var chips = document.querySelectorAll(".chip");
+    for (var j = 0; j < chips.length; j++) {
+      var ci = SEGMENTS.indexOf(byId(chips[j].getAttribute("data-chip")));
+      chips[j].classList.toggle("is-active", chips[j].getAttribute("data-chip") === id);
+      chips[j].classList.toggle("is-past", idx > -1 && ci < idx);
+    }
+    var s = id ? byId(id) : null;
+    lastLbl = "";
+    $("#now-label").innerHTML = s
+      ? esc(nom(s)) + (s.lettre ? " · " + AR(esc(s.lettre)) : "")
+      : (ordre.length ? "Zallat" : "Audio de référence");
+    if (state.scene) renderScene();
+  }
+  function tick() {
+    var t = audio.currentTime || 0;
+    if (state.loop && activeId && !state.calage) {
+      var b = bounds(activeId);
+      if (b && t >= b.end - 0.08) { audio.currentTime = b.start; t = b.start; }
+    }
+    if (!state.calage) {
+      var cur = segmentAt(t);
+      var id = cur ? cur.id : null;
+      if (id !== activeId) setActive(id);
+    }
+    if (activeId) {
+      var bb = bounds(activeId);
+      var card = document.getElementById(activeId);
+      if (bb && card) {
+        var s = byId(activeId);
+        var cs = cycleIndex(bb.start), ci = cycleIndex(t);
+        var total = Math.max(1, Math.round((bb.end - bb.start) / 16.5));
+        var rep = Math.min(total, Math.floor(Math.max(0, ci - cs) / 2) + 1);
+        var r0 = cs + 2 * (rep - 1);
+        var rs = rep === 1 ? bb.start : CYCLES[r0];
+        var re = rep === total ? bb.end : Math.min(bb.end, CYCLES[r0 + 2] || bb.end);
+        var r = Math.max(0, Math.min(1, (t - rs) / Math.max(0.1, re - rs)));
+        card.querySelector(".progress span").style.width = (r * 100).toFixed(2) + "%";
+        var half = s.type === "vers" ? ((ci - cs) % 2 === 0 ? "h1" : "h2") : "";
+        card.classList.toggle("h1", half === "h1");
+        card.classList.toggle("h2", half === "h2");
+        if (state.scene) $("#scene-body").className = half;
+        var lbl = esc(nom(s)) + (s.lettre ? " · " + AR(esc(s.lettre)) : "") +
+          (total > 1 ? ' <span class="muted">· ' + rep + "/" + total + "</span>" : "");
+        if (lbl !== lastLbl) { $("#now-label").innerHTML = lbl; lastLbl = lbl; }
+      }
+    }
+    updateTime(t);
+  }
+  function boucle() {
+    cancelAnimationFrame(rafId);
+    var step = function () { tick(); if (!audio.paused) rafId = requestAnimationFrame(step); };
+    rafId = requestAnimationFrame(step);
+  }
+  function jouer() {
+    var p = audio.play();
+    if (p && p.catch) p.catch(function () { toast("Lecture impossible : touchez à nouveau le bouton de lecture."); });
+  }
+  function ecouter(id) {
+    var b = bounds(id);
+    if (!b) {
+      if (ordre.length) toast("Ce passage n’est pas chanté dans l’enregistrement.");
+      else toast("Calez d’abord le texte sur l’audio pour écouter beuyite par beuyite.");
+      return;
+    }
+    audio.currentTime = b.start + 0.01;
+    tick();
+    jouer();
+  }
+
+  /* ---------- Mode scène ---------- */
+  function renderScene() {
+    var id = activeId || (state.calage && SEGMENTS[state.calage.idx] ? SEGMENTS[state.calage.idx].id : "v1");
+    var s = byId(id) || SEGMENTS[1];
+    var prose = s.type !== "vers";
+    $("#scene-body").innerHTML = '<div class="scene-body">' +
+      '<p class="scene-label">' + esc(nom(s)) + "</p>" +
+      (s.lettre ? '<div class="scene-letter" lang="ar" aria-hidden="true">' + esc(s.lettre) + "</div>" : "") +
+      (state.ar ? '<div class="scene-ar' + (prose ? " prose" : "") + '" lang="ar" dir="rtl">' + s.ar.map(function (l) { return "<p>" + esc(l) + "</p>"; }).join("") + "</div>" : "") +
+      (state.ph ? '<div class="scene-ph" lang="ar-Latn">' + s.ph.map(function (l) { return "<p>" + esc(l) + "</p>"; }).join("") + "</div>" : "") +
+      (state.fr ? '<p class="scene-fr">' + esc(s.fr) + "</p>" : "") +
+      "</div>";
+  }
+  function openScene() {
+    state.scene = true;
+    $("#scene-view").hidden = false;
+    $("#scene").setAttribute("aria-pressed", "true");
+    renderScene();
+    $("#scene-close").focus();
+  }
+  function closeScene() {
+    state.scene = false;
+    $("#scene-view").hidden = true;
+    $("#scene").setAttribute("aria-pressed", "false");
+    if (activeId) {
+      var c = document.getElementById(activeId);
+      if (c) c.scrollIntoView({ block: "center" });
+    }
+  }
+
+  /* ---------- Manuscrit ---------- */
+  function openMs(page) {
+    var d = $("#ms");
+    $("#ms-img").src = "manuscrit/p" + page + ".jpg";
+    $("#ms-img").alt = "Page du manuscrit : " + PAGES[page];
+    $("#ms-cap").textContent = "Manuscrit · " + PAGES[page];
+    if (typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
+  }
+  function closeMs() {
+    var d = $("#ms");
+    if (typeof d.close === "function") d.close(); else d.removeAttribute("open");
+  }
+
+  var toastTimer = 0;
+  function toast(msg) {
+    var t = $("#toast");
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, 4200);
+  }
+
+  /* ---------- Événements ---------- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    var chip = b.getAttribute("data-chip");
+    if (chip) {
+      var card = document.getElementById(chip);
+      if (card) card.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+      lastUserScroll = Date.now();
+      if (bounds(chip)) { audio.currentTime = bounds(chip).start + 0.01; tick(); }
+      return;
+    }
+    if (b.getAttribute("data-play")) { ecouter(b.getAttribute("data-play")); return; }
+    if (b.getAttribute("data-page")) { openMs(Number(b.getAttribute("data-page"))); return; }
+    var action = b.getAttribute("data-action");
+    if (action === "calage") { startCalage(); return; }
+    if (action === "tot" || action === "tard") {
+      var nd = state.decalage + (action === "tot" ? -1 : 1);
+      if (nd < -2 || nd > 2) { toast("Impossible de décaler davantage dans ce sens."); return; }
+      state.decalage = nd;
+      state.mode = "auto";
+      state.temps = autoTemps(nd);
+      state.majLe = new Date().toISOString();
+      state.source = "local";
+      state.pendingSave = true;
+      store.set("zallat-calage-v1", { version: 2, mode: "auto", decalage: nd, majLe: state.majLe, temps: state.temps, partage: false });
+      recompute();
+      setActive(null);
+      tick();
+      renderCalageStatus();
+      toast(action === "tot" ? "Les beuyites arrivent maintenant un beuyite plus tôt." : "Les beuyites arrivent maintenant un beuyite plus tard.");
+      return;
+    }
+    if (action === "publier") { publierCalage(b); return; }
+    if (action === "copier") { copierTemps(); return; }
+  });
+
+  $("#btn-k1").addEventListener("click", function () {
+    state.kourel = "k1"; state.ph = false; state.ar = true; state.fr = true; applyView(); savePrefs();
+  });
+  $("#btn-k2").addEventListener("click", function () {
+    state.kourel = "k2"; state.ar = true; state.ph = true; state.fr = true; applyView(); savePrefs();
+  });
+  ["ar", "ph", "fr"].forEach(function (k) {
+    $("#t-" + k).addEventListener("click", function () {
+      state[k] = !state[k];
+      if (!state.ar && !state.ph && !state.fr) state[k] = true;
+      applyView(); savePrefs();
+    });
+  });
+  $("#play").addEventListener("click", function () { if (audio.paused) jouer(); else audio.pause(); });
+  $("#speed").addEventListener("click", function () {
+    var v = [1, 0.75, 0.5];
+    state.speed = v[(v.indexOf(state.speed) + 1) % v.length];
+    applyView(); savePrefs();
+  });
+  $("#loop").addEventListener("click", function () {
+    if (!ordre.length) { toast("Calez d’abord le texte sur l’audio pour répéter un beuyite."); return; }
+    state.loop = !state.loop;
+    applyView();
+    toast(state.loop ? "Boucle activée : le beuyite en cours se répète." : "Boucle désactivée.");
+  });
+  $("#follow").addEventListener("click", function () {
+    state.follow = !state.follow;
+    lastUserScroll = 0;
+    applyView(); savePrefs();
+  });
+  $("#scene").addEventListener("click", function () { if (state.scene) closeScene(); else openScene(); });
+  $("#scene-close").addEventListener("click", closeScene);
+  $("#ms-close").addEventListener("click", closeMs);
+  $("#ms").addEventListener("click", function (e) { if (e.target === $("#ms")) closeMs(); });
+  $("#mark").addEventListener("click", function () { markCalage(Math.round(snap(audio.currentTime || 0) * 100) / 100); });
+  $("#skip").addEventListener("click", function () { markCalage(null); });
+  $("#undo").addEventListener("click", undoCalage);
+  $("#stop").addEventListener("click", finishCalage);
+  $("#seek").addEventListener("input", function (e) { audio.currentTime = Number(e.target.value); tick(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && state.scene) closeScene();
+    if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].indexOf(e.key) > -1) lastUserScroll = Date.now();
+  });
+  window.addEventListener("wheel", function () { lastUserScroll = Date.now(); }, { passive: true });
+  window.addEventListener("touchmove", function () { lastUserScroll = Date.now(); }, { passive: true });
+
+  audio.addEventListener("play", function () { setPlayIcon(true); boucle(); });
+  audio.addEventListener("pause", function () { setPlayIcon(false); tick(); });
+  audio.addEventListener("ended", function () { setPlayIcon(false); tick(); });
+  audio.addEventListener("seeked", tick);
+  audio.addEventListener("loadedmetadata", function () {
+    $("#seek").max = String(Math.floor(audio.duration * 10) / 10);
+    audio.playbackRate = state.speed;
+    tick();
+  });
+  audio.addEventListener("error", function () { toast("L’audio n’a pas pu être chargé. Rechargez la page."); });
+
+  var player = $("#player");
+  function majHauteur() { document.documentElement.style.setProperty("--player-h", player.offsetHeight + "px"); }
+  if (window.ResizeObserver) new ResizeObserver(majHauteur).observe(player);
+  majHauteur();
+
+  /* Chaque demi-beuyite sur une seule ligne : la taille s'ajuste à la largeur de l'écran. */
+  function ajusterVers() {
+    var blocs = document.querySelectorAll('.card[data-type="vers"] .ar');
+    var MIN = 22;
+    function ratio(ps) {
+      var k = 1;
+      for (var j = 0; j < ps.length; j++) {
+        if (ps[j].scrollWidth > ps[j].clientWidth + 1) k = Math.min(k, ps[j].clientWidth / ps[j].scrollWidth);
+      }
+      return k;
+    }
+    for (var i = 0; i < blocs.length; i++) {
+      var el = blocs[i];
+      var ps = el.querySelectorAll("p");
+      el.classList.remove("pile");
+      el.style.fontSize = "";
+      for (var j = 0; j < ps.length; j++) ps[j].classList.remove("wrap");
+      var base = parseFloat(getComputedStyle(el).fontSize);
+      var k = ratio(ps);
+      if (k >= 1) continue;
+      var taille = Math.floor(base * k * 0.97 * 10) / 10;
+      if (taille >= MIN) {
+        el.style.fontSize = taille + "px";
+      } else {
+        /* Trop petit côte à côte : les deux demi-beuyite passent l'un sous l'autre. */
+        el.classList.add("pile");
+        var k2 = ratio(ps);
+        if (k2 < 1) el.style.fontSize = Math.max(base * 0.88, Math.floor(base * k2 * 0.97 * 10) / 10) + "px";
+      }
+      for (j = 0; j < ps.length; j++) if (ps[j].scrollWidth > ps[j].clientWidth + 1) ps[j].classList.add("wrap");
+    }
+  }
+  var ajusterTimer = 0;
+  window.addEventListener("resize", function () { clearTimeout(ajusterTimer); ajusterTimer = setTimeout(ajusterVers, 150); });
+
+  /* ---------- Démarrage ---------- */
+  render();
+  ajusterVers();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajusterVers);
+  applyView();
+  setPlayIcon(false);
+  recompute();
+  renderCalageStatus();
+  updateTime(0);
+  loadCalage();
+
+  /* Lien direct vers un beuyite (#v3) : la page s'ouvre sur ce beuyite, par exemple depuis un Tari. */
+  var cible = location.hash.slice(1);
+  if (/^v\d+$/.test(cible) && document.getElementById(cible)) {
+    lastUserScroll = Date.now();
+    setTimeout(function () {
+      var c = document.getElementById(cible);
+      c.scrollIntoView({ block: "start" });
+      c.classList.add("is-next");
+      setTimeout(function () { c.classList.remove("is-next"); }, 4000);
+    }, 400);
+  }
+})();
+</script>
+<!-- Lecture immersive : la frise et le lecteur se cachent pendant la lecture et reviennent au besoin. -->
+<style>
+.strip, .player { transition: transform 0.28s ease, box-shadow 0.28s ease; will-change: transform; }
+body.chrome-cache .strip { transform: translateY(-105%); }
+body.chrome-cache .player { transform: translateY(105%); box-shadow: none; }
+.mini-progress { position: fixed; left: 0; right: 0; bottom: 0; height: 3px; z-index: 36; pointer-events: none; opacity: 0; transition: opacity 0.2s ease; background: var(--rule); }
+.mini-progress span { display: block; height: 100%; width: 0; background: var(--accent); }
+body.chrome-cache .mini-progress { opacity: 1; }
+.mini-play { position: fixed; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 37; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); display: grid; place-items: center; cursor: pointer; opacity: 0; transform: scale(0.8); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
+.mini-play svg { width: 20px; height: 20px; }
+body.chrome-cache .mini-play { opacity: 1; transform: none; pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) { .strip, .player, .mini-play { transition: none; } }
+</style>
+<div class="mini-progress" aria-hidden="true"><span></span></div>
+<button type="button" class="mini-play" id="mini-play" aria-label="Afficher le lecteur"></button>
+<script>
+(function () {
+  "use strict";
+  var body = document.body, audio = document.getElementById("audio");
+  var barre = document.querySelector(".mini-progress span"), mini = document.getElementById("mini-play");
+  var ICONE_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+  var ICONE_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
+  var cache = false, dernierY = window.scrollY;
+  function bloque() {
+    var panneau = document.getElementById("calage-panel"), scene = document.getElementById("scene-view");
+    return (panneau && !panneau.hidden) || (scene && !scene.hidden) || (document.activeElement && document.getElementById("player").contains(document.activeElement));
+  }
+  function montrer() { if (cache) { cache = false; body.classList.remove("chrome-cache"); } }
+  function cacher() { if (!cache && !bloque()) { cache = true; body.classList.add("chrome-cache"); } }
+  function majMini() { mini.innerHTML = audio.paused ? ICONE_PLAY : ICONE_PAUSE; mini.setAttribute("aria-label", audio.paused ? "Lire" : "Pause"); }
+  /* Défilement : vers le bas on cache, vers le haut on montre ; tout en haut, toujours visible. */
+  window.addEventListener("scroll", function () {
+    var y = window.scrollY, d = y - dernierY;
+    if (y < 80) montrer();
+    else if (d > 6) cacher();
+    else if (d < -6) montrer();
+    dernierY = y;
+  }, { passive: true });
+  /* Souris près du bord haut ou bas : on montre. */
+  window.addEventListener("mousemove", function (e) {
+    if (e.clientY > window.innerHeight - 120 || e.clientY < 80) montrer();
+  }, { passive: true });
+  /* Toucher le texte (hors bouton ou lien) : on montre. */
+  document.addEventListener("click", function (e) {
+    if (cache && !e.target.closest("button, a, input, select, textarea")) montrer();
+  });
+  document.addEventListener("focusin", function (e) { if (document.getElementById("player").contains(e.target)) montrer(); });
+  /* Le petit bouton rond lit ou met en pause sans rouvrir le lecteur. */
+  mini.addEventListener("click", function () { if (audio.paused) document.getElementById("play").click(); else audio.pause(); });
+  audio.addEventListener("play", majMini);
+  audio.addEventListener("pause", majMini);
+  audio.addEventListener("ended", function () { majMini(); montrer(); });
+  audio.addEventListener("timeupdate", function () {
+    var d = audio.duration || 1;
+    barre.style.width = Math.min(100, 100 * audio.currentTime / d) + "%";
+  });
+  majMini();
+})();
+</script>
+
+</html>
+<script>
+/* Plateforme en ligne (avec comptes) : seul un administrateur refait ou enregistre le calage. Sur claude.ai, rien ne change. */
+(function () {
+  if (!/^https?:$/.test(location.protocol)) return;
+  fetch("/api/moi", { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
+    if (m && m.connecte && !m.admin) document.body.classList.add("calage-admin-seul");
+  }, function () { /* hors plateforme en ligne */ });
+})();
+</script>
