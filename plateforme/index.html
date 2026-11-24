@@ -459,6 +459,8 @@ h3.group .linkish { text-decoration: none; text-transform: uppercase; letter-spa
 .rap-row.annulee .rap-when b { text-decoration: line-through; color: var(--ink-soft); }
 @media (max-width: 560px) { .rap-row > .btn { flex: 1 1 auto; padding: 10px; } .rap-row > .btn.ghost { flex: 0 0 auto; } }
 .rap-when .pill { font-size: 12px; }
+.rap-lieu { flex: 1 1 100%; font-size: 13px; color: var(--ink-soft); }
+.rap-lieu.inhabituel { color: var(--warn); font-weight: 600; }
 .toggle.sugg { text-align: left; white-space: normal; line-height: 1.35; padding: 6px 11px; border-radius: 14px; }
 .toggle.sugg[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .seg-tabs { margin-bottom: 2px; }
@@ -682,8 +684,13 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
 .tari-banniere b { font-size: 15.5px; font-weight: 600; }
 .tari-banniere small { font-size: 12.5px; opacity: 0.85; }
 .tari-banniere .tb-go { font-size: 22px; flex: none; }
-.tq-groupe { margin-top: 18px; }
-.tq-gtitre { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+.tq-kourel { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.tq-kourel:first-of-type { border-top: 0; padding-top: 0; }
+.tq-ktitre { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 17px; font-weight: 600; }
+.tq-ktitre small { margin-left: auto; font-size: 12.5px; color: var(--ink-soft); font-weight: 500; }
+.tq-ere { font-size: 12.5px; font-weight: 500; color: var(--ink-soft); }
+.tq-groupe { margin-top: 12px; }
+.tq-gtitre { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin: 0 0 8px; font-size: 14.5px; font-weight: 600; }
 .tq-gtitre small { margin-left: auto; font-size: 12.5px; color: var(--ink-soft); font-weight: 500; }
 .tq-liste { display: grid; gap: 8px; }
 .tq-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; }
@@ -990,8 +997,9 @@ a.tq-item:hover { border-color: var(--accent); }
         pr.map(function (r) {
           var prog = progDe(r.id), kh = khassidas[prog.khassida];
           var when = '<span class="rap-when"><b>' + esc(jourCourt(r.date)) + '</b> <span class="chip">' + esc(TYPES[r.type]) + "</span>" +
-            (prog.exceptionnelle && !prog.annulee ? ' <span class="pill e">Date exceptionnelle</span>' : "") +
-            (lieuInhabituel(prog) && !prog.annulee ? ' <span class="pill r">📍 ' + esc(prog.lieu) + "</span>" : "");
+            (prog.exceptionnelle && !prog.annulee ? ' <span class="pill e">Date exceptionnelle</span>' : "");
+          /* Adresse toujours visible ; mise en évidence seulement si le lieu change exceptionnellement. */
+          var lieuR = prog.lieu ? (lieuInhabituel(prog) ? '<span class="rap-lieu inhabituel">⚠️ Exceptionnellement : ' + esc(prog.lieu) + "</span>" : '<span class="rap-lieu">📍 ' + esc(prog.lieu) + "</span>") : "";
           if (prog.annulee) {
             return '<div class="rap-row annulee">' + when + '<span class="muted">' +
               (prog.deplaceeVers ? "Déplacée au " + esc(jourCourt(prog.deplaceeVers.slice(0, 10))) + (prog.deplaceeVers.slice(11) !== r.type ? " (" + esc(TYPES[prog.deplaceeVers.slice(11)]) + ")" : "") : "Annulée" + (prog.motifAnnulation ? " · " + esc(prog.motifAnnulation) : "")) + "</span></span>" +
@@ -1000,7 +1008,7 @@ a.tq-item:hover { border-color: var(--accent); }
                 ? '<button type="button" class="btn small danger" data-action="rep-suppr-ok" data-id="' + esc(r.id) + '">Oui, supprimer</button><button type="button" class="btn small ghost" data-action="rep-suppr-non">Non</button>'
                 : '<button type="button" class="btn small ghost" data-action="rep-suppr" data-id="' + esc(r.id) + '" title="Retirer cette date de la liste">Supprimer</button>') + "</div>";
           }
-          var h = '<div class="rap-row">' + when + '<span class="muted">' + esc(prog.horaire) + (itemsCle("rep-" + r.id, "retenu").length ? " · " + itemsCle("rep-" + r.id, "retenu").length + " khassida" + (itemsCle("rep-" + r.id, "retenu").length > 1 ? "s" : "") + " au programme" : kh ? " · " + esc(kh.titre) : "") + "</span></span>" +
+          var h = '<div class="rap-row">' + when + '<span class="muted">' + esc(prog.horaire) + (itemsCle("rep-" + r.id, "retenu").length ? " · " + itemsCle("rep-" + r.id, "retenu").length + " khassida" + (itemsCle("rep-" + r.id, "retenu").length > 1 ? "s" : "") + " au programme" : kh ? " · " + esc(kh.titre) : "") + "</span>" + lieuR + "</span>" +
             '<button type="button" class="btn small' + (prog.envoye ? "" : " primary") + '" data-rappel="' + esc(r.id) + '">' + (prog.envoye ? "Rappel envoyé ✓" : "Préparer le rappel") + "</button>" +
             '<button type="button" class="btn small ghost" data-action="rep-edit" data-id="' + esc(r.id) + '">Modifier</button>';
           if (editRep === r.id) {
@@ -3870,24 +3878,32 @@ a.tq-item:hover { border-color: var(--accent); }
       }).join("") + "</span>";
     var moiAussi = mesTaris().filter(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; })[0];
     if (moiAussi) html += '<p class="tq-moi-aussi">🎙️ <span>Vous aussi avez un Tari à envoyer : <a href="' + lienTari(moiAussi.s.id) + '">enregistrer mon Tari</a>.</span></p>';
-    var groupes, vide, item;
+    /* Rangement : d'abord le kourel de la répétition qui a demandé le Tari (Kourel 1, Kourel 2, répétition générale), puis le khassida. */
+    var liste, vide, item, khDe, kourelDe;
     if (tarisOnglet === "envoyer") {
-      groupes = grouperParKh(aEnv, function (x) { return x.td.khassida; }); item = itemAEnvoyer;
+      liste = aEnv; item = itemAEnvoyer; khDe = function (x) { return x.td.khassida; }; kourelDe = function (x) { return x.s.type; };
       vide = "Tout le monde a envoyé son Tari.";
     } else if (tarisOnglet === "historique") {
-      var vus = tarisHistTout ? hist : hist.slice(0, 30);
-      groupes = grouperParKh(vus, function (x) { return x.dec.khassida; }); item = itemHistorique;
+      liste = tarisHistTout ? hist : hist.slice(0, 30); item = itemHistorique; khDe = function (x) { return x.dec.khassida; }; kourelDe = function (x) { return x.d.type; };
       vide = "Aucune réponse donnée pour l’instant.";
     } else {
-      groupes = grouperParKh(ae, function (x) { return x.td.khassida; }); item = itemAEcouter;
+      liste = ae; item = itemAEcouter; khDe = function (x) { return x.td.khassida; }; kourelDe = function (x) { return x.s.type; };
       vide = "Aucun Tari à écouter pour l’instant. Quand un membre enregistre son Tari depuis Mon espace, il apparaît ici.";
     }
-    if (!groupes.length) html += '<div class="empty" style="margin-top:14px">' + vide + "</div>";
-    groupes.forEach(function (g) {
-      var t0 = g.items[0], titre = titreGroupe(g.kh, t0.dec ? t0.dec.titre : t0.d && dernierEnvoi(t0.d) ? dernierEnvoi(t0.d).titre : "");
-      html += '<div class="tq-groupe"><h3 class="tq-gtitre"><span class="kh-puce" aria-hidden="true"></span>' + esc(titre) +
-        "<small>" + g.items.length + (tarisOnglet === "ecouter" ? " à écouter" : tarisOnglet === "envoyer" ? " en attente" : " réponse" + (g.items.length > 1 ? "s" : "")) + "</small></h3>" +
-        '<div class="tq-liste">' + g.items.map(item).join("") + "</div></div>";
+    if (!liste.length) html += '<div class="empty" style="margin-top:14px">' + vide + "</div>";
+    var unite = function (n) { return tarisOnglet === "ecouter" ? n + " à écouter" : tarisOnglet === "envoyer" ? n + " en attente" : n + " réponse" + (n > 1 ? "s" : ""); };
+    [["k1", "Kourel 1"], ["k2", "Kourel 2"], ["rg", "Répétition générale"]].forEach(function (k) {
+      var duKourel = liste.filter(function (x) { return (kourelDe(x) || "rg") === k[0]; });
+      if (!duKourel.length) return;
+      html += '<section class="tq-kourel kh-' + (k[0] === "rg" ? "tous" : k[0]) + '"><h3 class="tq-ktitre"><span class="kh-puce" aria-hidden="true"></span>' + k[1] + "<small>" + unite(duKourel.length) + "</small></h3>";
+      grouperParKh(duKourel, khDe).forEach(function (g) {
+        var t0 = g.items[0], titre = titreGroupe(g.kh, t0.dec ? t0.dec.titre : t0.d && dernierEnvoi(t0.d) ? dernierEnvoi(t0.d).titre : "");
+        var kh = khassidas[g.kh];
+        html += '<div class="tq-groupe"><h4 class="tq-gtitre">📖 ' + esc(titre) + (kh && kh.ere ? ' <span class="tq-ere">ère ' + esc(kh.ere) + "</span>" : "") +
+          "<small>" + unite(g.items.length) + "</small></h4>" +
+          '<div class="tq-liste">' + g.items.map(item).join("") + "</div></div>";
+      });
+      html += "</section>";
     });
     if (tarisOnglet === "historique" && hist.length > 30 && !tarisHistTout) html += '<div style="margin-top:12px"><button type="button" class="btn ghost small" data-taris-tout>Voir tout l’historique (' + hist.length + ")</button></div>";
     app.innerHTML = html + "</section>";
