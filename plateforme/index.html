@@ -1156,7 +1156,8 @@ a.tq-item:hover { border-color: var(--accent); }
     } else {
       var tt = tariTexte(s.tariDetail || {});
       html += '<p style="margin-top:6px">' + (tt ? "À envoyer : " + tt : "Contenu à préciser.") + "</p>" +
-        '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " maîtrisé" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + (tc.retravail ? " · " + tc.retravail + " à retravailler" : "") + " · à maîtriser avant la répétition du " + esc(jourEcheance(echeanceTari(s))) + "</p>";
+        '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " maîtrisé" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + (tc.retravail ? " · " + tc.retravail + " à retravailler" : "") + " · à maîtriser avant la répétition du " + esc(jourEcheance(echeanceTari(s))) + "</p>" +
+        (tarisApi ? '<p class="muted" style="margin-top:4px;font-size:13px">🎙️ Les membres concernés l’enregistrent depuis Mon espace ; vous l’écoutez dans <a href="#taris" style="color:var(--accent);font-weight:600">Taris</a>.</p>' : "");
     }
     html += "</div>";
     if (peutSuivi) {
@@ -2310,7 +2311,7 @@ a.tq-item:hover { border-color: var(--accent); }
     });
     if (peutSuivi && tous.length) html += '<p class="muted kh-aide">« Marquer en répétition » : le khassida que le kourel travaille en ce moment passe en tête de son kourel, pour tous les membres.</p>';
     if (peutModifier) html += '<p class="muted kh-aide">Pour ajouter un khassida ou changer son kourel, allez dans <a href="#reglages">Réglages</a>.</p>';
-    app.innerHTML = banniereTaris() + html + "</section>";
+    app.innerHTML = entreeTaris() + html + "</section>";
   }
   function vueLecture() {
     var kh = lecture && khassidas[lecture.id];
@@ -3359,6 +3360,15 @@ a.tq-item:hover { border-color: var(--accent); }
     if (!n) return "";
     return '<a class="tari-banniere" href="#taris"><span class="tb-ico" aria-hidden="true">🎧</span><span><b>' + n + " Tari" + (n > 1 ? "s" : "") + " à écouter</b>" +
       "<small>Enregistré" + (n > 1 ? "s" : "") + " par les membres sur la plateforme</small></span><span class=\"tb-go\" aria-hidden=\"true\">›</span></a>";
+  }
+  /* Onglet Khassidas (Conservatoire, admin) : toujours une entrée vers les Taris, mise en avant quand il y en a à écouter. */
+  function entreeTaris() {
+    if (!tarisApi || !peutSuivi) return "";
+    var fort = banniereTaris();
+    if (fort) return fort;
+    var aEnv = tarisDemandes().filter(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; }).length;
+    return '<a class="chartes-lien" href="#taris"><span aria-hidden="true">🎧</span><span><b>Taris enregistrés</b><small>Rien à écouter pour l’instant' +
+      (aEnv ? " · " + aEnv + " Tari" + (aEnv > 1 ? "s" : "") + " pas encore envoyé" + (aEnv > 1 ? "s" : "") : " · les envois des membres arriveront ici") + "</small></span><span aria-hidden=\"true\">›</span></a>";
   }
   /* Sur la carte d'un khassida : ses Taris à écouter (Conservatoire) et le Tari du membre. */
   function badgesTarisKh(k) {
