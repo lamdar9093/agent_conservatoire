@@ -523,7 +523,8 @@ h3.group .linkish { text-decoration: none; text-transform: uppercase; letter-spa
 .disc .toggle[aria-pressed="true"] { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
 .disc-pills { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 6px; }
 .disc-pills .pill { font-size: 12px; }
-@media (max-width: 560px) { .tari-etat .seg { display: flex; width: 100%; } .tari-etat .seg button { flex: 1; padding: 8px 4px; } }
+@media (max-width: 560px) { .tari-etat .seg { display: flex; width: 100%; } .tari-etat .seg button { flex: 1 1 auto; padding: 8px 6px; white-space: nowrap; } }
+@media (max-width: 400px) { .tari-etat .seg button { font-size: 13px; padding: 8px 4px; } }
 .chartes h3 { margin: 18px 0 6px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
 .chartes p { margin: 8px 0 0 !important; font-family: var(--font-text); line-height: 1.6; }
 .chartes ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 8px; font-family: var(--font-text); line-height: 1.55; }
@@ -738,6 +739,7 @@ a.tq-item:hover { border-color: var(--accent); }
 .vocal .niveau i { max-width: 4px; }
 .vocal-txt { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vocal.pause .rec-point { animation: none; opacity: 0.45; }
+@media (max-width: 420px) { .vocal.pause .vocal-txt { visibility: hidden; } .vocal-btn { padding: 8px 10px; } }
 .vocal-btn { flex: none; border: 0; border-radius: 999px; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--surface); color: var(--ink); }
 .vocal-btn.fin { background: var(--bad); color: var(--surface); }
 .vocal-btn.icone { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; background: transparent; color: var(--bad); }
