@@ -730,6 +730,14 @@ a.tq-item:hover { border-color: var(--accent); }
 .tari-ecoute.neuf { padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); }
 .dk-mot { display: block; }
 .dk-form { display: grid; gap: 8px; }
+/* Notifications (Mon espace) */
+.notifs-tete { display: flex; gap: 12px; align-items: flex-start; }
+.notifs-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; background: var(--accent-soft); }
+.notifs-tete > span:last-child { display: grid; gap: 2px; }
+.notifs-tete b { font-size: 15.5px; font-weight: 600; }
+.notifs-tete small { font-size: 13px; color: var(--ink-soft); }
+.notifs-btn { width: 100%; margin-top: 12px; padding: 12px; font-weight: 600; }
+.notifs-etapes { margin: 10px 0 0; padding: 10px 12px 10px 30px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); font-size: 13.5px; display: grid; gap: 4px; }
 /* Vocal du correcteur */
 .vocal-ajout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border-radius: 12px; border: 1px dashed var(--bad); background: var(--bad-soft); color: var(--bad); font: inherit; font-weight: 600; font-size: 14.5px; cursor: pointer; }
 .rec-rond-mini { width: 12px; height: 12px; border-radius: 50%; background: currentColor; flex: none; }
@@ -2178,6 +2186,7 @@ a.tq-item:hover { border-color: var(--accent); }
     var moi = membres[moiCourant];
     /* Mes Taris en premier : c'est l'action à faire (enregistrer), juste sous le nom du membre. */
     if (moi && tarisApi) html += blocMesTaris(moi);
+    html += blocNotifs();
     if (moi && statutMembre(moi) === "actif") {
       prochainsDahiras().forEach(function (dz, i) {
         var e = etatDahira(dz), rs = e.raisons[moi.id] || [];
@@ -2501,7 +2510,7 @@ a.tq-item:hover { border-color: var(--accent); }
     /* Taris : la liste est au Conservatoire ; chacun n'ouvre que son propre Tari (le Conservatoire, ceux de tous). */
     if (vue === "taris" && !(peutSuivi && tarisApi)) vue = "moi";
     if (vue === "tari" && (!tarisApi || !tariVue || (tariVue.mid && tariVue.mid !== moiCourant && !peutSuivi))) vue = "moi";
-    majPastilleTaris(); majPastilleMsg();
+    majPastilleTaris(); majPastilleMsg(); majBadgeIcone();
     var actif = vue === "khassida" || vue === "taris" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi"
       : vue === "tari" ? (tariVue.mid && tariVue.mid !== moiCourant ? "khassidas" : "moi") : vue;
     document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
@@ -2548,6 +2557,7 @@ a.tq-item:hover { border-color: var(--accent); }
     if (clicMessages(b)) return;
     if (clicProgramme(b)) return;
     if (clicTaris(b)) return;
+    if (clicNotifs(b)) return;
     if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.hasAttribute("data-back")) { seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.dataset.rappel) { rappelOuvert = b.dataset.rappel; afficher(); window.scrollTo(0, 0); return; }
@@ -4176,6 +4186,81 @@ a.tq-item:hover { border-color: var(--accent); }
   });
   app.addEventListener("input", function (e) { if (e.target.id === "tari-mot") correction.mot = e.target.value; });
 
+  /* ---------- Notifications sur le téléphone et chiffre sur l'icône ----------
+     Sur iPhone : seulement depuis l'icône de l'écran d'accueil (iOS 16.4 et plus). Le chiffre de l'icône = Taris à enregistrer,
+     Taris à écouter (Conservatoire) et demandes d'accès (admin), comme les pastilles. */
+  var notifsApi = null, notifsEtat = { pret: false, abonne: false, occupe: false };
+  var estIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var estAppli = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  function notifsPossibles() { return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
+  function cleOctets(b64) {
+    var s = (b64 + "===".slice((b64.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/"), bin = atob(s), u = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    return u;
+  }
+  function initNotifs() {
+    if (!notifsApi || !notifsPossibles()) { notifsEtat.pret = true; return; }
+    navigator.serviceWorker.register("/sw.js").then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+      notifsEtat.abonne = !!sub && Notification.permission === "granted";
+      // L'appareil reste connu du serveur (abonnement renouvelé à chaque ouverture).
+      if (notifsEtat.abonne) notifsApi.abonner(sub.toJSON()).catch(function () {});
+      notifsEtat.pret = true; majBadgeIcone(); if (vue === "moi") afficher();
+    }, function () { notifsEtat.pret = true; if (vue === "moi") afficher(); });
+  }
+  function activerNotifs() {
+    if (!notifsApi || !notifsPossibles()) return;
+    notifsEtat.occupe = true; afficher();
+    var fin = function (msg) { notifsEtat.occupe = false; afficher(); if (msg) toast(msg); };
+    // La demande d'autorisation part tout de suite (iPhone : seulement pendant le toucher du bouton).
+    Promise.resolve(Notification.requestPermission()).then(function (perm) {
+      if (perm !== "granted") { fin(perm === "denied" ? "Notifications refusées. Vous pourrez les autoriser dans les réglages du téléphone." : ""); return; }
+      return Promise.all([notifsApi.cle(), navigator.serviceWorker.ready]).then(function (r) {
+        return r[1].pushManager.getSubscription().then(function (ex) { return ex || r[1].pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: cleOctets(r[0].cle) }); });
+      }).then(function (sub) { return notifsApi.abonner(sub.toJSON()); }).then(function () {
+        notifsEtat.abonne = true; majBadgeIcone();
+        return notifsApi.essai().catch(function () {});
+      }).then(function () { fin("Notifications activées : une notification d’essai arrive."); });
+    }).catch(function () { fin("Activation impossible pour le moment. Réessayez."); });
+  }
+  function desactiverNotifs() {
+    if (!notifsPossibles()) return;
+    navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); }).then(function (sub) {
+      if (!sub) return;
+      var ep = sub.endpoint;
+      return sub.unsubscribe().then(function () { return notifsApi.desabonner(ep); });
+    }).then(function () {
+      notifsEtat.abonne = false;
+      if (navigator.clearAppBadge) navigator.clearAppBadge().catch(function () {});
+      afficher(); toast("Notifications désactivées sur cet appareil.");
+    }, function () { toast("Impossible pour le moment."); });
+  }
+  /* Le chiffre de l'icône suit les pastilles quand la plateforme est ouverte. */
+  function majBadgeIcone() {
+    if (!navigator.setAppBadge || !("Notification" in window) || Notification.permission !== "granted") return;
+    var n = mesTarisAFaire() + nbTarisAEcouter() + (peutModifier && comptesEtat && comptesEtat.demandes ? Object.keys(comptesEtat.demandes).length : 0);
+    (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(function () {});
+  }
+  function blocNotifs() {
+    if (!notifsApi || !notifsEtat.pret) return "";
+    var h = '<section class="panel notifs"><div class="notifs-tete"><span class="notifs-ico" aria-hidden="true">🔔</span><span><b>Notifications</b><small>';
+    if (notifsEtat.abonne) {
+      return h + "Activées sur cet appareil : vous êtes prévenu, et le chiffre s’affiche sur l’icône.</small></span></div>" +
+        '<div class="row" style="margin-top:10px"><button type="button" class="btn small" data-notifs="essai">Envoyer un essai</button><button type="button" class="btn ghost small" data-notifs="non">Désactiver</button></div></section>';
+    }
+    h += "Soyez prévenu sans ouvrir la plateforme : Tari à enregistrer, réponse du Conservatoire" + (peutSuivi ? ", Tari à écouter" : "") + ". Le chiffre s’affiche aussi sur l’icône.</small></span></div>";
+    if (estIOS && !estAppli) return h + '<ol class="notifs-etapes"><li>Dans Safari, touchez <b>Partager</b> (le carré avec la flèche).</li><li>Choisissez <b>Sur l’écran d’accueil</b>.</li><li>Ouvrez la plateforme depuis cette icône, puis revenez ici.</li></ol></section>';
+    if (!notifsPossibles()) return h + '<p class="dk-note" style="margin-top:8px">Ce navigateur ne permet pas les notifications. Sur iPhone, il faut iOS 16.4 ou plus.</p></section>';
+    if (Notification.permission === "denied") return h + '<p class="dk-note" style="margin-top:8px">Les notifications sont bloquées pour la plateforme. ' + (estIOS ? "Réglages du téléphone › Notifications › Conservatoire › Autoriser." : "Autorisez-les dans les réglages du site (cadenas à gauche de l’adresse).") + "</p></section>";
+    return h + '<button type="button" class="btn primary notifs-btn" data-notifs="oui"' + (notifsEtat.occupe ? " disabled" : "") + ">" + (notifsEtat.occupe ? "Activation…" : "🔔 Activer les notifications") + "</button></section>";
+  }
+  function clicNotifs(b) {
+    if (!b.dataset.notifs) return false;
+    if (b.dataset.notifs === "oui") activerNotifs();
+    else if (b.dataset.notifs === "non") desactiverNotifs();
+    else if (b.dataset.notifs === "essai") notifsApi.essai().then(function (r) { toast(r && r.envoyes ? "Essai envoyé : la notification arrive." : "Aucun appareil joignable : désactivez puis réactivez."); }, function () { toast("Envoi impossible."); });
+    return true;
+  }
+
   /* ---------- Visite guidée des onglets (première connexion) ---------- */
   var tourEtat = null;
   function iconeOnglet(v) {
@@ -4219,6 +4304,10 @@ a.tq-item:hover { border-color: var(--accent); }
       return peutSuivi
         ? { vue: "khassidas", titre: "Les Taris s’écoutent ici", texte: "Les membres enregistrent maintenant leur Tari sur la plateforme. Écoutez-les depuis l’onglet Khassidas et répondez : maîtrisé, ou à retravailler avec un mot. Quand vous en prenez un, les autres voient « pris par vous » : personne ne corrige à deux." }
         : { vue: "moi", titre: "Enregistrez votre Tari ici", texte: "Plus besoin de l’envoyer sur WhatsApp : dans Mon espace, touchez « Enregistrer mon Tari », chantez en lisant le texte, puis envoyez. Le Conservatoire l’écoute et vous répond ici." };
+    } },
+    { cle: "notifications", contenu: function () {
+      if (!notifsApi || notifsEtat.abonne) return null;
+      return { vue: "moi", titre: "Soyez prévenu", texte: "Plus besoin d’ouvrir la plateforme pour vérifier : dans Mon espace, touchez « Activer les notifications ». Vous serez prévenu, et un chiffre s’affichera sur l’icône." + (estIOS && !estAppli ? " Sur iPhone, ajoutez d’abord la plateforme à l’écran d’accueil." : "") };
     } }];
   function contenuNouveaute(n) { return n.contenu ? n.contenu() : n; }
   function nouveauteVue(cle) { return !!(monCompte && (monCompte.vu || []).indexOf(cle) > -1); }
@@ -4347,11 +4436,14 @@ a.tq-item:hover { border-color: var(--accent); }
       claudeApi.use("comptes").catch(function () { return null; }),
       claudeApi.use("messages").catch(function () { return null; }),
       claudeApi.use("programme").catch(function () { return null; }),
-      claudeApi.use("taris").catch(function () { return null; })
+      claudeApi.use("taris").catch(function () { return null; }),
+      claudeApi.use("notifs").catch(function () { return null; })
     ]).then(function (rr) {
       messagesApi = rr[1] ? rr[3] : null;
       programmeApi = rr[1] ? rr[4] : null;
       tarisApi = rr[1] ? rr[5] : null;
+      notifsApi = rr[1] ? rr[6] : null;
+      initNotifs();
       if (messagesApi) chargerMessages();
       peutModifier = !!rr[0];
       monCompte = rr[1];

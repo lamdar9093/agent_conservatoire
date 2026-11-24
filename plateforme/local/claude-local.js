@@ -7,6 +7,7 @@
      valider / refuser (demandes d'inscription), invitation (nouveau lien d'inscription)
    - use("messages"), use("programme") : boîte à idées et support, programme de chant
    - use("taris") : Taris enregistrés (envoyer l'audio avec sa progression, prendre, laisser, répondre)
+   - use("notifs") : notifications sur le téléphone (clé, abonnement de l'appareil, essai)
    Chargé automatiquement par plateforme/local/serveur.mjs ; index.html n'est pas modifié. */
 (function () {
   "use strict";
@@ -173,7 +174,15 @@
     audio: function (fichier) { return "/api/taris/audio/" + encodeURIComponent(fichier); }
   });
 
-  var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme, taris: taris };
+  /* Notifications sur le téléphone (voir notifications.mjs et sw.js) */
+  var notifs = Object.freeze({
+    cle: function () { return appel("GET", "notifs/cle"); },
+    abonner: function (abonnement) { return appel("POST", "notifs/abonnement", { abonnement: abonnement }); },
+    desabonner: function (endpoint) { return appel("POST", "notifs/abonnement", { retirer: true, endpoint: endpoint }); },
+    essai: function () { return appel("POST", "notifs/essai", {}); }
+  });
+
+  var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme, taris: taris, notifs: notifs };
   window.claude = Object.freeze({
     use: function (nom) {
       if (nom === "comptes") return admin().then(function (a) { return a ? comptes : null; });

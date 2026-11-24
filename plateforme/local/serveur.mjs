@@ -16,6 +16,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { ouvrirStockage, nomValide } from "./stockage.mjs";
 import { creerComptes, COOKIE, DUREE_SESSION } from "./comptes.mjs";
+import { creerNotifications } from "./notifications.mjs";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const PLATEFORME = path.resolve(ICI, "..");
@@ -43,7 +44,7 @@ const peut = (sess, perm) => { const r = ROLES[roleDe(sess)]; return r === null 
 // Collections lisibles par un membre (les autres sont réservées à l'administrateur).
 const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages", "taris"]);
 // Fichiers accessibles sans connexion (le logo et les icônes de /marque/ aussi : page de connexion, onglet, écran d'accueil).
-const PUBLICS = new Set(["/connexion.html", "/local/connexion.js", "/favicon.ico"]);
+const PUBLICS = new Set(["/connexion.html", "/local/connexion.js", "/favicon.ico", "/sw.js"]);
 const estPublic = (rel) => PUBLICS.has(rel) || /^\/marque\/[\w.-]+$/.test(rel);
 
 // En production (Docker sur le VPS), les données doivent être dans PostgreSQL : un conteneur n'a pas de disque durable.
@@ -89,6 +90,57 @@ for (const dossier of await fsp.readdir(path.join(PLATEFORME, "khassidas")).catc
   } catch { /* dossier sans fiche */ }
 }
 const comptes = creerComptes(stock);
+const notifs = await creerNotifications(stock, { sujet: PUBLIC_URL.startsWith("https://") ? PUBLIC_URL : "https://conservatoire.mthbichri.ca" });
+
+/* ---------- Notifications : qui prévenir, et le chiffre de la pastille sur l'icône ---------- */
+async function lecteursTaris(sauf) {
+  return (await stock.lireCollection("_comptes")).filter((d) => (d.data.admin || d.data.conservatoire) && d.id !== sauf).map((d) => d.id);
+}
+async function admins() { return (await stock.lireCollection("_comptes")).filter((d) => d.data.admin).map((d) => d.id); }
+const actif = (m) => !!m && (m.statut || (m.actif === false ? "pause" : "actif")) === "actif";
+/* Pastille de l'icône : Taris à enregistrer, Taris à écouter (Conservatoire), demandes d'accès (admin). */
+async function badgePour(membre) {
+  const c = (await stock.lireDoc("_comptes", membre)) || {}, suivi = !!(c.admin || c.conservatoire);
+  const seances = await stock.lireCollection("seances"), taris = new Map((await stock.lireCollection("taris")).map((d) => [d.id, d.data]));
+  const membres = new Map((await stock.lireCollection("membres")).map((d) => [d.id, d.data]));
+  let n = 0;
+  for (const { id: sid, data: s } of seances) {
+    for (const mid of s.participants || []) {
+      if (!tariConcerneServeur(s, mid) || etatTariServeur(s, mid) === "maitrise" || !actif(membres.get(mid))) continue;
+      const envois = (taris.get(sid + "~" + mid) || {}).envois || [], dernier = envois[envois.length - 1];
+      const enAttente = dernier && !dernier.verdict;
+      if (mid === membre && !enAttente) n++;
+      else if (suivi && mid !== membre && enAttente && !(priseActive(dernier) && dernier.prise.par !== membre)) n++;
+    }
+  }
+  if (c.admin) n += Object.keys((await comptes.demandes()) || {}).length;
+  return n;
+}
+/* Tari demandé dans une séance : on attend 90 secondes que le Conservatoire ait fini de choisir (mode, membres, khassida),
+   puis on prévient les nouveaux concernés, une seule fois par séance. */
+const tarisEnAttente = new Map();
+function concernesTari(s) {
+  return new Set(s ? (s.participants || []).filter((m) => tariConcerneServeur(s, m) && etatTariServeur(s, m) !== "maitrise") : []);
+}
+function planifierTari(sid, avant) {
+  const p = tarisEnAttente.get(sid);
+  if (p) clearTimeout(p.minuteur);
+  const debut = p ? p.avant : concernesTari(avant);
+  tarisEnAttente.set(sid, { avant: debut, minuteur: setTimeout(() => annoncerTari(sid, debut).catch((e) => console.error(e)), Number(process.env.DELAI_NOTIF_TARI || 90000)) });
+}
+async function annoncerTari(sid, avant) {
+  tarisEnAttente.delete(sid);
+  const s = await stock.lireDoc("seances", sid);
+  if (!s) return;
+  const deja = ((await stock.lireDoc("_notifsTaris", sid)) || {}).membres || {};
+  const membres = new Map((await stock.lireCollection("membres")).map((d) => [d.id, d.data]));
+  const nouveaux = [...concernesTari(s)].filter((m) => !avant.has(m) && !deja[m] && actif(membres.get(m)));
+  if (!nouveaux.length) return;
+  const td = s.tariDetail || {}, kh = td.khassida && nomValide(td.khassida) ? await stock.lireDoc("khassidas", td.khassida) : null;
+  const plage = td.tout ? "khassida entier" : td.de ? (td.a && Number(td.a) !== Number(td.de) ? "beuyites " + td.de + " à " + td.a : "beuyite " + td.de) : "";
+  await stock.ecrireDoc("_notifsTaris", sid, { membres: Object.assign({}, deja, Object.fromEntries(nouveaux.map((m) => [m, Date.now()]))) });
+  await notifs.notifier(nouveaux, { titre: "🎙️ Tari à enregistrer", texte: [kh ? kh.titre : "", plage, td.consigne].filter(Boolean).join(" · ") || "Le Conservatoire vous demande un Tari.", url: "/#tari/" + encodeURIComponent(sid) });
+}
 
 const clients = new Set();
 function prevenir(collection) {
@@ -390,6 +442,7 @@ async function api(req, res, parts, sess) {
     if (typeof corps.motDePasse !== "string" || corps.motDePasse.length < 8) return json(res, 400, { code: "court", message: "Choisissez un mot de passe d’au moins 8 caractères." });
     await comptes.demander(m.id, String(corps.telephone).trim().slice(0, 30), corps.motDePasse);
     prevenir("_comptes");
+    admins().then((l) => notifs.notifier(l, { titre: "Nouvelle demande d’accès", texte: m.data.nom + " demande l’accès à la plateforme : à valider.", url: "/#reglages" })).catch((e) => console.error(e));
     return json(res, 200, { ok: true, identifiant: m.id, nom: m.data.nom, telephone: String(corps.telephone).trim() });
   }
   // Visite guidée des onglets : vue une fois par personne (enregistré sur son compte, valable sur tous ses appareils).
@@ -421,6 +474,27 @@ async function api(req, res, parts, sess) {
     return r.erreur ? json(res, 400, { code: r.erreur, message: msg[r.erreur] }) : json(res, 200, { ok: true });
   }
   if (sess.temporaire) return json(res, 403, { code: "doit_changer", message: "Choisissez d’abord votre mot de passe." });
+
+  /* --- Notifications sur le téléphone (voir notifications.mjs) --- */
+  if (parts[0] === "notifs") {
+    if (parts[1] === "cle" && req.method === "GET") return json(res, 200, { cle: notifs.clePublique, abonne: (await notifs.abonnes()).has(sess.membre) });
+    if (parts[1] === "resume" && req.method === "GET") {
+      const d = (await notifs.dernier(sess.membre)) || {};
+      return json(res, 200, { titre: d.titre || "Conservatoire", texte: d.texte || "Du nouveau sur la plateforme.", url: d.url || "/", badge: await badgePour(sess.membre) });
+    }
+    if (parts[1] === "badge" && req.method === "GET") return json(res, 200, { badge: await badgePour(sess.membre) });
+    if (parts[1] === "abonnement" && req.method === "POST") {
+      const c = await lireCorps(req);
+      if (c.retirer) { await notifs.desabonner(sess.membre, c.endpoint); return json(res, 200, { ok: true }); }
+      if (!(await notifs.abonner(sess.membre, c.abonnement))) return json(res, 400, { code: "invalid_argument", message: "Abonnement refusé." });
+      return json(res, 200, { ok: true });
+    }
+    if (parts[1] === "essai" && req.method === "POST") {
+      const n = await notifs.notifier([sess.membre], { titre: "🔔 Notifications activées", texte: "Vous serez prévenu ici : Taris à enregistrer ou à écouter, réponses du Conservatoire.", url: "/#moi" });
+      return json(res, 200, { ok: true, envoyes: n });
+    }
+    return json(res, 405, { code: "invalid_argument" });
+  }
 
   /* --- Mises à jour en direct --- */
   if (parts[0] === "evenements") {
@@ -465,6 +539,7 @@ async function api(req, res, parts, sess) {
         ? { ...(anonyme ? {} : { auteur: sess.membre }), anonyme, type: ["idee", "suggestion", "positif", "ameliorer"].includes(c.type) ? c.type : "idee", texte, creeLe: Date.now(), statut: "nouveau" }
         : { auteur: sess.membre, texte, contexte: String(c.contexte || "").slice(0, 300), creeLe: Date.now(), statut: "ouvert" };
       await stock.ecrireDoc(col, nid, doc); prevenir(col);
+      if (parts[0] === "support") admins().then((l) => notifs.notifier(l.filter((x) => x !== sess.membre), { titre: "🛟 Souci signalé", texte: (noms[sess.membre] || "Un membre") + " : " + texte.slice(0, 120), url: "/#messages" })).catch((e) => console.error(e));
       return json(res, 200, { ok: true, id: nid });
     }
     if (id && req.method === "PATCH") {
@@ -575,6 +650,7 @@ async function api(req, res, parts, sess) {
       if (r.erreur) { await fsp.rm(path.join(AUDIOS, fichier), { force: true }); return json(res, r.erreur, { code: r.code, message: r.message }); }
       if (r.remplace && FICHIER_AUDIO.test(r.remplace.fichier || "")) await fsp.rm(path.join(AUDIOS, r.remplace.fichier), { force: true });
       prevenir("taris");
+      if (!r.remplace) lecteursTaris(moi).then((l) => notifs.notifier(l, { titre: "🎧 Tari à écouter", texte: moiNom + " a envoyé son Tari" + (r.envoi.titre ? " · " + r.envoi.titre : ""), url: "/#taris" })).catch((e) => console.error(e));
       return json(res, 200, { ok: true, envoi: r.envoi, remplace: !!r.remplace });
     }
 
@@ -631,6 +707,12 @@ async function api(req, res, parts, sess) {
         prevenir("seances");
       }
       prevenir("taris");
+      if (b === "verdict") {
+        const ok = c.verdict === "maitrise", mot = String(c.mot || "").trim();
+        notifs.notifier([r.d.membre], { titre: ok ? "✓ Tari maîtrisé" : "↻ Tari à retravailler",
+          texte: moiNom + " a écouté votre Tari" + (mot ? " : « " + mot.slice(0, 120) + " »" : "") + (vocal ? (mot ? " (et un vocal)" : " et vous a laissé un vocal") : "") + ".",
+          url: "/#tari/" + encodeURIComponent(r.d.seance) }).catch((e) => console.error(e));
+      }
       return json(res, 200, { ok: true, prise: r.e.prise || null });
     }
     return json(res, 405, { code: "invalid_argument" });
@@ -707,10 +789,11 @@ async function api(req, res, parts, sess) {
       || (avant && req.method === "PATCH" && PROTEGES.some((k) => k in corps && different(k)));
     if (refuse) return json(res, 403, { code: "admin_seance", message: "Seul l’administrateur peut modifier ou supprimer une séance. Contactez-le si c’est une erreur." });
   }
-  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true }); }
+  const avantSeance = col === "seances" && req.method !== "DELETE" ? await stock.lireDoc("seances", id) : null;
+  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); if (col === "seances") planifierTari(id, avantSeance); return json(res, 200, { ok: true }); }
   if (req.method === "PATCH") {
     if (!(await stock.fusionnerDoc(col, id, corps))) return json(res, 404, { code: "not_found" });
-    prevenir(col); await apresMembre(col, id); return json(res, 200, { ok: true });
+    prevenir(col); await apresMembre(col, id); if (col === "seances") planifierTari(id, avantSeance); return json(res, 200, { ok: true });
   }
   if (req.method === "DELETE") { await stock.supprimerDoc(col, id); prevenir(col); return json(res, 200, { ok: true }); }
   return json(res, 405, { code: "invalid_argument" });
