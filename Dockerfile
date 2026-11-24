@@ -11,9 +11,15 @@ RUN npm ci --omit=dev && npm cache clean --force
 FROM node:22-alpine AS runner
 WORKDIR /app
 
+# ffmpeg : convertit chaque Tari enregistré en m4a, lisible sur tous les téléphones (iPhone compris)
+RUN apk add --no-cache ffmpeg
+
 # Utilisateur sans privilèges
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 conservatoire
+
+# Audios des Taris : dossier monté comme volume Docker (voir docker-compose.yml), gardé d'un déploiement à l'autre
+RUN mkdir -p /app/audios && chown conservatoire:nodejs /app/audios
 
 COPY --from=deps --chown=conservatoire:nodejs /app/node_modules ./node_modules
 COPY --chown=conservatoire:nodejs package.json ./
@@ -22,6 +28,7 @@ COPY --chown=conservatoire:nodejs plateforme ./plateforme
 # Valeurs fournies au lancement par docker-compose (.env du VPS)
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV AUDIOS_DIR=/app/audios
 
 USER conservatoire
 EXPOSE 8080

@@ -15,6 +15,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL manquant dans .env}
       # Adresse publique : liens d'inscription et messages WhatsApp, cookie Secure.
       PUBLIC_URL: ${PUBLIC_URL:-https://conservatoire.mthbichri.ca}
+    volumes:
+      # Audios des Taris enregistrés par les membres : sur le disque du VPS, gardés à chaque déploiement.
+      - audios:/app/audios
     networks:
       - traefik-net
     labels:
@@ -29,3 +32,7 @@ networks:
   traefik-net:
     external: true
     name: traefik-net
+
+volumes:
+  audios:
+    name: conservatoire-audios

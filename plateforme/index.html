@@ -563,6 +563,172 @@ h3.group .compte { display: inline-grid; place-items: center; min-width: 20px; h
 @media (max-width: 560px) { .acces-row.demande .actions .btn, .acces-row.valide .actions a { flex: 1; } .acces-lien .row .btn { flex: 1 1 auto; } }
 @media (max-width: 560px) { .acces-row .tel { flex: 1 1 100%; } .acces-row .actions { flex: 1 1 100%; } .acces-row .actions .btn:first-child { flex: 1; } }
 textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: 13px/1.5 ui-monospace, Menlo, monospace; }
+
+/* ---------- Taris enregistrés : studio du membre, écoute du Conservatoire ---------- */
+/* Volet du bas, sous la page du khassida (le texte reste lisible au-dessus) */
+.tari-dock { position: relative; z-index: 2; background: var(--surface); border-top: 1px solid var(--rule); box-shadow: 0 -10px 30px rgba(10, 30, 28, 0.10);
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  max-height: 62vh; overflow-y: auto; overscroll-behavior: contain; }
+.tari-dock-in { max-width: 680px; margin: 0 auto; display: grid; gap: 12px; }
+.tari-seul .tari-dock { border: 0; box-shadow: none; padding: 0; max-height: none; overflow: visible; background: transparent; }
+.tari-seul .tari-dock-in { max-width: none; }
+.dk-tete { display: flex; align-items: center; gap: 10px; }
+.dk-titre { flex: 1; min-width: 0; display: grid; }
+.dk-titre b { font-size: 15.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dk-titre span { font-size: 13px; color: var(--ink-soft); }
+.dk-tete .pill { flex: none; font-size: 12px; }
+.dk-reduire { flex: none; width: 34px; height: 34px; border: 1px solid var(--rule); border-radius: 50%; background: var(--surface); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; }
+.dk-reduire svg { width: 16px; height: 16px; transition: transform 0.2s ease; }
+.tari-dock.reduit .dk-reduire svg { transform: rotate(180deg); }
+.tari-dock.reduit .dk-plus { display: none; }
+.tari-seul .dk-reduire { display: none; }
+.dk-note { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.dk-liens { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
+.dk-liens .linkish { font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; padding: 2px 0; }
+/* Bouton d'enregistrement */
+.rec { display: flex; align-items: center; gap: 14px; }
+.rec-btn { position: relative; flex: none; width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--bad); color: var(--surface); display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(179, 38, 30, 0.32); transition: transform 0.15s ease; }
+.rec-btn:active { transform: scale(0.94); }
+.rec-btn:disabled { opacity: 0.6; cursor: default; }
+.rec-rond { width: 22px; height: 22px; border-radius: 50%; background: currentColor; }
+.rec-carre { width: 20px; height: 20px; border-radius: 5px; background: currentColor; }
+.rec-btn.enreg::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--bad); animation: rec-pouls 1.4s ease-out infinite; }
+@keyframes rec-pouls { from { opacity: 0.85; transform: scale(0.92); } to { opacity: 0; transform: scale(1.28); } }
+.rec-btn.attente::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--bad); animation: rec-tour 0.9s linear infinite; }
+@keyframes rec-tour { to { transform: rotate(360deg); } }
+.rec-txt { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.rec-txt b { font-size: 16px; font-weight: 600; }
+.rec-txt > span { font-size: 13px; color: var(--ink-soft); }
+.rec-live { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; font-size: 17px; }
+.rec-point { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); animation: kh-pulse 1s ease-in-out infinite; flex: none; }
+.niveau { display: flex; align-items: center; gap: 3px; height: 34px; }
+.niveau i { flex: 1 1 0; max-width: 6px; height: 100%; border-radius: 3px; background: var(--bad); opacity: 0.85; transform: scaleY(0.08); transition: transform 0.09s linear; }
+@media (prefers-reduced-motion: reduce) { .rec-btn.enreg::after, .rec-point { animation: none; } .niveau i { transition: none; } }
+/* Lecteur audio des envois */
+.lect { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--paper); border: 1px solid var(--rule); min-width: 0; }
+.lect-btn { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; }
+.lect-btn svg { width: 18px; height: 18px; }
+.lect-piste { position: relative; flex: 1; min-width: 60px; height: 26px; cursor: pointer; }
+.lect-piste::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 6px; border-radius: 3px; background: var(--rule); }
+.lect-prog { position: absolute; left: 0; top: 10px; height: 6px; width: 0; border-radius: 3px; background: var(--accent); }
+.lect-prog::after { content: ""; position: absolute; right: -6px; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--surface); opacity: 0; }
+.lect.joue .lect-prog::after, .lect.entame .lect-prog::after { opacity: 1; }
+.lect-temps { flex: none; font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.lect.petit .lect-btn { width: 32px; height: 32px; }
+.lect.petit .lect-btn svg { width: 15px; height: 15px; }
+.envoi-barre { height: 8px; border-radius: 4px; background: var(--rule); overflow: hidden; }
+.envoi-barre span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.2s ease; }
+.dk-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.dk-actions .btn { flex: 1 1 140px; padding: 11px 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+/* Mot du correcteur */
+.dk-mot { margin: 0; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; font-size: 14.5px; white-space: pre-wrap; }
+.dk-mot small { display: block; margin-top: 3px; color: var(--ink-soft); font-size: 12.5px; white-space: normal; }
+.dk-mot.retravailler { border-left-color: var(--warn); background: var(--warn-soft); }
+.dk-etat { display: flex; align-items: center; gap: 12px; }
+.dk-etat-ico { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: var(--info-soft); color: var(--info); }
+.dk-etat-ico.ok { background: var(--good-soft); color: var(--good); }
+.dk-etat > span:last-child { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.dk-etat b { font-size: 15.5px; font-weight: 600; }
+.dk-etat small { font-size: 13px; color: var(--ink-soft); }
+/* Écoute par le Conservatoire */
+.dk-prise { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; background: var(--paper); border: 1px dashed var(--rule); color: var(--ink-soft); }
+.dk-prise.moi { background: var(--info-soft); border: 1px solid transparent; color: var(--info); }
+.dk-prise.autre { background: var(--warn-soft); border: 1px solid transparent; color: var(--warn); }
+.dk-prise .linkish { font-size: 13px; color: inherit; font-weight: 600; }
+.dk-prise .btn { margin-left: auto; }
+.dk-champ { width: 100%; min-height: 58px; padding: 9px 11px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14.5px; resize: vertical; }
+.dk-sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.dk-sugg .toggle { font-size: 12.5px; }
+.dk-verdict { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dk-verdict .btn { padding: 13px 10px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.btn.v-retravailler { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+.btn.v-maitrise { border-color: var(--good); background: var(--good); color: var(--surface); }
+.dk-fait { display: grid; gap: 10px; padding: 14px; border-radius: 12px; background: var(--good-soft); color: var(--good); text-align: center; }
+.dk-fait b { font-size: 16px; }
+.dk-fait .row { justify-content: center; }
+.dk-hist { display: grid; gap: 8px; }
+.dk-hist-titre { margin: 4px 0 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+.dk-hist-item { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); }
+.dk-hist-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 13px; color: var(--ink-soft); }
+.dk-hist-tete b { color: var(--ink); font-weight: 600; }
+.dk-hist-tete .pill { font-size: 11.5px; margin-left: auto; }
+.dk-hist .dk-mot { font-size: 13.5px; }
+/* Mes Taris (Mon espace) */
+.mt-liste { display: grid; gap: 10px; margin-top: 12px; }
+.mt-carte { display: flex; gap: 12px; padding: 14px; border-radius: 14px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.15s ease, transform 0.15s ease; }
+.mt-carte:hover { border-color: var(--accent); }
+.mt-carte:active { transform: scale(0.995); }
+.mt-carte.a-faire { border-color: var(--warn); background: linear-gradient(180deg, var(--warn-soft), var(--surface) 80%); }
+.mt-ico { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 21px; background: var(--paper); border: 1px solid var(--rule); }
+.mt-carte.a-faire .mt-ico { background: var(--bad); border-color: var(--bad); }
+.mt-carte.a-faire .mt-ico span { width: 16px; height: 16px; border-radius: 50%; background: var(--surface); }
+.mt-corps { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.mt-ligne { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; }
+.mt-ligne b { font-size: 15.5px; font-weight: 600; }
+.mt-ligne .pill { font-size: 12px; }
+.mt-sous, .mt-quand { font-size: 13px; color: var(--ink-soft); }
+.mt-quand.depasse { color: var(--bad); font-weight: 500; }
+.mt-corps .dk-mot { font-size: 13.5px; margin-top: 2px; }
+.mt-go { justify-self: start; margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 14px; }
+.mt-carte.a-faire .mt-go { background: var(--bad); color: var(--surface); }
+.mt-go.doux { background: var(--accent-soft); color: var(--accent); }
+.mt-go-rond { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex: none; }
+@media (max-width: 480px) { .mt-go { justify-self: stretch; justify-content: center; padding: 11px; } }
+/* Liste des Taris à écouter (Conservatoire) */
+.tari-banniere { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--accent); color: var(--accent-ink); text-decoration: none; box-shadow: var(--shadow); }
+.tari-banniere .tb-ico { flex: none; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; background: rgba(255, 255, 255, 0.16); }
+.tari-banniere > span:nth-child(2) { flex: 1; min-width: 0; display: grid; }
+.tari-banniere b { font-size: 15.5px; font-weight: 600; }
+.tari-banniere small { font-size: 12.5px; opacity: 0.85; }
+.tari-banniere .tb-go { font-size: 22px; flex: none; }
+.tq-groupe { margin-top: 18px; }
+.tq-gtitre { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+.tq-gtitre small { margin-left: auto; font-size: 12.5px; color: var(--ink-soft); font-weight: 500; }
+.tq-liste { display: grid; gap: 8px; }
+.tq-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; }
+a.tq-item:hover { border-color: var(--accent); }
+.tq-item.neuf { border-left: 4px solid var(--accent); }
+.tq-item.pris { background: var(--paper); }
+.tq-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; }
+.tq-corps { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.tq-corps b { font-weight: 600; }
+.tq-corps small { color: var(--ink-soft); font-size: 12.5px; }
+.tq-corps .tq-pris { color: var(--warn); font-weight: 600; }
+.tq-corps .tq-moi { color: var(--info); font-weight: 600; }
+.tq-corps .tq-retard { color: var(--bad); font-weight: 500; }
+.tq-item > .pill { flex: none; font-size: 12px; }
+@media (max-width: 560px) { .tq-item.ecouter { flex-wrap: wrap; } .tq-item.ecouter > .btn { flex: 1 1 100%; padding: 10px; } }
+.chip-filtre { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; }
+.tq-moi-aussi { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 13.5px; }
+.tq-moi-aussi a { color: var(--accent); font-weight: 600; }
+.tq-item > .btn { justify-content: center; text-align: center; }
+/* Badges sur les cartes des khassidas, liens dans la séance */
+.khc-taris { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.khc-tari { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; text-decoration: none; background: var(--warn-soft); color: var(--warn); }
+.khc-tari.info { background: var(--info-soft); color: var(--info); }
+.khc-tari.ok { background: var(--good-soft); color: var(--good); }
+.khc-tari.ecouter { background: var(--accent); color: var(--accent-ink); }
+.lecture-bar .btn { flex: none; white-space: nowrap; }
+.lecture-bar .lb-tari { margin-left: auto; }
+.lecture-bar .lb-tari.rec-lien { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.tari-ecoute { font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.tari-ecoute.neuf { padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); }
+.dk-mot { display: block; }
+.dk-form { display: grid; gap: 8px; }
+.dk-etapes { margin: 0 0 8px; padding: 10px 12px 10px 30px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); font-size: 13px; color: var(--ink-soft); display: grid; gap: 3px; }
+@media (max-width: 720px) { .dk-sugg { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; } .dk-sugg::-webkit-scrollbar { display: none; } .dk-sugg .toggle { flex: none; } }
+@media (min-width: 960px) {
+  body.lecture.avec-dock main { grid-template-columns: minmax(0, 1fr) 420px; grid-template-rows: auto minmax(0, 1fr); }
+  body.lecture.avec-dock .lecture-bar { grid-column: 1 / -1; }
+  body.lecture.avec-dock .lecture-frame { grid-column: 1; grid-row: 2; }
+  body.lecture.avec-dock .tari-dock { grid-column: 2; grid-row: 2; max-height: none; border-top: 0; border-left: 1px solid var(--rule); box-shadow: -10px 0 30px rgba(10, 30, 28, 0.08); padding: 18px 20px; }
+  body.lecture.avec-dock .dk-reduire { display: none; }
+  body.lecture.avec-dock .tari-dock.reduit .dk-plus { display: block; }
+}
+/* Pastilles de la barre du bas (téléphone) : sur l'icône, pas sous le libellé */
+.bottom-nav a { position: relative; }
+.bottom-nav a .pastille { position: absolute; top: 1px; left: calc(50% + 5px); }
 </style>
 
 <header class="top">
@@ -683,7 +849,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return c;
   }
   function nomsTari(s, ids) {
-    return ids.map(function (id) { return membres[id] ? membres[id].nom + (etatTari(s, id) === "recu" ? " (à retravailler)" : "") : ""; })
+    /* Avec les Taris enregistrés : « (envoyé) » pour un envoi pas encore corrigé, plutôt que l'ancien état. */
+    return ids.map(function (id) {
+      var e = tarisApi ? etatAffiche(s, id) : (etatTari(s, id) === "recu" ? "retravailler" : "attendu");
+      return membres[id] ? membres[id].nom + (e === "envoye" || e === "ecoute" ? " (envoyé)" : e === "retravailler" ? " (à retravailler)" : "") : "";
+    })
       .filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
   }
   /* Discipline (chartes) : tenue non conforme = avertissement, récidive dans le mois = écarté ; coiffure non conforme = écarté. */
@@ -801,7 +971,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (rappelOuvert) return vueRappel(rappelOuvert);
     if (dahiraOuvert) return vueDahira(dahiraOuvert);
     if (seanceOuverte) return vueSeance(seances.filter(function (s) { return s.id === seanceOuverte; })[0]);
-    var html = "";
+    var html = banniereTaris();
     if (peutSuivi) {
       var d = today();
       html += '<section class="panel"><h2>Nouvelle séance</h2><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
@@ -918,7 +1088,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
           tariHtml = peutSuivi
             ? '<div class="tari-etat"><span class="lbl">' + (indiv ? "Partie à retravailler" : "Tari") + '</span><span class="seg" role="group" aria-label="Tari de ' + esc(p.nom) + '">' + Object.keys(ETATS_TARI).map(function (k) {
                 return '<button type="button" data-tarietat="' + esc(p.id) + "|" + k + '" data-te="' + k + '" aria-pressed="' + (et === k) + '">' + ETATS_TARI[k] + "</button>";
-              }).join("") + "</span>" + (indiv ? '<button type="button" class="linkish" data-indiv="' + esc(p.id) + '">Retirer</button>' : "") + "</div>"
+              }).join("") + "</span>" + (indiv ? '<button type="button" class="linkish" data-indiv="' + esc(p.id) + '">Retirer</button>' : "") + lienEcoute(s, p.id) + "</div>"
             : '<span class="pill ' + (et === "maitrise" ? "p" : "r") + '">Tari : ' + ETATS_TARI[et].toLowerCase() + "</span>";
         }
         var disc = "";
@@ -1137,7 +1307,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
               var t = tariTexte(s.tariDetail || {});
               var et2 = etatTari(s, x.m.id);
               return '<div class="wait-row"><span class="what">' + (t || "Contenu à préciser") + "<br>Demandé à la " + (s.type === "rg" ? "répétition générale du " + esc(dimancheLong(s.date)) : "répétition du " + esc(seanceCourte(s))) +
-                ' · <span class="pill ' + (et2 === "recu" ? "e" : "r") + '">' + ETATS_TARI[et2] + "</span></span>" +
+                ' · <span class="pill ' + (et2 === "recu" ? "e" : "r") + '">' + ETATS_TARI[et2] + "</span>" + (peutSuivi && lienEcoute(s, x.m.id) ? "<br>" + lienEcoute(s, x.m.id) : "") + "</span>" +
                 (peutSuivi ? (et2 === "attendu" ? '<button type="button" class="btn small" data-tetat="' + esc(s.id) + "|" + esc(x.m.id) + '|recu">Reçu, à retravailler</button>' : "") +
                   '<button type="button" class="btn small primary" data-tetat="' + esc(s.id) + "|" + esc(x.m.id) + '|maitrise">Maîtrisé ✓</button>' : "") + "</div>";
             }).join("") + "</div>";
@@ -1178,6 +1348,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       });
       L.push("_Votre Tari doit être maîtrisé avant samedi pour entrer dans le kourel._");
       L.push("");
+      ligneLienTari(L);
     }
     L.push("Merci à tous pour votre engagement.");
     L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
@@ -1289,6 +1460,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         puces(L, x.noms);
         L.push("");
       });
+      if (tr.liste.length) ligneLienTari(L);
     }
     L.push("Niogui sakku ci kounek nieuw ci waxtu wi nguir niou meuna tela paré.");
     L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
@@ -1625,6 +1797,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       L.push("");
     }
     lignesPause(L, filtre.kourel, stats, null);
+    var avecTari = false;
     parDate.forEach(function (s) {
       if (!s.tari || s.tari === "aucun") return;
       var manquants = nomsTari(s, tariCompte(s).manquants);
@@ -1633,7 +1806,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       L.push(tariPlain(s.tariDetail || {}));
       puces(L, manquants);
       L.push("");
+      avecTari = true;
     });
+    if (avecTari) ligneLienTari(L);
     L.push("Merci à tous pour votre engagement.");
     L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
     return L.join("\n");
@@ -1685,6 +1860,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
         if (s.tari === "tous" && !tariCompte(s).recus && !tariCompte(s).retravail) L.push("→ tout le monde"); else puces(L, manquants);
         L.push("_Sans Tari maîtrisé à temps : pas de dahira ni de prestation (chartes du kourel)._");
         L.push("");
+        ligneLienTari(L);
       }
     }
     L.push("Merci à tous pour votre engagement.");
@@ -1964,20 +2140,25 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
           liste.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === moiCourant ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") +
           "</select></label></div></section>");
     var moi = membres[moiCourant];
+    /* Mes Taris en premier : c'est l'action à faire (enregistrer), juste sous le nom du membre. */
+    if (moi && tarisApi) html += blocMesTaris(moi);
     if (moi && statutMembre(moi) === "actif") {
       prochainsDahiras().forEach(function (dz, i) {
         var e = etatDahira(dz), rs = e.raisons[moi.id] || [];
         var parTari = rs.filter(function (r) { return r.tari; }).map(function (r) { return r.label; });
         var att = rs.length > 0;
-        if (parTari.length) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : votre Tari doit être maîtrisé pour entrer dans le " + esc(parTari.join(" et le ")) + ".</span></div>";
+        /* Tari envoyé sur la plateforme mais pas encore corrigé : on le dit, pour rassurer. */
+        var envoyeSeul = tarisApi && mesTaris().some(function (x) { return x.etat === "envoye" || x.etat === "ecoute"; }) && !mesTaris().some(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; });
+        if (parTari.length) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + (envoyeSeul ? " : votre Tari est envoyé ; une fois validé « maîtrisé » par le Conservatoire, vous pourrez entrer dans le " : " : votre Tari doit être maîtrisé pour entrer dans le ") + esc(parTari.join(" et le ")) + ".</span></div>";
         else if (att) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : Kourel général, réservé à ceux qui sont venus à la dernière répétition générale.</span></div>";
         else if ((i === 0 || dahirasCfg[dz]) && !e.fusion && !(e.mode === "k2k1" ? (moi.k1 || moi.k2) : moi[e.mode])) html += '<div class="me-banner info">ℹ️ <span>Dahira du ' + esc(samediLong(dz)) + " : " + esc(MODE_PHRASE[e.mode].replace(/^./, function (c) { return c.toLowerCase(); })) + "</span></div>";
         else if (i === 0 && (moi.k1 || moi.k2)) html += '<div class="me-banner ok">✅ <span>Dahira du ' + esc(samediLong(dz)) + " : vous pouvez entrer dans le " + esc(e.groupes.filter(function (g) { return g.ok.indexOf(moi) > -1; }).map(function (g) { return g.label; }).join(" et le ") || "kourel") + ".</span></div>";
       });
     }
     if (moi) {
+      /* Sans enregistrement sur la plateforme (prototype claude.ai) : la liste simple, Tari à envoyer sur WhatsApp. */
       var items = [];
-      seances.forEach(function (s) {
+      if (!tarisApi) seances.forEach(function (s) {
         if (!s.tari || s.tari === "aucun" || (s.participants || []).indexOf(moi.id) < 0 || !tariConcerne(s, moi.id)) return;
         var et = etatTari(s, moi.id), recu = et === "maitrise", ech = echeanceTari(s);
         if (recu && ech < isoPlus(today(), -30)) return;
@@ -1987,7 +2168,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       /* Mes Taris : d'abord ceux à envoyer, puis (à part, en petit) ceux déjà maîtrisés ces 30 derniers jours. */
       var aFaire = items.filter(function (x) { return !x.recu; }), faits = items.filter(function (x) { return x.recu; });
       var quandTari = function (x) { return (x.s.type === "rg" ? "la répétition générale" : "la répétition du " + esc(TYPES[x.s.type] || "kourel")) + " du " + esc(asDate(x.s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })); };
-      html += '<section class="panel"><h2>Mes Taris</h2><p class="muted">' + (aFaire.length ? aFaire.length + " Tari" + (aFaire.length > 1 ? "s" : "") + " à envoyer ou à retravailler, sur WhatsApp ou à un membre du Conservatoire." : "Aucun Tari à envoyer pour le moment.") + "</p>" +
+      if (!tarisApi) html += '<section class="panel"><h2>Mes Taris</h2><p class="muted">' + (aFaire.length ? aFaire.length + " Tari" + (aFaire.length > 1 ? "s" : "") + " à envoyer ou à retravailler, sur WhatsApp ou à un membre du Conservatoire." : "Aucun Tari à envoyer pour le moment.") + "</p>" +
         (aFaire.length ? '<div class="list" style="margin-top:10px">' + aFaire.map(function (x) {
           var t = tariTexte(x.s.tariDetail || {});
           var depasse = x.ech < today();
@@ -2070,6 +2251,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       "<li>Absent à une répétition : le Tari (fichier audio) est à maîtriser avant la répétition suivante. Sinon, pas de dahira ni de prestation tant qu’il n’est pas maîtrisé.</li>" +
       "<li>Un Tari passe par trois états : attendu, reçu à retravailler, maîtrisé. Seul « maîtrisé » permet de rejoindre le kourel.</li>" +
       "<li>Présent mais partie non maîtrisée : le Conservatoire peut demander un Tari individuel, avec la même règle.</li>" +
+      (tarisApi ? "<li>Le Tari s’enregistre sur la plateforme (Mon espace › Mes Taris), autant de fois que nécessaire. Un membre du Conservatoire l’écoute et répond : maîtrisé, ou à retravailler avec un conseil.</li>" : "") +
       "<li>Tenue non conforme : avertissement ; récidive dans le même mois : pas de participation à la séance. Coiffure non conforme : pas de participation.</li>" +
       "</ul></div></section>";
   }
@@ -2097,6 +2279,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       (k.arabe ? '<span class="khc-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
       '<b class="khc-titre">' + esc(k.titre) + "</b>" +
       '<span class="khc-meta">' + [k.vers ? k.vers + " beuyites" : "", k.ere ? "ère " + esc(k.ere) : (interne ? "texte et audio" : "")].filter(Boolean).join(" · ") + "</span>" +
+      badgesTarisKh(k) +
       '<span class="khc-pied">' +
         (k.enRepetition ? '<span class="kh-rep-pill">En répétition</span>' : '<span class="khc-go">' + (href ? "Ouvrir →" : "Page à venir") + "</span>") +
         (peutSuivi ? '<button type="button" class="khc-rep" data-kh-rep="' + esc(k.id) + '" aria-pressed="' + !!k.enRepetition + '" title="' + (k.enRepetition ? "Retirer de la répétition" : "Marquer en cours de répétition") + '">' +
@@ -2127,7 +2310,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     });
     if (peutSuivi && tous.length) html += '<p class="muted kh-aide">« Marquer en répétition » : le khassida que le kourel travaille en ce moment passe en tête de son kourel, pour tous les membres.</p>';
     if (peutModifier) html += '<p class="muted kh-aide">Pour ajouter un khassida ou changer son kourel, allez dans <a href="#reglages">Réglages</a>.</p>';
-    app.innerHTML = html + "</section>";
+    app.innerHTML = banniereTaris() + html + "</section>";
   }
   function vueLecture() {
     var kh = lecture && khassidas[lecture.id];
@@ -2135,20 +2318,40 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       app.innerHTML = '<div class="wrap" style="padding-block:20px"><div class="empty">Ce khassida n’a pas encore de page d’étude sur la plateforme. <a href="#khassidas">Retour aux khassidas</a></div></div>';
       return;
     }
-    var cle = kh.page + "|" + (lecture.vers || "");
-    var exist = app.querySelector(".lecture-frame");
-    if (exist && exist.dataset.cle === cle) { ajusterLecture(); return; }
-    app.innerHTML = '<div class="lecture-bar"><a class="logo-mini" href="#seances" aria-label="Accueil du Conservatoire"><img src="/marque/logo.webp" width="32" height="32" alt=""></a><a class="btn ghost small" href="#khassidas">← Khassidas</a><b>' + esc(kh.titre) + "</b></div>" +
-      '<iframe class="lecture-frame" title="' + esc(kh.titre) + '" data-cle="' + esc(cle) + '" src="' + esc(kh.page + (lecture.vers ? "?v=" + lecture.vers + "#v" + lecture.vers : "")) + '" allow="autoplay"></iframe>';
+    montrerLecture(kh, lecture.vers, { href: "#khassidas", txt: "← Khassidas" }, kh.titre, boutonTariLecture(kh), "");
+  }
+  /* Page d'un khassida en plein écran : barre fine en haut, et (pour un Tari) le volet d'enregistrement ou d'écoute en bas.
+     La page du khassida n'est rechargée que si elle change : la barre et le volet se mettent à jour seuls. */
+  function montrerLecture(kh, vers, retour, titre, bouton, dock) {
+    var cle = kh.page + "|" + (vers || ""), f = app.querySelector(".lecture-frame");
+    if (!f || f.dataset.cle !== cle) {
+      app.innerHTML = '<div class="lecture-bar"></div>' +
+        '<iframe class="lecture-frame" title="' + esc(kh.titre) + '" data-cle="' + esc(cle) + '" src="' + esc(kh.page + (vers ? "?v=" + vers + "#v" + vers : "")) + '" allow="autoplay"></iframe>' +
+        '<div class="tari-dock" id="tari-dock" hidden></div>';
+      f = app.querySelector(".lecture-frame");
+      f.addEventListener("load", brancherReference);
+      if (window.ResizeObserver) new ResizeObserver(ajusterLecture).observe(document.getElementById("tari-dock"));
+    }
+    var bar = app.querySelector(".lecture-bar");
+    var bh = '<a class="logo-mini" href="#seances" aria-label="Accueil du Conservatoire"><img src="/marque/logo.webp" width="32" height="32" alt=""></a>' +
+      '<a class="btn ghost small" href="' + esc(retour.href) + '">' + esc(retour.txt) + "</a><b>" + esc(titre) + "</b>" + (bouton || "");
+    if (bar.__h !== bh) { bar.innerHTML = bh; bar.__h = bh; }
+    rendreDock(dock);
     ajusterLecture();
   }
   function ajusterLecture() {
     var f = app.querySelector(".lecture-frame");
     if (!f) return;
+    var dk = document.getElementById("tari-dock"), avec = !!dk && !dk.hidden;
+    var cote = avec && window.matchMedia("(min-width: 960px)").matches;
+    document.body.classList.toggle("avec-dock", avec);
     var haut = f.getBoundingClientRect().top + window.scrollY;
-    f.style.height = Math.max(420, window.innerHeight - haut) + "px";
+    if (cote) { var hh = Math.max(320, window.innerHeight - haut) + "px"; f.style.height = hh; dk.style.height = hh; return; }
+    if (dk) dk.style.height = "";
+    var bas = avec ? dk.offsetHeight : 0;
+    f.style.height = Math.max(bas ? 150 : 420, window.innerHeight - haut - bas) + "px";
   }
-  window.addEventListener("resize", function () { if (vue === "khassida") ajusterLecture(); });
+  window.addEventListener("resize", function () { if (vue === "khassida" || vue === "tari") ajusterLecture(); });
 
   /* ---------- Khassidas (réglages) ---------- */
   function vueKhassidas(ajouter) {
@@ -2201,7 +2404,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     return {
       application: "Présences du Conservatoire · Dahira Mafatihul Bichri Touba Estrie",
       format: 1, exporteLe: new Date().toISOString(),
-      collections: { membres: col(membres), seances: se, khassidas: col(khassidas), dahiras: dahirasCfg, programmes: programmes, evaluations: evaluations }
+      collections: { membres: col(membres), seances: se, khassidas: col(khassidas), dahiras: dahirasCfg, programmes: programmes, evaluations: evaluations, taris: tarisDocs }
     };
   }
   function csvPresences() {
@@ -2259,11 +2462,19 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     /* Le Conservatoire n'a pas les réglages (accès, membres, khassidas, sauvegardes). */
     if (!peutModifier && vue === "reglages") vue = "seances";
     if (vue === "messages" && !peutSuivi) vue = "moi";
-    var actif = vue === "khassida" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi" : vue;
+    /* Taris : la liste est au Conservatoire ; chacun n'ouvre que son propre Tari (le Conservatoire, ceux de tous). */
+    if (vue === "taris" && !(peutSuivi && tarisApi)) vue = "moi";
+    if (vue === "tari" && (!tarisApi || !tariVue || (tariVue.mid && tariVue.mid !== moiCourant && !peutSuivi))) vue = "moi";
+    majPastilleTaris(); majPastilleMsg();
+    var actif = vue === "khassida" || vue === "taris" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi"
+      : vue === "tari" ? (tariVue.mid && tariVue.mid !== moiCourant ? "khassidas" : "moi") : vue;
     document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-    document.body.classList.toggle("lecture", vue === "khassida");
+    document.body.classList.toggle("lecture", vue === "khassida" || (vue === "tari" && tariAvecPage()));
+    if (vue !== "tari") document.body.classList.remove("avec-dock");
     document.body.classList.toggle("vue-programme", vue === "dahira" && !dahiraOuvert);
     if (vue === "khassida") return vueLecture();
+    if (vue === "tari") return vueTari();
+    if (vue === "taris") return vueTarisListe();
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
     else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
     if (vue === "moi") app.insertAdjacentHTML("beforeend", blocMessagesMembre());
@@ -2275,9 +2486,23 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (h === "membres") h = "reglages";
     var mk = /^khassida\/([^\/]+)(?:\/v(\d+))?$/.exec(h);
     if (mk) { vue = "khassida"; lecture = { id: decodeURIComponent(mk[1]), vers: mk[2] ? Number(mk[2]) : null }; return; }
+    /* Taris : #tari/séance (le sien), #tari/séance/membre (écoute du Conservatoire), #taris ou #taris/khassida (liste) */
+    var mt = /^tari\/([^\/]+)(?:\/([^\/]+))?$/.exec(h);
+    if (mt) { vue = "tari"; tariVue = { sid: decodeURIComponent(mt[1]), mid: mt[2] ? decodeURIComponent(mt[2]) : null }; return; }
+    var mq = /^taris(?:\/([^\/]+))?$/.exec(h);
+    if (mq) { vue = "taris"; tarisFiltreKh = mq[1] ? decodeURIComponent(mq[1]) : null; return; }
     vue = ["seances", "bilan", "reglages", "moi", "khassidas", "dahira", "chartes", "messages"].indexOf(h) > -1 ? h : "seances";
   }
-  window.addEventListener("hashchange", function () { lireHash(); window.scrollTo(0, 0); seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null; afficher(); });
+  window.addEventListener("hashchange", function () {
+    var avant = tariVue && vue === "tari" ? tariVue.sid + "|" + tariVue.mid : "";
+    lireHash(); window.scrollTo(0, 0); seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null;
+    /* Taris : on quitte un Tari → on coupe l'audio ; un enregistrement en cours s'arrête (il reste à réécouter). */
+    if (vue !== "tari" || avant !== tariVue.sid + "|" + tariVue.mid) {
+      arreterLecture(); histOuvert = false; correction = { mot: "", fait: null, changer: null };
+      if (studio && studio.etat === "enreg") arreterEnregistrement("cache");
+    }
+    afficher();
+  });
 
   app.addEventListener("click", function (e) {
     if (e.target.closest("[data-refus-seance]")) { refusSeance("modifier"); return; }
@@ -2285,6 +2510,7 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (!b) return;
     if (clicMessages(b)) return;
     if (clicProgramme(b)) return;
+    if (clicTaris(b)) return;
     if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.hasAttribute("data-back")) { seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.dataset.rappel) { rappelOuvert = b.dataset.rappel; afficher(); window.scrollTo(0, 0); return; }
@@ -2919,13 +3145,15 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     if (msgSupport && msgSupport.lecteur) n += msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length;
     return n;
   }
+  /* Pastille de Mon espace : messages à lire (Conservatoire, admin) et Taris à enregistrer (chacun). */
   function majPastilleMsg() {
-    var n = nbNouveaux();
+    var nm = nbNouveaux(), nt = mesTarisAFaire(), n = nm + nt;
     document.querySelectorAll('a[data-view="moi"]').forEach(function (a) {
       var p = a.querySelector(".pastille");
       if (!n) { if (p) p.remove(); return; }
       if (!p) { p = document.createElement("span"); p.className = "pastille"; a.appendChild(p); }
-      p.textContent = n; p.setAttribute("aria-label", n + " message" + (n > 1 ? "s" : "") + " à lire");
+      p.textContent = n;
+      p.setAttribute("aria-label", [nm ? nm + " message" + (nm > 1 ? "s" : "") + " à lire" : "", nt ? nt + " Tari" + (nt > 1 ? "s" : "") + " à enregistrer" : ""].filter(Boolean).join(", "));
     });
   }
   function quand(ms) { return ms ? new Date(ms).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : ""; }
@@ -3044,6 +3272,699 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   }
   function garderTexte() { var t = document.getElementById("msg-texte"); if (t) msgBrouillon.texte = t.value; }
 
+  /* ---------- Taris enregistrés sur la plateforme ----------
+     taris/{séance~membre} (voir serveur.mjs) : les envois audio d'un membre pour le Tari d'une séance, et la réponse du Conservatoire.
+     Le membre enregistre (ou envoie un fichier) sur la page du khassida : le texte reste au-dessus, le studio en dessous.
+     Un membre du Conservatoire « prend » un envoi (les autres voient « pris par … »), l'écoute et répond :
+     maîtrisé, ou à retravailler avec un mot. La réponse met à jour l'état du Tari de la séance (comme ses boutons). */
+  var tarisApi = null, tarisDocs = {};
+  var tariVue = null;                                        // Tari ouvert (#tari/séance ou #tari/séance/membre)
+  var tarisOnglet = "ecouter", tarisFiltreKh = null, tarisHistTout = false;
+  var studio = null;                                         // enregistrement du membre en cours
+  var correction = { mot: "", fait: null, changer: null };   // saisie et dernière réponse du correcteur
+  var dockReduit = false, histOuvert = false, priseEnCours = false, champFichier = null;
+  var lecteur = null, lecteurSrc = "";
+  var PRISE_MS = 45 * 60000, DUREE_MAX = 15 * 60;
+  var ICO_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+  var ICO_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
+  var ICO_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  var MOTS_TARI = ["Bravo, c’est maîtrisé !", "Bien, continue comme ça.", "Revois la prononciation.", "Attention au rythme.", "Le xàjj n’est pas encore juste.", "Chante avec plus d’assurance.", "Réécoute l’audio de référence."];
+
+  function docTariId(sid, mid) { return sid + "~" + mid; }
+  function dossierTari(sid, mid) { return tarisDocs[docTariId(sid, mid)] || null; }
+  function envoisDe(d) { return (d && d.envois) || []; }
+  function dernierEnvoi(d) { var l = envoisDe(d); return l.length ? l[l.length - 1] : null; }
+  function enAttente(d) { var e = dernierEnvoi(d); return e && !e.verdict ? e : null; }
+  function priseActive(e) { return e && e.prise && Date.now() - e.prise.le < PRISE_MS ? e.prise : null; }
+  /* État d'un Tari : attendu (à envoyer), envoye (pas encore écouté), ecoute (pris par un correcteur), retravailler, maitrise. */
+  function etatAffiche(s, mid) {
+    var et = etatTari(s, mid);
+    if (et === "maitrise") return "maitrise";
+    var e = enAttente(dossierTari(s.id, mid));
+    if (e) return priseActive(e) ? "ecoute" : "envoye";
+    return et === "recu" ? "retravailler" : "attendu";
+  }
+  var ETATS_AFF = { attendu: ["À envoyer", "r"], envoye: ["Envoyé", "e"], ecoute: ["En cours d’écoute", "e"], retravailler: ["À retravailler", "r"], maitrise: ["Maîtrisé", "p"] };
+  function pillEtat(etat) { var x = ETATS_AFF[etat] || ETATS_AFF.attendu; return '<span class="pill ' + x[1] + '">' + x[0] + "</span>"; }
+  function plageTari(td) {
+    if (!td) return "";
+    if (td.tout) return "khassida entier";
+    if (!td.de) return "";
+    return td.a && Number(td.a) !== Number(td.de) ? "beuyites " + td.de + " à " + td.a : "beuyite " + td.de;
+  }
+  /* Titre d'un Tari : son khassida ; sans khassida précisé, la répétition qui l'a demandé (la consigne vient en dessous). */
+  function titreTari(td, d, s) {
+    var kh = khassidas[td.khassida], e = dernierEnvoi(d);
+    return kh ? kh.titre : (e && e.titre) || (s ? "Tari " + (s.type === "rg" ? "de la répétition générale" : "du " + (TYPES[s.type] || "kourel")) : "Tari");
+  }
+  function fmtDuree(s) { s = Math.max(0, Math.round(Number(s) || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+  function initiales(nom) { return String(nom || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(function (x) { return x.charAt(0).toUpperCase(); }).join(""); }
+  function prenomDe(nom) { return String(nom || "").split(" ")[0]; }
+  function lienTari(sid, mid) { return "#tari/" + encodeURIComponent(sid) + (mid ? "/" + encodeURIComponent(mid) : ""); }
+  function audioUrl(e) { return tarisApi && tarisApi.audio ? tarisApi.audio(e.fichier) : "/api/taris/audio/" + encodeURIComponent(e.fichier); }
+  function quandDemande(s) { return (s.type === "rg" ? "à la répétition générale" : "à la répétition du " + (TYPES[s.type] || "kourel")) + " du " + asDate(s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
+
+  /* Les Taris demandés (séance × membre concerné), avec leur état. */
+  function tarisDemandes(mid) {
+    var out = [];
+    seances.forEach(function (s) {
+      if (!s.tari || s.tari === "aucun") return;
+      (s.participants || []).forEach(function (id) {
+        if ((mid && id !== mid) || !membres[id] || !requis(s, id) || !tariConcerne(s, id)) return;
+        out.push({ s: s, mid: id, m: membres[id], td: s.tariDetail || {}, d: dossierTari(s.id, id), etat: etatAffiche(s, id) });
+      });
+    });
+    return out;
+  }
+  function mesTaris() { return moiCourant ? tarisDemandes(moiCourant) : []; }
+  /* À écouter : les envois pas encore corrigés, du plus ancien au plus récent (jamais son propre Tari). */
+  function tarisAEcouter() {
+    return tarisDemandes().filter(function (x) { return (x.etat === "envoye" || x.etat === "ecoute") && x.mid !== moiCourant; })
+      .sort(function (a, b) { return enAttente(a.d).le - enAttente(b.d).le; });
+  }
+  function libreOuMien(x) { var p = priseActive(enAttente(x.d)); return !p || p.par === moiCourant; }
+  function nbTarisAEcouter() { return tarisApi && peutSuivi ? tarisAEcouter().filter(libreOuMien).length : 0; }
+  function mesTarisAFaire() { return tarisApi ? mesTaris().filter(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; }).length : 0; }
+  function majPastilleTaris() {
+    var n = nbTarisAEcouter();
+    document.querySelectorAll('.tabs a[data-view="khassidas"], .bottom-nav a[data-view="khassidas"]').forEach(function (a) {
+      var p = a.querySelector(".pastille");
+      if (!n) { if (p) p.remove(); return; }
+      if (!p) { p = document.createElement("span"); p.className = "pastille"; a.appendChild(p); }
+      p.textContent = n; p.setAttribute("aria-label", n + " Tari" + (n > 1 ? "s" : "") + " à écouter");
+    });
+  }
+  function banniereTaris() {
+    var n = nbTarisAEcouter();
+    if (!n) return "";
+    return '<a class="tari-banniere" href="#taris"><span class="tb-ico" aria-hidden="true">🎧</span><span><b>' + n + " Tari" + (n > 1 ? "s" : "") + " à écouter</b>" +
+      "<small>Enregistré" + (n > 1 ? "s" : "") + " par les membres sur la plateforme</small></span><span class=\"tb-go\" aria-hidden=\"true\">›</span></a>";
+  }
+  /* Sur la carte d'un khassida : ses Taris à écouter (Conservatoire) et le Tari du membre. */
+  function badgesTarisKh(k) {
+    if (!tarisApi) return "";
+    var h = "";
+    if (peutSuivi) {
+      var n = tarisAEcouter().filter(function (x) { return x.td.khassida === k.id; }).length;
+      if (n) h += '<a class="khc-tari ecouter" href="#taris/' + encodeURIComponent(k.id) + '">🎧 ' + n + " Tari" + (n > 1 ? "s" : "") + " à écouter</a>";
+    }
+    mesTaris().filter(function (x) { return x.td.khassida === k.id && x.etat !== "maitrise"; }).forEach(function (x) {
+      var af = x.etat === "attendu" || x.etat === "retravailler";
+      h += '<a class="khc-tari' + (af ? "" : " info") + '" href="' + lienTari(x.s.id) + '">' + (af ? "🎙️" : "🎧") + " Mon Tari : " + ETATS_AFF[x.etat][0].toLowerCase() + "</a>";
+    });
+    return h ? '<span class="khc-taris">' + h + "</span>" : "";
+  }
+  /* Dans la barre de lecture d'un khassida : le Tari du membre, ou les Taris à écouter. */
+  function boutonTariLecture(kh) {
+    if (!tarisApi) return "";
+    if (peutSuivi) {
+      var n = tarisAEcouter().filter(function (x) { return x.td.khassida === kh.id; }).length;
+      if (n) return '<a class="btn small lb-tari" href="#taris/' + encodeURIComponent(kh.id) + '">🎧 ' + n + " à écouter</a>";
+    }
+    var x = mesTaris().filter(function (t) { return t.td.khassida === kh.id && t.etat !== "maitrise"; })[0];
+    if (!x) return "";
+    return '<a class="btn small lb-tari' + (x.etat === "attendu" || x.etat === "retravailler" ? " rec-lien" : "") + '" href="' + lienTari(x.s.id) + '">🎙️ Mon Tari</a>';
+  }
+  /* Dans la séance et le dahira : lien vers l'écoute d'un membre. */
+  function lienEcoute(s, mid) {
+    if (!tarisApi) return "";
+    var d = dossierTari(s.id, mid), att = enAttente(d), n = envoisDe(d).length;
+    if (!n) return "";
+    return '<a class="tari-ecoute' + (att ? " neuf" : "") + '" href="' + lienTari(s.id, mid) + '">' +
+      (att ? "🎧 Envoyé " + esc(ilYa(att.le)) + " : écouter" : "🎧 " + n + " envoi" + (n > 1 ? "s" : "") + " sur la plateforme") + "</a>";
+  }
+  function ligneLienTari(L) {
+    if (!tarisApi) return;
+    L.push("🎙️ _Enregistrez et envoyez votre Tari sur la plateforme :_ " + adressePlateforme() + "/#taris");
+    L.push("");
+  }
+
+  /* ----- Mes Taris (Mon espace) ----- */
+  function blocMesTaris(moi) {
+    var items = tarisDemandes(moi.id).map(function (x) { x.ech = echeanceTari(x.s); return x; });
+    var rang = { attendu: 0, retravailler: 0, envoye: 1, ecoute: 1 };
+    var aFaire = items.filter(function (x) { return x.etat !== "maitrise"; }).sort(function (a, b) { return (rang[a.etat] - rang[b.etat]) || (a.ech < b.ech ? -1 : 1); });
+    var faits = items.filter(function (x) { return x.etat === "maitrise" && x.ech >= isoPlus(today(), -30); });
+    var nb = aFaire.filter(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; }).length;
+    var h = '<section class="panel" id="mes-taris"><h2>Mes Taris</h2><p class="muted">' +
+      (nb ? (nb > 1 ? nb + " Taris" : "Un Tari") + " à enregistrer. Chantez-le ici, sur la plateforme : le Conservatoire l’écoute et vous répond."
+        : aFaire.length ? "Envoyé : le Conservatoire va l’écouter et vous répondre ici." : "Aucun Tari à envoyer pour le moment.") + "</p>";
+    if (aFaire.length) h += '<div class="mt-liste">' + aFaire.map(carteMonTari).join("") + "</div>";
+    if (faits.length) h += '<h3 class="group">Déjà maîtrisés</h3><ul class="taris-faits">' + faits.map(function (x) {
+      return '<li><span class="ok" aria-hidden="true">✓</span><span><a href="' + lienTari(x.s.id) + '">' + esc(titreTari(x.td, x.d, x.s)) + "</a>" +
+        (plageTari(x.td) ? " · " + esc(plageTari(x.td)) : "") + ' <span class="muted">· demandé ' + esc(quandDemande(x.s)) + "</span></span></li>";
+    }).join("") + "</ul>";
+    return h + "</section>";
+  }
+  function carteMonTari(x) {
+    var d = x.d, e = dernierEnvoi(d), att = enAttente(d), p = priseActive(att), td = x.td, kh = khassidas[td.khassida];
+    var aFaire = x.etat === "attendu" || x.etat === "retravailler", depasse = x.ech < today();
+    var sous = [plageTari(td), kh && kh.ere ? "ère " + kh.ere : "", td.consigne].filter(Boolean).join(" · ");
+    var quand = aFaire ? (depasse ? "Échéance dépassée : pas de dahira ni de prestation tant qu’il n’est pas maîtrisé" : "À maîtriser avant la répétition du " + jourEcheance(x.ech))
+      : p ? prenomDe(p.nom) + " du Conservatoire l’écoute en ce moment"
+      : "Envoyé " + ilYa(att.le) + " · en attente d’écoute";
+    var mot = x.etat === "retravailler" && e && e.verdict === "retravailler" && e.mot ? motHTML(e) : "";
+    var go = x.etat === "attendu" ? "Enregistrer mon Tari" : x.etat === "retravailler" ? "Réenregistrer" : "Écouter mon envoi";
+    return '<a class="mt-carte' + (aFaire ? " a-faire" : "") + '" href="' + lienTari(x.s.id) + '">' +
+      '<span class="mt-ico" aria-hidden="true">' + (aFaire ? "<span></span>" : p ? "🎧" : "✓") + "</span>" +
+      '<span class="mt-corps"><span class="mt-ligne"><b>' + esc(titreTari(td, d, x.s)) + "</b>" + pillEtat(x.etat) + "</span>" +
+      (sous ? '<span class="mt-sous">' + esc(sous) + "</span>" : "") +
+      '<span class="mt-quand' + (aFaire && depasse ? " depasse" : "") + '">' + esc(quand) + "</span>" + mot +
+      '<span class="mt-go' + (aFaire ? "" : " doux") + '">' + (aFaire ? '<span class="mt-go-rond" aria-hidden="true"></span>' : "") + go + "</span></span></a>";
+  }
+  function motHTML(e) {
+    return '<span class="dk-mot' + (e.verdict === "retravailler" ? " retravailler" : "") + '">' + esc(e.mot || (e.verdict === "maitrise" ? "Maîtrisé." : "À retravailler.")) +
+      "<small>— " + esc(e.parNom || "Le Conservatoire") + (e.corrigeLe ? ", " + esc(ilYa(e.corrigeLe)) : "") + "</small></span>";
+  }
+
+  /* ----- Le Tari ouvert : page du khassida au-dessus, volet en dessous ----- */
+  function tariCourant() {
+    if (!tariVue) return null;
+    var s = seances.filter(function (x) { return x.id === tariVue.sid; })[0], mid = tariVue.mid || moiCourant;
+    return s && mid ? { s: s, mid: mid, td: s.tariDetail || {} } : null;
+  }
+  function tariAvecPage() { var t = tariCourant(), kh = t && khassidas[t.td.khassida]; return !!(kh && kh.page); }
+  function vueTari() {
+    var t = tariCourant(), estMoi = !!t && t.mid === moiCourant;
+    var retour = estMoi || !peutSuivi ? { href: "#moi", txt: "← Mes Taris" } : { href: "#taris" + (tarisFiltreKh ? "/" + encodeURIComponent(tarisFiltreKh) : ""), txt: "← Taris" };
+    if (!t || !membres[t.mid] || (!tariConcerne(t.s, t.mid) && !envoisDe(dossierTari(t.s.id, t.mid)).length)) {
+      app.innerHTML = '<div><a class="btn ghost" href="' + retour.href + '">' + retour.txt + '</a></div><div class="empty">Ce Tari n’existe plus, ou il ne vous est pas demandé.</div>';
+      return;
+    }
+    var kh = khassidas[t.td.khassida], m = membres[t.mid];
+    var dock = estMoi ? dockMembre(t) : dockCorrecteur(t);
+    if (kh && kh.page) {
+      montrerLecture(kh, t.td.tout ? null : t.td.de, retour, (estMoi ? "Mon Tari" : "Tari de " + prenomDe(m.nom)) + " · " + kh.titre, "", dock);
+      return;
+    }
+    var cle = t.s.id + "|" + t.mid;
+    if (!app.querySelector('[data-tari-cle="' + cle + '"]')) {
+      app.innerHTML = '<div><a class="btn ghost" href="' + retour.href + '">' + retour.txt + "</a></div>" +
+        '<section class="panel tari-seul" data-tari-cle="' + esc(cle) + '"><div class="tari-dock" id="tari-dock"></div></section>';
+    }
+    rendreDock(dock);
+  }
+  function enteteDock(titre, sous, pill) {
+    return '<div class="dk-tete"><span class="dk-titre"><b>' + esc(titre) + "</b>" + (sous ? "<span>" + esc(sous) + "</span>" : "") + "</span>" + (pill || "") +
+      '<button type="button" class="dk-reduire" data-dock-reduire aria-label="' + (dockReduit ? "Agrandir" : "Réduire") + ' le volet" aria-expanded="' + !dockReduit + '">' + ICO_CHEVRON + "</button></div>";
+  }
+  /* Volet du membre : enregistrer, réécouter, envoyer ; puis l'état de son envoi et la réponse du Conservatoire. */
+  function dockMembre(t) {
+    var s = t.s, td = t.td, d = dossierTari(s.id, t.mid), etat = etatAffiche(s, t.mid);
+    var e = dernierEnvoi(d), att = enAttente(d), p = priseActive(att), st = studio && studio.sid === s.id ? studio : null;
+    var ech = echeanceTari(s), depasse = ech < today();
+    var page = tariAvecPage();
+    var sous = [plageTari(td), td.consigne, page ? "" : "demandé " + quandDemande(s)].filter(Boolean).join(" · ") || "Le Conservatoire précisera quoi chanter";
+    var h = enteteDock(page ? "Mon Tari" : titreTari(td, d, s), sous, st ? "" : pillEtat(etat)), c;
+    if (st && (st.etat === "autorisation" || st.etat === "fin")) {
+      c = '<div class="rec"><button type="button" class="rec-btn attente" disabled aria-label="Un instant"><span class="rec-rond"></span></button><span class="rec-txt"><b>' +
+        (st.etat === "fin" ? "Un instant…" : "Autorisez le micro") + "</b><span>" + (st.etat === "fin" ? "Préparation de votre enregistrement." : "Votre téléphone demande l’accès au micro : touchez « Autoriser ».") + "</span></span></div>";
+    } else if (st && st.etat === "enreg") {
+      var niv = st.niveaux || [], barres = "";
+      for (var i = 0; i < 30; i++) barres += '<i style="transform:scaleY(' + Math.max(0.08, niv[niv.length - 30 + i] || 0) + ')"></i>';
+      c = '<div class="rec"><button type="button" class="rec-btn enreg" data-studio="arreter" aria-label="Arrêter l’enregistrement"><span class="rec-carre"></span></button>' +
+        '<span class="rec-txt"><span class="rec-live"><span class="rec-point" aria-hidden="true"></span><b id="studio-temps">' + fmtDuree((Date.now() - st.debut) / 1000) + "</b></span>" +
+        '<span class="niveau" id="studio-niveau" aria-hidden="true">' + barres + "</span>" +
+        "<span>Chantez" + (tariAvecPage() ? " en lisant le texte au-dessus" : "") + ", puis touchez ■ pour arrêter.</span></span></div>";
+    } else if (st && st.etat === "revue") {
+      c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">🎧</span><span><b>Réécoutez avant d’envoyer</b><small>' + (st.fichier ? esc(st.fichier) : "Votre enregistrement") + (st.duree ? " · " + fmtDuree(st.duree) : "") + "</small></span></div>" +
+        lecteurHTML(st.url, st.duree) +
+        '<div class="dk-actions">' + (st.fichier ? '<button type="button" class="btn" data-studio="fichier">Choisir un autre fichier</button>' : '<button type="button" class="btn" data-studio="recommencer">↺ Recommencer</button>') +
+        '<button type="button" class="btn primary" data-studio="envoyer">Envoyer ➤</button></div>';
+    } else if (st && st.etat === "envoi") {
+      var pc = Math.round((st.progres || 0) * 100);
+      c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">⇪</span><span><b id="studio-envoi-txt">' + (pc >= 100 ? "Finalisation…" : "Envoi… " + pc + " %") + "</b><small>Gardez la page ouverte jusqu’à la fin.</small></span></div>" +
+        '<div class="envoi-barre"><span id="studio-envoi-barre" style="width:' + pc + '%"></span></div>';
+    } else if (st && st.etat === "refus") {
+      c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">🎙️</span><span><b>' + esc(st.erreur === "NotFoundError" ? "Aucun micro trouvé" : st.erreur === "NonSupporte" ? "Enregistrement impossible ici" : "Le micro est bloqué") + "</b><small>" + aideMicro(st.erreur) + "</small></span></div>" +
+        '<div class="dk-actions"><button type="button" class="btn" data-studio="fichier">Envoyer un fichier audio</button>' + (st.erreur === "NonSupporte" ? "" : '<button type="button" class="btn primary" data-studio="enregistrer">Réessayer</button>') + "</div>";
+    } else if (etat === "maitrise") {
+      c = '<div class="dk-etat"><span class="dk-etat-ico ok" aria-hidden="true">✓</span><span><b>Tari maîtrisé</b><small>' +
+        (e && e.verdict === "maitrise" ? "Validé par " + esc(e.parNom || "le Conservatoire") + ", " + esc(ilYa(e.corrigeLe)) : "Validé par le Conservatoire") + "</small></span></div>" +
+        (e && e.verdict === "maitrise" && e.mot ? motHTML(e) : "") + (e && e.verdict === "maitrise" ? lecteurHTML(audioUrl(e), e.duree) : "");
+    } else if (att) {
+      c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">' + (p ? "🎧" : "✓") + "</span><span><b>" + (p ? esc(prenomDe(p.nom)) + " écoute votre Tari" : "Envoyé, en attente d’écoute") + "</b>" +
+        "<small>Envoyé " + esc(ilYa(att.le)) + (p ? " · sa réponse s’affichera ici" : " · vous pouvez encore le remplacer") + "</small></span></div>" +
+        lecteurHTML(audioUrl(att), att.duree) +
+        (p ? "" : '<div class="dk-plus"><div class="dk-liens"><button type="button" class="linkish" data-studio="enregistrer">↺ Remplacer par un nouvel enregistrement</button></div></div>');
+    } else {
+      c = (etat === "retravailler" && e && e.verdict === "retravailler" ? motHTML(e) : "") +
+        '<div class="rec"><button type="button" class="rec-btn" data-studio="enregistrer" aria-label="Enregistrer mon Tari"><span class="rec-rond"></span></button>' +
+        '<span class="rec-txt"><b>' + (etat === "retravailler" ? "Réenregistrer mon Tari" : "Enregistrer mon Tari") + "</b><span>" +
+        (depasse ? "Échéance dépassée : à maîtriser au plus vite." : "À maîtriser avant la répétition du " + esc(jourEcheance(ech)) + ".") + "</span></span></div>" +
+        '<div class="dk-plus">' + (etat === "attendu" ? '<ol class="dk-etapes">' + (page ? "<li>Écoutez l’audio de référence avec le lecteur de la page.</li>" : "") +
+          "<li>Touchez le bouton rouge et chantez " + esc(plageTari(td) || "ce qui est demandé") + ".</li><li>Réécoutez-vous, puis envoyez : le Conservatoire vous répond ici.</li></ol>" : "") +
+        '<div class="dk-liens"><button type="button" class="linkish" data-studio="fichier">Ou envoyer un fichier audio déjà enregistré</button></div></div>';
+    }
+    // Envois déjà corrigés, du plus récent au plus ancien (le dernier « maîtrisé » est déjà affiché au-dessus).
+    var hist = envoisDe(d).filter(function (x) { return x.verdict && !(etat === "maitrise" && x === e); }).reverse();
+    return '<div class="tari-dock-in">' + h + c + (hist.length && !st ? blocHistorique(hist, false) : "") + "</div>";
+  }
+  function aideMicro(err) {
+    if (err === "NonSupporte") return "Ce navigateur ne sait pas enregistrer. Mettez-le à jour, ou enregistrez-vous avec l’application Dictaphone de votre téléphone et envoyez le fichier.";
+    if (err === "NotFoundError") return "Branchez un micro, ou enregistrez-vous avec votre téléphone et envoyez le fichier.";
+    return /iPhone|iPad/.test(navigator.userAgent)
+      ? "Pour l’autoriser : touchez « aA » à gauche de l’adresse › Réglages du site web › Micro › Autoriser, puis réessayez."
+      : "Pour l’autoriser : touchez le cadenas à gauche de l’adresse › Autorisations › Micro › Autoriser, puis réessayez.";
+  }
+  function blocHistorique(hist, correcteur) {
+    var h = '<div class="dk-plus"><button type="button" class="linkish dk-liens" data-hist-basculer aria-expanded="' + histOuvert + '" style="color:var(--accent);font-weight:600;text-decoration:none">' +
+      (histOuvert ? "▾ " : "▸ ") + (correcteur ? "Envois précédents" : "Mes envois précédents") + " (" + hist.length + ")</button>";
+    if (histOuvert) h += '<div class="dk-hist">' + hist.map(function (x) {
+      return '<div class="dk-hist-item"><div class="dk-hist-tete"><b>Envoi du ' + esc(dateCourte(x.le)) + "</b><span>" + fmtDuree(x.duree) + "</span>" +
+        (x.verdict === "maitrise" ? '<span class="pill p">Maîtrisé</span>' : '<span class="pill r">À retravailler</span>') + "</div>" +
+        lecteurHTML(audioUrl(x), x.duree, true) + motHTML(x) + "</div>";
+    }).join("") + "</div>";
+    return h + "</div>";
+  }
+  /* Volet du Conservatoire : prendre, écouter, répondre (et passer au suivant). */
+  function dockCorrecteur(t) {
+    var s = t.s, mid = t.mid, td = t.td, d = dossierTari(s.id, mid), m = membres[mid], etat = etatAffiche(s, mid);
+    var envois = envoisDe(d), e = dernierEnvoi(d), att = enAttente(d), p = priseActive(att), docId = docTariId(s.id, mid);
+    var aMoi = !!p && p.par === moiCourant, autre = !!p && !aMoi, pr = prenomDe(m.nom);
+    var h = enteteDock(m.nom, [plageTari(td), tariAvecPage() ? "" : td.consigne, "Tari du " + jourCourt(s.date)].filter(Boolean).join(" · "), pillEtat(etat)), c = "";
+    if (correction.fait && correction.fait.docId === docId) {
+      var reste = tarisAEcouter().filter(libreOuMien).filter(function (x) { return docTariId(x.s.id, x.mid) !== docId; });
+      c = '<div class="dk-fait"><b>' + (correction.fait.verdict === "maitrise" ? "✓ Maîtrisé" : "↻ À retravailler") + " : réponse envoyée à " + esc(pr) + "</b>" +
+        "<span>" + (reste.length ? "Encore " + reste.length + " Tari" + (reste.length > 1 ? "s" : "") + " à écouter." : "Plus aucun Tari à écouter. Merci !") + "</span>" +
+        '<div class="row">' + (reste.length ? '<button type="button" class="btn primary" data-tari-ouvrir="' + esc(reste[0].s.id + "|" + reste[0].mid) + '">Suivant : ' + esc(prenomDe(reste[0].m.nom)) + " →</button>" : "") +
+        '<a class="btn" href="#taris">Tous les Taris</a></div></div>';
+      return '<div class="tari-dock-in">' + h + c + "</div>";
+    }
+    if (att) {
+      c += '<span class="dk-note">' + (envois.length > 1 ? envois.length + "e envoi · " : "") + "Reçu " + esc(ilYa(att.le)) + "</span>" + lecteurHTML(audioUrl(att), att.duree);
+      if (mid === moiCourant) c += '<div class="dk-prise">C’est votre propre Tari : un autre membre du Conservatoire l’écoutera.</div>';
+      else if (autre) {
+        var min = Math.round((Date.now() - p.le) / 60000);
+        c += '<div class="dk-prise autre"><span>🎧 <b>' + esc(p.nom) + "</b> " + (min < 1 ? "vient de prendre ce Tari" : "écoute ce Tari depuis " + min + " min") + ". Vous pouvez l’écouter ; c’est à lui de répondre.</span></div>";
+      }
+      else {
+        c += aMoi ? '<div class="dk-prise moi">✓ <span>Vous l’avez pris : les autres voient « pris par ' + esc(prenomDe(p.nom)) + " ».</span>" + '<button type="button" class="linkish" data-tari-liberer="' + esc(docId) + '">Le laisser</button></div>'
+          : '<div class="dk-prise"><span>Personne ne l’écoute encore.</span><button type="button" class="btn small primary" data-tari-prendre="' + esc(docId) + '">🎧 Je le prends</button></div>';
+        c += formulaireVerdict(docId, att.id, pr);
+      }
+    } else if (correction.changer === docId && e && e.verdict) {
+      c += '<span class="dk-note">Nouvelle réponse pour l’envoi du ' + esc(dateCourte(e.le)) + " :</span>" + lecteurHTML(audioUrl(e), e.duree) + formulaireVerdict(docId, e.id, pr) +
+        '<div class="dk-liens"><button type="button" class="linkish" data-tari-changer="">Annuler</button></div>';
+    } else if (e && e.verdict) {
+      c += '<div class="dk-etat"><span class="dk-etat-ico' + (e.verdict === "maitrise" ? " ok" : "") + '" aria-hidden="true">' + (e.verdict === "maitrise" ? "✓" : "↻") + "</span><span><b>" +
+        (e.verdict === "maitrise" ? "Maîtrisé" : "À retravailler : " + esc(pr) + " doit le renvoyer") + "</b><small>Réponse de " + esc(e.parNom || "…") + ", " + esc(ilYa(e.corrigeLe)) + "</small></span></div>" +
+        motHTML(e) + lecteurHTML(audioUrl(e), e.duree) +
+        (e === dernierEnvoi(d) && mid !== moiCourant ? '<div class="dk-plus"><div class="dk-liens"><button type="button" class="linkish" data-tari-changer="' + esc(docId) + '">Changer la réponse</button></div></div>' : "");
+    } else if (etat === "maitrise") {
+      c += '<div class="dk-etat"><span class="dk-etat-ico ok" aria-hidden="true">✓</span><span><b>Maîtrisé</b><small>Marqué sur la séance (reçu en dehors de la plateforme).</small></span></div>';
+    } else {
+      c += '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">⏳</span><span><b>Pas encore envoyé sur la plateforme</b><small>' +
+        (echeanceTari(s) < today() ? "Échéance dépassée" : "À maîtriser avant la répétition du " + esc(jourEcheance(echeanceTari(s)))) + "</small></span></div>";
+    }
+    // Reçu en dehors de la plateforme (WhatsApp, en personne) : mêmes boutons que la séance.
+    if (!att && etat !== "maitrise" && peutSuivi) {
+      c += '<div class="dk-plus"><div class="dk-prise"><span>Reçu en dehors de la plateforme ?</span>' +
+        (etat === "attendu" ? '<button type="button" class="btn small" data-tetat="' + esc(s.id + "|" + mid) + '|recu">À retravailler</button>' : "") +
+        '<button type="button" class="btn small" data-tetat="' + esc(s.id + "|" + mid) + '|maitrise">Maîtrisé ✓</button></div></div>';
+    }
+    var hist = envois.filter(function (x) { return x.verdict && x !== e; }).reverse();
+    return '<div class="tari-dock-in">' + h + c + (hist.length ? blocHistorique(hist, true) : "") + "</div>";
+  }
+  function formulaireVerdict(docId, envoiId, prenom) {
+    var mot = correction.mot || "";
+    return '<div class="dk-plus"><div class="dk-form"><textarea class="dk-champ" id="tari-mot" data-tari-mot maxlength="1000" rows="2" placeholder="Un mot pour ' + esc(prenom) + ' (facultatif) : ce qui est bien, ce qu’il faut reprendre…">' + esc(mot) + "</textarea>" +
+      '<div class="dk-sugg">' + MOTS_TARI.map(function (t, i) { var on = mot.indexOf(t) > -1; return '<button type="button" class="toggle" data-tari-sugg="' + i + '" aria-pressed="' + on + '">' + (on ? "✓ " : "") + esc(t) + "</button>"; }).join("") + "</div></div></div>" +
+      '<div class="dk-verdict"><button type="button" class="btn v-retravailler" data-tari-verdict="retravailler" data-doc="' + esc(docId) + '" data-envoi="' + esc(envoiId) + '">↻ À retravailler</button>' +
+      '<button type="button" class="btn v-maitrise" data-tari-verdict="maitrise" data-doc="' + esc(docId) + '" data-envoi="' + esc(envoiId) + '">✓ Maîtrisé</button></div>';
+  }
+  /* Le volet est mis à jour sans recharger la page du khassida, en gardant la saisie en cours. */
+  function rendreDock(html) {
+    var dk = document.getElementById("tari-dock");
+    if (!dk) return;
+    if (!html) { if (!dk.hidden) { dk.hidden = true; dk.innerHTML = ""; dk.__h = ""; } return; }
+    dk.classList.toggle("reduit", dockReduit && !dk.closest(".tari-seul"));
+    if (dk.__h !== html) {
+      var act = document.activeElement, fid = act && dk.contains(act) && act.id ? act.id : null;
+      var sel = fid && typeof act.selectionStart === "number" ? [act.selectionStart, act.selectionEnd] : null, haut = dk.scrollTop;
+      dk.innerHTML = html; dk.__h = html; dk.scrollTop = haut;
+      if (fid) { var n = document.getElementById(fid); if (n) try { n.focus({ preventScroll: true }); if (sel && n.setSelectionRange) n.setSelectionRange(sel[0], sel[1]); } catch (e) { /* sans sélection */ } }
+    }
+    dk.hidden = false;
+    majLecteurs();
+  }
+
+  /* ----- Enregistrement (micro du téléphone) ----- */
+  function enregistrementPossible() { return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
+  function mimeEnregistrement() {
+    var l = ["audio/mp4;codecs=mp4a.40.2", "audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg;codecs=opus"];
+    for (var i = 0; i < l.length; i++) { try { if (MediaRecorder.isTypeSupported(l[i])) return l[i]; } catch (e) { /* navigateur ancien */ } }
+    return "";
+  }
+  function demarrerEnregistrement(sid) {
+    if (!enregistrementPossible()) { studio = { sid: sid, etat: "refus", erreur: "NonSupporte" }; afficher(); return; }
+    arreterLecture(); pauserReference();
+    if (studio && studio.url) URL.revokeObjectURL(studio.url);
+    var st = studio = { sid: sid, etat: "autorisation" };
+    /* Le contexte audio (barres de niveau) se crée pendant le toucher du bouton : Safari sur iPhone l'exige. */
+    try { var AC = window.AudioContext || window.webkitAudioContext; st.ctx = new AC(); if (st.ctx.resume) st.ctx.resume().catch(function () {}); } catch (e) { st.ctx = null; }
+    afficher();
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } }).then(function (flux) {
+      if (studio !== st) { flux.getTracks().forEach(function (x) { x.stop(); }); if (st.ctx && st.ctx.close) st.ctx.close().catch(function () {}); return; }
+      var mime = mimeEnregistrement(), rec;
+      try { rec = new MediaRecorder(flux, mime ? { mimeType: mime, audioBitsPerSecond: 128000 } : undefined); }
+      catch (e) {
+        try { rec = new MediaRecorder(flux); }
+        catch (e2) { libererMicro(Object.assign(st, { flux: flux })); studio = { sid: sid, etat: "refus", erreur: "NonSupporte" }; afficher(); return; }
+      }
+      st.flux = flux; st.rec = rec; st.morceaux = []; st.niveaux = []; st.mime = rec.mimeType || mime || "audio/webm";
+      rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) st.morceaux.push(ev.data); };
+      rec.onstop = function () { finEnregistrement(st); };
+      flux.getAudioTracks().forEach(function (x) { x.onended = function () { if (studio === st) arreterEnregistrement("micro"); }; });
+      try {
+        if (st.ctx) { st.analyseur = st.ctx.createAnalyser(); st.analyseur.fftSize = 1024; st.ctx.createMediaStreamSource(flux).connect(st.analyseur); }
+      } catch (e) { st.analyseur = null; }
+      try { if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { st.eveil = w; }, function () {}); } catch (e) { /* l'écran peut s'éteindre */ }
+      rec.start(1000);
+      st.debut = Date.now(); st.etat = "enreg";
+      st.minuteur = setInterval(function () {
+        if (studio !== st || st.etat !== "enreg") return;
+        var sec = (Date.now() - st.debut) / 1000, el = document.getElementById("studio-temps");
+        if (el) el.textContent = fmtDuree(sec);
+        if (sec >= DUREE_MAX) { arreterEnregistrement("max"); toast("15 minutes au plus : l’enregistrement s’est arrêté. Réécoutez-le avant d’envoyer."); }
+      }, 250);
+      afficher();
+      boucleNiveau(st);
+    }, function (err) {
+      if (st.ctx && st.ctx.close) st.ctx.close().catch(function () {});
+      if (studio !== st) return;
+      studio = { sid: sid, etat: "refus", erreur: (err && err.name) || "NotAllowedError" };
+      afficher();
+    });
+  }
+  /* Les barres bougent avec la voix : le membre voit que le micro l'entend. */
+  function boucleNiveau(st) {
+    if (studio !== st || st.etat !== "enreg") return;
+    var el = document.getElementById("studio-niveau"), t = Date.now();
+    if (st.analyseur && el && (!st.dernierNiv || t - st.dernierNiv > 90)) {
+      st.dernierNiv = t;
+      var buf = new Uint8Array(st.analyseur.fftSize), max = 0;
+      st.analyseur.getByteTimeDomainData(buf);
+      for (var i = 0; i < buf.length; i++) { var v = Math.abs(buf[i] - 128); if (v > max) max = v; }
+      st.niveaux.push(Math.min(1, Math.pow(max / 100, 0.65)));
+      if (st.niveaux.length > 60) st.niveaux.shift();
+      var b = el.children, n = b.length, l = st.niveaux;
+      for (var j = 0; j < n; j++) b[j].style.transform = "scaleY(" + Math.max(0.08, l[l.length - n + j] || 0) + ")";
+    }
+    st.raf = requestAnimationFrame(function () { boucleNiveau(st); });
+  }
+  function arreterEnregistrement(raison) {
+    var st = studio;
+    if (!st || st.etat !== "enreg") return;
+    st.duree = (Date.now() - st.debut) / 1000; st.raison = raison || ""; st.etat = "fin";
+    afficher();
+    try { if (st.rec.state !== "inactive") st.rec.stop(); else finEnregistrement(st); } catch (e) { finEnregistrement(st); }
+  }
+  function libererMicro(st) {
+    clearInterval(st.minuteur);
+    if (st.raf) cancelAnimationFrame(st.raf);
+    if (st.flux) st.flux.getTracks().forEach(function (x) { x.onended = null; x.stop(); });
+    if (st.ctx && st.ctx.close) st.ctx.close().catch(function () {});
+    if (st.eveil && st.eveil.release) st.eveil.release().catch(function () {});
+    st.flux = st.ctx = st.analyseur = st.eveil = null;
+  }
+  function finEnregistrement(st) {
+    if (st.fini) return;
+    st.fini = true;
+    libererMicro(st);
+    if (studio !== st) return;
+    var blob = new Blob(st.morceaux || [], { type: (st.mime || "audio/webm").split(";")[0] });
+    if (st.duree < 2 || blob.size < 1000) { studio = null; afficher(); toast("Enregistrement trop court : touchez le bouton rouge, chantez, puis arrêtez."); return; }
+    studio = { sid: st.sid, etat: "revue", blob: blob, url: URL.createObjectURL(blob), duree: st.duree };
+    afficher();
+    if (st.raison === "cache") toast("L’enregistrement s’est arrêté quand vous avez quitté l’écran. Réécoutez-le avant d’envoyer.");
+    else if (st.raison === "micro") toast("Le micro s’est coupé. Réécoutez l’enregistrement avant d’envoyer.");
+  }
+  function envoyerStudio() {
+    var st = studio;
+    if (!st || st.etat !== "revue" || !tarisApi) return;
+    arreterLecture();
+    st.etat = "envoi"; st.progres = 0;
+    afficher();
+    tarisApi.envoyer(st.sid, st.blob, { duree: st.duree, progres: function (f) {
+      st.progres = f;
+      var b = document.getElementById("studio-envoi-barre"), tx = document.getElementById("studio-envoi-txt");
+      if (b) b.style.width = Math.round(f * 100) + "%";
+      if (tx) tx.textContent = f >= 1 ? "Finalisation…" : "Envoi… " + Math.round(f * 100) + " %";
+    } }).then(function (r) {
+      if (studio === st) { if (st.url) URL.revokeObjectURL(st.url); studio = null; }
+      histOuvert = false;
+      afficher();
+      toast(r && r.remplace ? "Nouvel enregistrement envoyé : il remplace le précédent." : "Tari envoyé ! Le Conservatoire va l’écouter et vous répondre ici.");
+    }, function (e) {
+      if (studio === st) { st.etat = "revue"; afficher(); }
+      toast(e && e.message ? e.message : "L’envoi n’a pas abouti. Réessayez.");
+    });
+  }
+  /* Fichier déjà enregistré (Dictaphone, note vocale) : on le réécoute avant de l'envoyer. */
+  function choisirFichier(sid) {
+    if (!champFichier) {
+      champFichier = document.createElement("input");
+      champFichier.type = "file"; champFichier.accept = "audio/*,.m4a,.mp3,.opus,.ogg,.wav,.webm,.aac"; champFichier.hidden = true;
+      document.body.appendChild(champFichier);
+      champFichier.addEventListener("change", function () {
+        var f = champFichier.files && champFichier.files[0], cible = champFichier.dataset.sid;
+        champFichier.value = "";
+        if (!f) return;
+        if (f.size > 40 * 1024 * 1024) { toast("Fichier trop lourd : 40 Mo au plus."); return; }
+        var url = URL.createObjectURL(f), a = new Audio(), fait = false;
+        var pret = function (duree) {
+          if (fait) return;
+          fait = true; arreterLecture();
+          if (studio && studio.url) URL.revokeObjectURL(studio.url);
+          studio = { sid: cible, etat: "revue", blob: f, url: url, duree: duree || 0, fichier: f.name };
+          afficher();
+        };
+        a.preload = "metadata";
+        a.onloadedmetadata = function () { pret(isFinite(a.duration) ? a.duration : 0); };
+        a.onerror = function () { pret(0); };
+        a.src = url;
+        setTimeout(function () { pret(0); }, 4000);
+      });
+    }
+    champFichier.dataset.sid = sid;
+    champFichier.click();
+  }
+  document.addEventListener("visibilitychange", function () { if (document.hidden && studio && studio.etat === "enreg") arreterEnregistrement("cache"); });
+  window.addEventListener("beforeunload", function (e) {
+    if (studio && (studio.etat === "enreg" || studio.etat === "revue" || studio.etat === "envoi")) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  /* ----- Lecteur des envois (un seul audio à la fois) ----- */
+  function leLecteur() {
+    if (lecteur) return lecteur;
+    lecteur = new Audio();
+    lecteur.preload = "metadata";
+    ["play", "pause", "timeupdate", "ended", "loadedmetadata", "durationchange"].forEach(function (ev) { lecteur.addEventListener(ev, majLecteurs); });
+    lecteur.addEventListener("error", function () { if (lecteurSrc) { lecteurSrc = ""; majLecteurs(); toast("Cet audio ne se lit pas sur cet appareil. Essayez sur un autre téléphone ou un ordinateur."); } });
+    return lecteur;
+  }
+  function lecteurHTML(src, duree, petit) {
+    return '<div class="lect' + (petit ? " petit" : "") + '" data-lect="' + esc(src) + '" data-duree="' + (Number(duree) || 0) + '">' +
+      '<button type="button" class="lect-btn" data-lect-jouer aria-label="Écouter">' + ICO_PLAY + "</button>" +
+      '<span class="lect-piste" data-lect-piste role="presentation"><span class="lect-prog"></span></span>' +
+      '<span class="lect-temps">' + fmtDuree(duree) + "</span></div>";
+  }
+  function majLecteurs() {
+    var a = lecteur;
+    document.querySelectorAll(".lect").forEach(function (el) {
+      var actif = !!a && !!lecteurSrc && el.dataset.lect === lecteurSrc, joue = actif && !a.paused && !a.ended;
+      var d = actif && isFinite(a.duration) && a.duration > 0 ? a.duration : Number(el.dataset.duree) || 0, t = actif ? a.currentTime || 0 : 0;
+      el.classList.toggle("joue", joue); el.classList.toggle("entame", actif && t > 0);
+      var b = el.querySelector(".lect-btn");
+      if (b.__joue !== joue) { b.innerHTML = joue ? ICO_PAUSE : ICO_PLAY; b.setAttribute("aria-label", joue ? "Pause" : "Écouter"); b.__joue = joue; }
+      el.querySelector(".lect-prog").style.width = (d ? Math.min(100, 100 * t / d) : 0) + "%";
+      el.querySelector(".lect-temps").textContent = actif && t > 0 ? fmtDuree(t) + " / " + fmtDuree(d) : fmtDuree(d);
+    });
+  }
+  function jouer(el, fraction) {
+    var a = leLecteur(), src = el.dataset.lect;
+    pauserReference();
+    if (lecteurSrc !== src) { a.src = src; lecteurSrc = src; }
+    else if (fraction == null && !a.paused && !a.ended) { a.pause(); return; }
+    if (fraction != null) {
+      var d0 = Number(el.dataset.duree) || 0;
+      var aller = function () { var d = isFinite(a.duration) && a.duration > 0 ? a.duration : d0; if (d) try { a.currentTime = fraction * d; } catch (e) { /* position impossible */ } };
+      if (a.readyState >= 1) aller(); else a.addEventListener("loadedmetadata", aller, { once: true });
+    }
+    var p = a.play();
+    if (p && p.catch) p.catch(function () {});
+    majLecteurs();
+    priseAuto(src);
+  }
+  function arreterLecture() { if (lecteur && !lecteur.paused) lecteur.pause(); }
+  function pauserReference() {
+    try { var f = app.querySelector(".lecture-frame"), r = f && f.contentDocument && f.contentDocument.getElementById("audio"); if (r && !r.paused) r.pause(); } catch (e) { /* page pas encore prête */ }
+  }
+  /* L'audio de référence de la page du khassida coupe le nôtre ; il ne joue pas pendant un enregistrement. */
+  function brancherReference() {
+    try {
+      var f = app.querySelector(".lecture-frame"), r = f && f.contentDocument && f.contentDocument.getElementById("audio");
+      if (!r || r.__branche) return;
+      r.__branche = true;
+      r.addEventListener("play", function () {
+        arreterLecture();
+        if (studio && studio.etat === "enreg") { r.pause(); toast("Pendant l’enregistrement, l’audio de référence est coupé : chantez seul."); }
+      });
+    } catch (e) { /* page d'une autre origine */ }
+  }
+  /* Le Conservatoire qui écoute un envoi libre le prend : les autres voient « pris par … ». */
+  function priseAuto(src) {
+    if (!tarisApi || !peutSuivi || vue !== "tari" || priseEnCours) return;
+    var t = tariCourant();
+    if (!t || t.mid === moiCourant) return;
+    var att = enAttente(dossierTari(t.s.id, t.mid));
+    if (!att || priseActive(att) || audioUrl(att) !== src) return;
+    prendreTari(docTariId(t.s.id, t.mid), true);
+  }
+  function prendreTari(docId, silencieux, puis) {
+    priseEnCours = true;
+    return tarisApi.prendre(docId).then(function () {
+      priseEnCours = false;
+      if (!silencieux) toast("Vous l’avez pris : les autres membres du Conservatoire le voient.");
+      if (puis) puis();
+    }, function (e) {
+      priseEnCours = false;
+      toast(e && e.message ? e.message : "Impossible de prendre ce Tari.");
+      if (puis && e && e.code === "pris") puis();
+    });
+  }
+
+  /* ----- Liste des Taris (Conservatoire) : à écouter, pas encore envoyés, historique ; regroupés par khassida ----- */
+  function grouperParKh(liste, cle) {
+    var g = {}, ordre = [];
+    liste.forEach(function (x) { var k = cle(x) || ""; if (!g[k]) { g[k] = []; ordre.push(k); } g[k].push(x); });
+    return ordre.map(function (k) { return { kh: k, items: g[k] }; });
+  }
+  function titreGroupe(k, titre) { return khassidas[k] ? khassidas[k].titre : titre || (k ? "Khassida" : "Khassida pas encore précisé"); }
+  function vueTarisListe() {
+    var filtre = function (k) { return !tarisFiltreKh || (k || "") === tarisFiltreKh; };
+    var ae = tarisAEcouter().filter(function (x) { return filtre(x.td.khassida); });
+    var aEnv = tarisDemandes().filter(function (x) { return (x.etat === "attendu" || x.etat === "retravailler") && filtre(x.td.khassida); })
+      .map(function (x) { x.ech = echeanceTari(x.s); return x; })
+      .sort(function (a, b) { return a.ech < b.ech ? -1 : a.ech > b.ech ? 1 : triNom(a.m, b.m); });
+    var hist = Object.keys(tarisDocs).map(function (id) {
+      var d = tarisDocs[id], dec = envoisDe(d).filter(function (y) { return y.verdict; }).pop();
+      return { d: d, dec: dec, m: membres[d.membre] };
+    }).filter(function (x) { return x.dec && x.m && filtre(x.dec.khassida); }).sort(function (a, b) { return b.dec.corrigeLe - a.dec.corrigeLe; });
+    var nLibres = ae.filter(libreOuMien).length;
+    var html = '<section class="panel"><h2>Taris</h2><p class="muted">Les Taris enregistrés par les membres. Prenez-en un pour l’écouter : les autres membres du Conservatoire voient qu’il est pris, pour ne pas corriger à deux.</p>' +
+      (tarisFiltreKh ? '<a class="chip-filtre" href="#taris" aria-label="Voir tous les khassidas">' + esc(titreGroupe(tarisFiltreKh)) + ' <span aria-hidden="true">✕</span></a>' : "") +
+      '<span class="seg seg-full kh-filtre" role="group" aria-label="Taris">' + [["ecouter", "À écouter" + (nLibres ? " · " + nLibres : "")], ["envoyer", "À envoyer" + (aEnv.length ? " · " + aEnv.length : "")], ["historique", "Historique"]].map(function (o) {
+        return '<button type="button" data-taris-onglet="' + o[0] + '" aria-pressed="' + (tarisOnglet === o[0]) + '">' + o[1] + "</button>";
+      }).join("") + "</span>";
+    var moiAussi = mesTaris().filter(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; })[0];
+    if (moiAussi) html += '<p class="tq-moi-aussi">🎙️ <span>Vous aussi avez un Tari à envoyer : <a href="' + lienTari(moiAussi.s.id) + '">enregistrer mon Tari</a>.</span></p>';
+    var groupes, vide, item;
+    if (tarisOnglet === "envoyer") {
+      groupes = grouperParKh(aEnv, function (x) { return x.td.khassida; }); item = itemAEnvoyer;
+      vide = "Tout le monde a envoyé son Tari.";
+    } else if (tarisOnglet === "historique") {
+      var vus = tarisHistTout ? hist : hist.slice(0, 30);
+      groupes = grouperParKh(vus, function (x) { return x.dec.khassida; }); item = itemHistorique;
+      vide = "Aucune réponse donnée pour l’instant.";
+    } else {
+      groupes = grouperParKh(ae, function (x) { return x.td.khassida; }); item = itemAEcouter;
+      vide = "Aucun Tari à écouter pour l’instant. Quand un membre enregistre son Tari depuis Mon espace, il apparaît ici.";
+    }
+    if (!groupes.length) html += '<div class="empty" style="margin-top:14px">' + vide + "</div>";
+    groupes.forEach(function (g) {
+      var t0 = g.items[0], titre = titreGroupe(g.kh, t0.dec ? t0.dec.titre : t0.d && dernierEnvoi(t0.d) ? dernierEnvoi(t0.d).titre : "");
+      html += '<div class="tq-groupe"><h3 class="tq-gtitre"><span class="kh-puce" aria-hidden="true"></span>' + esc(titre) +
+        "<small>" + g.items.length + (tarisOnglet === "ecouter" ? " à écouter" : tarisOnglet === "envoyer" ? " en attente" : " réponse" + (g.items.length > 1 ? "s" : "")) + "</small></h3>" +
+        '<div class="tq-liste">' + g.items.map(item).join("") + "</div></div>";
+    });
+    if (tarisOnglet === "historique" && hist.length > 30 && !tarisHistTout) html += '<div style="margin-top:12px"><button type="button" class="btn ghost small" data-taris-tout>Voir tout l’historique (' + hist.length + ")</button></div>";
+    app.innerHTML = html + "</section>";
+  }
+  function itemAEcouter(x) {
+    var att = enAttente(x.d), p = priseActive(att), aMoi = !!p && p.par === moiCourant, n = envoisDe(x.d).length;
+    var infos = [plageTari(x.td), fmtDuree(att.duree), "reçu " + ilYa(att.le)].concat(n > 1 ? [n + "e envoi"] : []).filter(Boolean).join(" · ");
+    return '<div class="tq-item ecouter' + (p && !aMoi ? " pris" : " neuf") + '"><span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
+      '<span class="tq-corps"><b>' + esc(x.m.nom) + "</b><small>" + esc(infos) + "</small>" +
+      (p ? '<small class="' + (aMoi ? "tq-moi" : "tq-pris") + '">🎧 ' + (aMoi ? "Pris par vous" : "Pris par " + esc(p.nom)) + " · " + esc(ilYa(p.le)) + "</small>" : "") + "</span>" +
+      (p && !aMoi ? '<a class="btn small ghost" href="' + lienTari(x.s.id, x.mid) + '">Voir</a>'
+        : '<button type="button" class="btn small primary" data-tari-ouvrir="' + esc(x.s.id + "|" + x.mid) + '">' + (aMoi ? "Reprendre" : "Écouter et corriger") + "</button>") + "</div>";
+  }
+  function itemAEnvoyer(x) {
+    var depasse = x.ech < today();
+    return '<a class="tq-item" href="' + lienTari(x.s.id, x.mid) + '"><span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
+      '<span class="tq-corps"><b>' + esc(x.m.nom) + (x.mid === moiCourant ? " (vous)" : "") + "</b><small>" + esc([plageTari(x.td), "demandé le " + jourCourt(x.s.date)].filter(Boolean).join(" · ")) + "</small>" +
+      '<small class="' + (depasse ? "tq-retard" : "") + '">' + (depasse ? "Échéance dépassée" : "À maîtriser avant le " + esc(jourCourt(x.ech))) + "</small></span>" + pillEtat(x.etat) + "</a>";
+  }
+  function itemHistorique(x) {
+    var d = x.d, n = envoisDe(d).length;
+    return '<a class="tq-item" href="' + lienTari(d.seance, d.membre) + '"><span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
+      '<span class="tq-corps"><b>' + esc(x.m.nom) + "</b><small>" + esc([plageTari(x.dec), n + " envoi" + (n > 1 ? "s" : "")].filter(Boolean).join(" · ")) + "</small>" +
+      "<small>Réponse de " + esc(x.dec.parNom || "…") + " · " + esc(ilYa(x.dec.corrigeLe)) + "</small></span>" +
+      (x.dec.verdict === "maitrise" ? '<span class="pill p">Maîtrisé</span>' : '<span class="pill r">À retravailler</span>') + "</a>";
+  }
+
+  /* ----- Clics ----- */
+  function clicTaris(b) {
+    var d = b.dataset;
+    if (d.lectJouer !== undefined) { var el = b.closest(".lect"); if (el) jouer(el); return true; }
+    if (d.studio) {
+      var t = tariCourant();
+      if (!t || t.mid !== moiCourant) return true;
+      if (d.studio === "enregistrer") demarrerEnregistrement(t.s.id);
+      else if (d.studio === "arreter") arreterEnregistrement("");
+      else if (d.studio === "recommencer") demarrerEnregistrement(t.s.id);
+      else if (d.studio === "envoyer") envoyerStudio();
+      else if (d.studio === "fichier") choisirFichier(t.s.id);
+      return true;
+    }
+    if (d.dockReduire !== undefined) { dockReduit = !dockReduit; afficher(); return true; }
+    if (d.histBasculer !== undefined) { histOuvert = !histOuvert; afficher(); return true; }
+    if (d.tarisOnglet) { tarisOnglet = d.tarisOnglet; afficher(); return true; }
+    if (d.tarisTout !== undefined) { tarisHistTout = true; afficher(); return true; }
+    if (!tarisApi) return false;
+    if (d.tariOuvrir) {
+      var po = d.tariOuvrir.split("|"), att = enAttente(dossierTari(po[0], po[1]));
+      var aller = function () { location.hash = lienTari(po[0], po[1]); };
+      if (att && !priseActive(att)) { b.disabled = true; prendreTari(docTariId(po[0], po[1]), true, aller).then(function () { b.disabled = false; }); }
+      else aller();
+      return true;
+    }
+    if (d.tariPrendre) { b.disabled = true; prendreTari(d.tariPrendre, false); return true; }
+    if (d.tariLiberer) {
+      b.disabled = true;
+      tarisApi.liberer(d.tariLiberer).then(function () { toast("Tari laissé : un autre membre du Conservatoire peut le prendre."); }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Impossible pour le moment."); });
+      return true;
+    }
+    if (d.tariSugg !== undefined) {
+      var ta = document.getElementById("tari-mot"), mot = MOTS_TARI[Number(d.tariSugg)], cur = (ta ? ta.value : correction.mot).trim();
+      correction.mot = cur.indexOf(mot) > -1 ? cur.replace(mot, "").replace(/\s{2,}/g, " ").trim() : (cur ? cur + " " : "") + mot;
+      afficher();
+      return true;
+    }
+    if (d.tariChanger !== undefined) { correction.changer = d.tariChanger || null; correction.mot = ""; afficher(); return true; }
+    if (d.tariVerdict) {
+      var ta2 = document.getElementById("tari-mot"), verdict = d.tariVerdict, docV = d.doc;
+      b.disabled = true;
+      tarisApi.repondre(docV, { envoi: d.envoi, verdict: verdict, mot: ta2 ? ta2.value : correction.mot }).then(function () {
+        arreterLecture();
+        correction = { mot: "", fait: { docId: docV, verdict: verdict }, changer: null };
+        afficher();
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "La réponse n’a pas pu être envoyée. Réessayez."); });
+      return true;
+    }
+    return false;
+  }
+  /* Toucher la barre d'un lecteur : aller à ce moment de l'audio. */
+  app.addEventListener("click", function (e) {
+    var piste = e.target.closest("[data-lect-piste]");
+    if (!piste) return;
+    var el = piste.closest(".lect"), r = piste.getBoundingClientRect();
+    if (el && r.width) jouer(el, Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)));
+  });
+  app.addEventListener("input", function (e) { if (e.target.id === "tari-mot") correction.mot = e.target.value; });
+
   /* ---------- Visite guidée des onglets (première connexion) ---------- */
   var tourEtat = null;
   function iconeOnglet(v) {
@@ -3058,7 +3979,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
   function etapesTour() {
     var prenom = ((membres[moiCourant] || {}).nom || (monCompte && monCompte.nom) || "").split(" ")[0];
     var e = [{ titre: "Bienvenue" + (prenom ? ", " + prenom : "") + " !", texte: "Voici la plateforme du Conservatoire. Faisons ensemble le tour des onglets : moins d’une minute." }];
-    e.push({ vue: "khassidas", titre: "Khassidas", texte: "Les khassidas de votre kourel : texte arabe, phonétique, traduction et audio de référence. Celui en cours de répétition apparaît en premier." });
+    e.push({ vue: "khassidas", titre: "Khassidas", texte: "Les khassidas de votre kourel : texte arabe, phonétique, traduction et audio de référence. Celui en cours de répétition apparaît en premier." +
+      (peutSuivi && tarisApi ? " Les Taris enregistrés par les membres s’écoutent aussi d’ici : prenez-en un, les autres voient qu’il est pris." : "") });
     if (peutSuivi) e.push({ vue: "seances", titre: "Répétitions", texte: peutModifier
       ? "Créez la séance du jour et faites l’appel : retards, absences, motifs et Taris. Préparez aussi les rappels WhatsApp des prochaines répétitions."
       : "Créez la séance du jour et faites l’appel : retards, absences, motifs, sanctions et Taris." });
@@ -3071,26 +3993,40 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
           : mesKourels.length ? "Comme dieuwrigne du " + mesKourels.map(function (k) { return TYPES[k]; }).join(" et du ") + ", vous décidez du programme ; les autres membres du Conservatoire proposent."
           : "Le dieuwrigne de chaque kourel décide ; vous pouvez proposer.") + " Vous y voyez aussi qui va prester au dahira." });
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
-    e.push({ vue: "moi", titre: "Mon espace", texte: "Vos présences, vos Taris, vos progrès et les chartes. C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
+    e.push({ vue: "moi", titre: "Mon espace", texte: (tarisApi ? "Vos Taris : enregistrez-les ici, le Conservatoire les écoute et vous répond. Aussi vos présences, vos progrès et les chartes."
+      : "Vos présences, vos Taris, vos progrès et les chartes.") + " C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
     if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Les accès des membres et leur rôle, la liste des membres, les khassidas et la sauvegarde des données." });
     e.push({ fin: true, titre: "C’est parti !", texte: "Vous pourrez revoir cette visite à tout moment depuis Mon espace." });
     return e;
   }
   /* Nouveautés : une bulle, une seule fois par personne, sur l'onglet concerné. Ceux qui font la visite complète ne la voient pas. */
+  /* Une nouveauté peut dépendre du rôle : contenu() renvoie { vue, titre, texte }, ou rien pour ne pas l'afficher. */
   var NOUVEAUTES = [{ cle: "programme", vue: "dahira", titre: "L’onglet Programme",
-    texte: "L’onglet Dahira devient Programme : vous y trouvez ce que votre kourel chantera aux répétitions et au dahira, avec l’ère de chaque khassida." }];
+    texte: "L’onglet Dahira devient Programme : vous y trouvez ce que votre kourel chantera aux répétitions et au dahira, avec l’ère de chaque khassida." },
+    { cle: "taris-audio", contenu: function () {
+      if (!tarisApi) return null;
+      return peutSuivi
+        ? { vue: "khassidas", titre: "Les Taris s’écoutent ici", texte: "Les membres enregistrent maintenant leur Tari sur la plateforme. Écoutez-les depuis l’onglet Khassidas et répondez : maîtrisé, ou à retravailler avec un mot. Quand vous en prenez un, les autres voient « pris par vous » : personne ne corrige à deux." }
+        : { vue: "moi", titre: "Enregistrez votre Tari ici", texte: "Plus besoin de l’envoyer sur WhatsApp : dans Mon espace, touchez « Enregistrer mon Tari », chantez en lisant le texte, puis envoyez. Le Conservatoire l’écoute et vous répond ici." };
+    } }];
+  function contenuNouveaute(n) { return n.contenu ? n.contenu() : n; }
   function nouveauteVue(cle) { return !!(monCompte && (monCompte.vu || []).indexOf(cle) > -1); }
-  function marquerNouveautes() {
+  /* Une nouveauté vue (sa bulle), ou toutes après la visite complète (qui présente déjà tout). */
+  function marquerNouveautes(seule) {
     NOUVEAUTES.forEach(function (n) {
-      if (!monCompte || nouveauteVue(n.cle)) return;
+      if (!monCompte || nouveauteVue(n.cle) || (seule && n !== seule)) return;
       monCompte.vu = (monCompte.vu || []).concat([n.cle]);
       if (utilisateur && typeof utilisateur.vu === "function") utilisateur.vu(n.cle).catch(function () {});
     });
   }
   function montrerNouveaute() {
     if (!monCompte || tourEtat) return;
-    var n = NOUVEAUTES.filter(function (x) { return !nouveauteVue(x.cle) && cibleOnglet(x.vue); })[0];
-    if (n) lancerTour([{ vue: n.vue, titre: n.titre, texte: n.texte, etiquette: "Nouveauté", nouveaute: n }]);
+    for (var i = 0; i < NOUVEAUTES.length; i++) {
+      var n = NOUVEAUTES[i], c = contenuNouveaute(n);
+      if (!c || nouveauteVue(n.cle) || !cibleOnglet(c.vue)) continue;
+      lancerTour([{ vue: c.vue, titre: c.titre, texte: c.texte, etiquette: "Nouveauté", nouveaute: n }]);
+      return;
+    }
   }
   function lancerTour(etapesDonnees) {
     if (tourEtat || vue === "khassida") return;
@@ -3166,8 +4102,9 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
     t.el.classList.remove("visible", "cible");
     setTimeout(function () { t.el.remove(); }, 350);
     if (t.retour && t.retour.focus) try { t.retour.focus({ preventScroll: true }); } catch (e) { /* élément disparu */ }
-    /* Nouveauté vue, ou visite complète terminée (qui présente déjà les nouveautés). */
-    marquerNouveautes();
+    /* Nouveauté vue (seulement celle-ci : la suivante s'affichera à la prochaine ouverture),
+       ou visite complète terminée (qui présente déjà les nouveautés). */
+    marquerNouveautes(t.simple ? t.etapes[0].nouveaute : null);
     if (t.simple) return;
     if (monCompte) monCompte.tourVu = true;
     try { localStorage.setItem("conservatoire-tour", "1"); } catch (e) { /* stockage indisponible */ }
@@ -3198,10 +4135,12 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       user && typeof user.compte === "function" ? user.compte().catch(function () { return null; }) : Promise.resolve(null),
       claudeApi.use("comptes").catch(function () { return null; }),
       claudeApi.use("messages").catch(function () { return null; }),
-      claudeApi.use("programme").catch(function () { return null; })
+      claudeApi.use("programme").catch(function () { return null; }),
+      claudeApi.use("taris").catch(function () { return null; })
     ]).then(function (rr) {
       messagesApi = rr[1] ? rr[3] : null;
       programmeApi = rr[1] ? rr[4] : null;
+      tarisApi = rr[1] ? rr[5] : null;
       if (messagesApi) chargerMessages();
       peutModifier = !!rr[0];
       monCompte = rr[1];
@@ -3244,6 +4183,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
       snap.docs.forEach(function (d) { if (d.id === "kourels") reglagesKourels = d.data() || {}; if (d.id === "repetitions") reglagesRep = d.data() || {}; });
       majPastilleProg(); afficher();
     }, function () { /* pas de réglage */ });
+    db.collection("taris").onSnapshot(function (snap) {
+      tarisDocs = {};
+      snap.docs.forEach(function (d) { tarisDocs[d.id] = d.data(); });
+      afficher();
+    }, function () { /* pas de Tari enregistré (prototype claude.ai) */ });
     db.collection("dahiras").onSnapshot(function (snap) {
       dahirasCfg = {};
       snap.docs.forEach(function (d) { dahirasCfg[d.id] = d.data(); });

@@ -5,6 +5,8 @@
    - use("downloads") : save({ filename, data })
    - use("comptes") : accès des membres (administrateur) : liste, temporaire, envoye, role, revoquer,
      valider / refuser (demandes d'inscription), invitation (nouveau lien d'inscription)
+   - use("messages"), use("programme") : boîte à idées et support, programme de chant
+   - use("taris") : Taris enregistrés (envoyer l'audio avec sa progression, prendre, laisser, répondre)
    Chargé automatiquement par plateforme/local/serveur.mjs ; index.html n'est pas modifié. */
 (function () {
   "use strict";
@@ -135,7 +137,39 @@
     retirer: function (cle, id) { return appel("DELETE", "chants/" + encodeURIComponent(cle) + "/items/" + encodeURIComponent(id)); }
   });
 
-  var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme };
+  /* Taris enregistrés sur la plateforme (voir serveur.mjs) : le membre envoie son audio, le Conservatoire le prend et répond. */
+  function erreurEnvoi(x) {
+    var j = {};
+    try { j = JSON.parse(x.responseText || "{}"); } catch (e) { /* réponse vide */ }
+    var er = new Error(j.message || (x.status ? "Erreur " + x.status : "Connexion perdue pendant l’envoi : vérifiez votre connexion et réessayez."));
+    er.code = j.code || (x.status ? "erreur" : "reseau");
+    return er;
+  }
+  var taris = Object.freeze({
+    /* Envoi du fichier tel quel, avec la progression (fraction de 0 à 1). */
+    envoyer: function (seance, fichier, opts) {
+      opts = opts || {};
+      return new Promise(function (ok, ko) {
+        var x = new XMLHttpRequest();
+        x.open("POST", "/api/taris/" + encodeURIComponent(seance) + "/envoi?duree=" + encodeURIComponent(opts.duree || ""));
+        x.setRequestHeader("Content-Type", fichier.type || "application/octet-stream");
+        if (x.upload && opts.progres) x.upload.onprogress = function (e) { if (e.lengthComputable) opts.progres(e.loaded / e.total); };
+        x.onload = function () {
+          if (x.status === 401) { location.href = "/connexion.html"; return; }
+          if (x.status >= 200 && x.status < 300) { var j = {}; try { j = JSON.parse(x.responseText); } catch (e) { /* vide */ } rafraichir("taris"); ok(j); }
+          else ko(erreurEnvoi(x));
+        };
+        x.onerror = function () { ko(erreurEnvoi(x)); };
+        x.send(fichier);
+      });
+    },
+    prendre: function (dossier) { return appel("POST", "taris/" + encodeURIComponent(dossier) + "/prise", {}).then(function (r) { rafraichir("taris"); return r; }); },
+    liberer: function (dossier) { return appel("POST", "taris/" + encodeURIComponent(dossier) + "/prise", { liberer: true }).then(function (r) { rafraichir("taris"); return r; }); },
+    repondre: function (dossier, data) { return appel("POST", "taris/" + encodeURIComponent(dossier) + "/verdict", data).then(function (r) { rafraichir("taris"); rafraichir("seances"); return r; }); },
+    audio: function (fichier) { return "/api/taris/audio/" + encodeURIComponent(fichier); }
+  });
+
+  var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme, taris: taris };
   window.claude = Object.freeze({
     use: function (nom) {
       if (nom === "comptes") return admin().then(function (a) { return a ? comptes : null; });

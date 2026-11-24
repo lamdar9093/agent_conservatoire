@@ -3,6 +3,7 @@
 // - sert le dossier plateforme/ (avec la lecture par morceaux pour l'audio) ;
 // - injecte l'adaptateur (claude-local.js) dans la page principale, sans modifier index.html ;
 // - garde les données dans PostgreSQL (Neon) si DATABASE_URL est défini dans .env, sinon dans donnees/ ;
+//   les audios des Taris enregistrés vont dans AUDIOS_DIR (volume Docker en production) ;
 // - connexion obligatoire : chaque membre a son compte (mot de passe temporaire, puis personnel) ;
 //   un membre ne lit que ce qui le concerne, seul un administrateur modifie ;
 // - prévient les pages ouvertes à chaque modification (Server-Sent Events).
@@ -11,6 +12,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { ouvrirStockage, nomValide } from "./stockage.mjs";
 import { creerComptes, COOKIE, DUREE_SESSION } from "./comptes.mjs";
@@ -39,7 +41,7 @@ const PERMISSION_COLLECTION = { seances: "suivi", evaluations: "suivi" };
 const roleDe = (sess) => (sess.admin ? "admin" : sess.conservatoire ? "conservatoire" : "membre");
 const peut = (sess, perm) => { const r = ROLES[roleDe(sess)]; return r === null || (!!perm && r.has(perm)); };
 // Collections lisibles par un membre (les autres sont réservées à l'administrateur).
-const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages"]);
+const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages", "taris"]);
 // Fichiers accessibles sans connexion (le logo et les icônes de /marque/ aussi : page de connexion, onglet, écran d'accueil).
 const PUBLICS = new Set(["/connexion.html", "/local/connexion.js", "/favicon.ico"]);
 const estPublic = (rel) => PUBLICS.has(rel) || /^\/marque\/[\w.-]+$/.test(rel);
@@ -50,6 +52,27 @@ if (process.env.NODE_ENV === "production" && !process.env.DATABASE_URL) {
   process.exit(1);
 }
 const stock = await ouvrirStockage();
+
+/* Audios des Taris enregistrés par les membres : fichiers sur le disque (pas dans la base).
+   En production (Docker), AUDIOS_DIR est un volume gardé d'un déploiement à l'autre (voir docker-compose.yml).
+   En local : le dossier audios-taris/ à la racine (exclu de git). */
+const AUDIOS = path.resolve(process.env.AUDIOS_DIR || path.resolve(ICI, "..", "..", "audios-taris"));
+try {
+  await fsp.mkdir(AUDIOS, { recursive: true });
+  await fsp.access(AUDIOS, fs.constants.W_OK);
+  // Réceptions interrompues lors d'un arrêt précédent.
+  for (const f of await fsp.readdir(AUDIOS)) if (f.startsWith(".recu-")) await fsp.rm(path.join(AUDIOS, f), { force: true });
+} catch (e) { console.error("Dossier des audios des Taris inaccessible (" + AUDIOS + ") : " + e.message); }
+/* ffmpeg (présent dans l'image Docker) convertit chaque envoi en m4a (AAC) : lisible sur tous les téléphones,
+   y compris un iPhone qui écoute un enregistrement fait sur Android. Sans ffmpeg, le fichier est gardé tel quel. */
+const FFMPEG = process.env.FFMPEG || "ffmpeg";
+const ffmpegDispo = await new Promise((ok) => {
+  try {
+    const p = spawn(FFMPEG, ["-version"], { stdio: "ignore" });
+    p.on("error", () => ok(false));
+    p.on("exit", (c) => ok(c === 0));
+  } catch { ok(false); }
+});
 
 /* Chaque page de khassida du code porte sa fiche (plateforme/khassidas/<dossier>/fiche.json).
    Au démarrage, une fiche absente de la liste y est ajoutée ; pour une fiche déjà présente, seuls les champs
@@ -127,6 +150,101 @@ function tropDInscriptions(req) {
 const chiffres = (t) => String(t || "").replace(/\D/g, "");
 const lienInscription = (req, code) => adresse(req) + "/inscription?c=" + encodeURIComponent(code);
 
+/* ---------- Taris enregistrés sur la plateforme ----------
+   taris/{séance~membre} = { seance, membre, date, type, envois: [{ id, fichier, mime, taille, duree, le,
+     khassida, titre, de, a, tout, consigne,              ← ce qui était demandé au moment de l'envoi
+     prise: { par, nom, le } | null,                       ← membre du Conservatoire qui l'écoute (les autres voient « pris par … »)
+     verdict: null | "maitrise" | "retravailler", mot, par, parNom, corrigeLe }] }
+   Le membre envoie ; un envoi pas encore écouté peut être remplacé. Le Conservatoire « prend » le dernier envoi,
+   l'écoute et répond : la réponse met à jour l'état du Tari de la séance (tariEtat), comme les boutons de la séance. */
+const PRISE_MS = 45 * 60000;          // une prise oubliée se libère seule après 45 minutes
+const MAX_AUDIO = 40 * 1024 * 1024;   // 40 Mo par envoi
+const TYPES_AUDIO = { webm: "audio/webm", m4a: "audio/mp4", ogg: "audio/ogg", mp3: "audio/mpeg", wav: "audio/wav", aac: "audio/aac" };
+// Nom d'un fichier audio : <membre>--<32 caractères aléatoires>.<format> (le membre se lit dans le nom : contrôle d'accès simple).
+const FICHIER_AUDIO = /^(.+)--[0-9a-f]{32}\.(webm|m4a|ogg|mp3|wav|aac)$/;
+function tariConcerneServeur(s, id) {
+  const t = s.tari || "aucun";
+  if (t === "aucun" || !(s.participants || []).includes(id)) return false;
+  if (t === "tous" || (s.tariIndividuel || {})[id]) return true;
+  if (t === "choisis") return !!(s.tariChoisis || {})[id];
+  return ((s.statuts || {})[id] || "P") === "A";
+}
+const etatTariServeur = (s, id) => (s.tariEtat || {})[id] || ((s.tariRecu || {})[id] ? "maitrise" : "attendu");
+const priseActive = (e) => !!(e && e.prise && Date.now() - e.prise.le < PRISE_MS);
+// Format reconnu d'après les premiers octets (jamais d'après ce que le navigateur annonce).
+function formatAudio(b) {
+  if (b.length < 12) return null;
+  if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return "webm";
+  if (b.toString("latin1", 4, 8) === "ftyp") return "m4a";
+  if (b.toString("latin1", 0, 4) === "OggS") return "ogg";
+  if (b.toString("latin1", 0, 4) === "RIFF" && b.toString("latin1", 8, 12) === "WAVE") return "wav";
+  if (b.toString("latin1", 0, 3) === "ID3") return "mp3";
+  if (b[0] === 0xff && (b[1] & 0xe0) === 0xe0) return (b[1] & 0x06) === 0 ? "aac" : "mp3";
+  return null;
+}
+/* Réception d'un fichier envoyé tel quel (sans JSON), avec une taille maximale. */
+function recevoirFichier(req, cible, max) {
+  return new Promise((ok, ko) => {
+    let taille = 0, tete = Buffer.alloc(0), fini = false;
+    const out = fs.createWriteStream(cible);
+    const echec = (code) => {
+      if (fini) return;
+      fini = true; req.unpipe(out); out.destroy();
+      fsp.rm(cible, { force: true }).finally(() => ko(Object.assign(new Error(code), { code })));
+    };
+    req.on("data", (c) => {
+      taille += c.length;
+      if (tete.length < 16) tete = Buffer.concat([tete, c.subarray(0, 16 - tete.length)]);
+      if (taille > max) { echec("trop_gros"); req.destroy(); }
+    });
+    req.on("aborted", () => echec("interrompu"));
+    req.on("error", () => echec("interrompu"));
+    out.on("error", () => echec("disque"));
+    out.on("finish", () => { if (!fini) { fini = true; ok({ taille, tete }); } });
+    req.pipe(out);
+  });
+}
+function convertirEnM4a(source, cible) {
+  return new Promise((ok) => {
+    const p = spawn(FFMPEG, ["-hide_banner", "-loglevel", "error", "-y", "-i", source, "-vn", "-ac", "1", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", cible], { stdio: "ignore" });
+    const minuteur = setTimeout(() => p.kill("SIGKILL"), 120000);
+    p.on("error", () => { clearTimeout(minuteur); ok(false); });
+    p.on("exit", (c) => { clearTimeout(minuteur); ok(c === 0); });
+  });
+}
+/* Un seul traitement à la fois par dossier de Tari (deux membres du Conservatoire qui le prennent en même temps). */
+const verrous = new Map();
+function sousVerrou(cle, fn) {
+  const suite = (verrous.get(cle) || Promise.resolve()).then(() => fn());
+  const fin = suite.catch(() => {});
+  verrous.set(cle, fin);
+  fin.then(() => { if (verrous.get(cle) === fin) verrous.delete(cle); });
+  return suite;
+}
+/* 30 envois d'audio par heure et par membre. */
+const envoisAudio = new Map();
+function tropDAudios(membre) {
+  const e = envoisAudio.get(membre);
+  if (!e || Date.now() - e.t > 3600000) { envoisAudio.set(membre, { n: 1, t: Date.now() }); return false; }
+  return ++e.n > 30;
+}
+/* Envoi d'un fichier du disque, avec la lecture par morceaux (Range) : indispensable pour avancer dans un audio. */
+async function envoyerFichier(req, res, cible, type, cache) {
+  let st;
+  try { st = await fsp.stat(cible); } catch { res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("Introuvable"); }
+  const range = req.headers.range && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+  if (range) {
+    let debut = range[1] === "" ? st.size - Number(range[2]) : Number(range[1]);
+    let fin = range[1] !== "" && range[2] !== "" ? Number(range[2]) : st.size - 1;
+    if (isNaN(debut) || debut < 0 || debut >= st.size || fin < debut) { res.writeHead(416, { "Content-Range": "bytes */" + st.size }); return res.end(); }
+    fin = Math.min(fin, st.size - 1);
+    res.writeHead(206, { "Content-Type": type, "Accept-Ranges": "bytes", "Content-Range": `bytes ${debut}-${fin}/${st.size}`, "Content-Length": fin - debut + 1, "Cache-Control": cache });
+    return fs.createReadStream(cible, { start: debut, end: fin }).pipe(res);
+  }
+  res.writeHead(200, { "Content-Type": type, "Accept-Ranges": "bytes", "Content-Length": st.size, "Cache-Control": cache });
+  fs.createReadStream(cible).pipe(res);
+}
+
 /* Ce qu'un membre (non administrateur) peut voir. */
 function filtrerPourMembre(col, docs, moi) {
   if (col === "membres") return docs.map((d) => ({ id: d.id, data: { nom: d.data.nom, k1: d.data.k1, k2: d.data.k2, statut: d.data.statut, actif: d.data.actif, depuis: d.data.depuis } }));
@@ -140,6 +258,8 @@ function filtrerPourMembre(col, docs, moi) {
   // Programme de chant : un membre ne voit que ce qui est retenu, sans les propositions ni leurs auteurs.
   if (col === "chants") return docs.map((d) => ({ id: d.id, data: { items: (d.data.items || []).filter((x) => x.statut === "retenu")
     .map((x) => ({ id: x.id, khassida: x.khassida, titre: x.titre, ere: x.ere, statut: x.statut })) } }));
+  // Taris enregistrés : chacun ne voit que les siens.
+  if (col === "taris") return docs.filter((d) => d.data.membre === moi);
   return docs;
 }
 
@@ -191,11 +311,8 @@ async function khassidasVisibles(sess) {
     for (const x of c.data.items || []) if (x.statut === "retenu" && x.khassida) ok.add(x.khassida);
   }
   for (const s of await stock.lireCollection("seances")) {
-    const d = s.data, moi = sess.membre, kh = d.tariDetail && d.tariDetail.khassida, t = d.tari || "aucun";
-    if (!kh || t === "aucun" || !(d.participants || []).includes(moi)) continue;
-    const concerne = t === "tous" || (d.tariIndividuel || {})[moi] || (t === "choisis" ? !!(d.tariChoisis || {})[moi] : ((d.statuts || {})[moi] || "P") === "A");
-    const etat = (d.tariEtat || {})[moi] || ((d.tariRecu || {})[moi] ? "maitrise" : "attendu");
-    if (concerne && etat !== "maitrise") ok.add(kh);
+    const kh = s.data.tariDetail && s.data.tariDetail.khassida;
+    if (kh && tariConcerneServeur(s.data, sess.membre) && etatTariServeur(s.data, sess.membre) !== "maitrise") ok.add(kh);
   }
   return ok;
 }
@@ -385,6 +502,114 @@ async function api(req, res, parts, sess) {
     return json(res, 200, { ok: true, decideur, message });
   }
 
+  /* --- Taris enregistrés (voir plus haut : taris/{séance~membre}) ---
+     GET  taris/audio/<fichier>      écouter : le membre lui-même, le Conservatoire, l'admin
+     POST taris/<séance>/envoi       le membre envoie son audio (corps = le fichier), ?duree=secondes
+     POST taris/<dossier>/prise      le Conservatoire prend le Tari ({ liberer: true } pour le laisser)
+     POST taris/<dossier>/verdict    { envoi, verdict: maitrise | retravailler, mot } */
+  if (parts[0] === "taris" && (parts.length > 2 || req.method !== "GET")) {
+    const [, a, b] = parts;
+    if (a === "audio" && req.method === "GET" && parts.length === 3) {
+      const m = FICHIER_AUDIO.exec(b || "");
+      if (!m || !nomValide(b)) return json(res, 404, { code: "not_found" });
+      if (!peut(sess, "suivi") && m[1] !== sess.membre) return json(res, 403, { code: "invalid_argument", message: "Cet audio ne vous appartient pas." });
+      return envoyerFichier(req, res, path.join(AUDIOS, b), TYPES_AUDIO[m[2]], "private, max-age=31536000, immutable");
+    }
+    if (parts.length !== 3 || req.method !== "POST" || !nomValide(a || "")) return json(res, 405, { code: "invalid_argument" });
+    const moiNom = ((await stock.lireDoc("membres", sess.membre)) || {}).nom || sess.membre;
+
+    if (b === "envoi") {
+      const sid = a, moi = sess.membre, s = await stock.lireDoc("seances", sid);
+      if (!s) return json(res, 404, { code: "not_found", message: "Cette séance n’existe plus." });
+      if (!tariConcerneServeur(s, moi)) return json(res, 403, { code: "pas_concerne", message: "Ce Tari ne vous est pas demandé." });
+      if (etatTariServeur(s, moi) === "maitrise") return json(res, 409, { code: "maitrise", message: "Ce Tari est déjà maîtrisé : rien à renvoyer." });
+      if (Number(req.headers["content-length"] || 0) > MAX_AUDIO) return json(res, 413, { code: "trop_gros", message: "Fichier trop lourd : 40 Mo au plus." });
+      if (tropDAudios(moi)) return json(res, 429, { code: "rate_limited", message: "Beaucoup d’envois rapprochés : réessayez dans une heure." });
+      const tmp = path.join(AUDIOS, ".recu-" + crypto.randomBytes(8).toString("hex"));
+      let recu;
+      try { recu = await recevoirFichier(req, tmp, MAX_AUDIO); }
+      catch (e) {
+        if (res.destroyed || req.destroyed) return;
+        return json(res, e.code === "trop_gros" ? 413 : 400, { code: e.code, message: e.code === "trop_gros" ? "Fichier trop lourd : 40 Mo au plus." : "L’envoi a été interrompu. Réessayez." });
+      }
+      const fmt = formatAudio(recu.tete);
+      if (recu.taille < 1000 || !fmt) {
+        await fsp.rm(tmp, { force: true });
+        return json(res, 415, { code: "format", message: recu.taille < 1000 ? "L’enregistrement est vide : recommencez." : "Ce fichier n’est pas un audio reconnu (m4a, mp3, webm, ogg ou wav)." });
+      }
+      const base = moi + "--" + crypto.randomBytes(16).toString("hex");
+      let fichier = base + "." + fmt, taille = recu.taille;
+      if (ffmpegDispo && await convertirEnM4a(tmp, path.join(AUDIOS, base + ".m4a"))) {
+        fichier = base + ".m4a";
+        taille = (await fsp.stat(path.join(AUDIOS, fichier))).size;
+        await fsp.rm(tmp, { force: true });
+      } else {
+        if (ffmpegDispo) await fsp.rm(path.join(AUDIOS, base + ".m4a"), { force: true });
+        await fsp.rename(tmp, path.join(AUDIOS, fichier));
+      }
+      const duree = Math.max(0, Math.min(3600, Math.round(10 * (Number(new URL(req.url, "http://x").searchParams.get("duree")) || 0)) / 10));
+      const docId = sid + "~" + moi;
+      const r = await sousVerrou(docId, async () => {
+        const d = (await stock.lireDoc("taris", docId)) || {};
+        const envois = d.envois || [], dernier = envois[envois.length - 1];
+        let remplace = null;
+        // Un envoi pas encore écouté est remplacé par le nouveau ; s'il est en cours d'écoute, on attend la réponse.
+        if (dernier && !dernier.verdict) {
+          if (priseActive(dernier)) return { erreur: 409, code: "en_ecoute", message: (dernier.prise.nom || "Un membre du Conservatoire") + " écoute votre envoi en ce moment : attendez sa réponse avant d’en renvoyer un." };
+          remplace = envois.pop();
+        }
+        if (envois.length >= 40) return { erreur: 400, code: "trop", message: "Trop d’envois pour ce Tari : contactez le Conservatoire." };
+        const td = s.tariDetail || {}, kh = td.khassida && nomValide(td.khassida) ? await stock.lireDoc("khassidas", td.khassida) : null;
+        const envoi = { id: crypto.randomBytes(5).toString("hex"), fichier, mime: TYPES_AUDIO[fichier.split(".").pop()], taille, duree, le: Date.now(),
+          khassida: td.khassida || "", titre: kh ? kh.titre : "", de: td.de || null, a: td.a || null, tout: !!td.tout, consigne: td.consigne || "", prise: null, verdict: null };
+        envois.push(envoi);
+        await stock.ecrireDoc("taris", docId, { seance: sid, membre: moi, date: s.date, type: s.type, envois, majLe: Date.now() });
+        return { envoi, remplace };
+      });
+      if (r.erreur) { await fsp.rm(path.join(AUDIOS, fichier), { force: true }); return json(res, r.erreur, { code: r.code, message: r.message }); }
+      if (r.remplace && FICHIER_AUDIO.test(r.remplace.fichier || "")) await fsp.rm(path.join(AUDIOS, r.remplace.fichier), { force: true });
+      prevenir("taris");
+      return json(res, 200, { ok: true, envoi: r.envoi, remplace: !!r.remplace });
+    }
+
+    if (b === "prise" || b === "verdict") {
+      if (!peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Réservé au Conservatoire." });
+      const docId = a, c = await lireCorps(req);
+      if (b === "verdict" && !["maitrise", "retravailler"].includes(c.verdict)) return json(res, 400, { code: "invalid_argument" });
+      const r = await sousVerrou(docId, async () => {
+        const d = await stock.lireDoc("taris", docId);
+        const envois = (d && d.envois) || [], e = envois[envois.length - 1];
+        if (!e) return { erreur: 404, code: "not_found", message: "Aucun envoi pour ce Tari." };
+        if (d.membre === sess.membre) return { erreur: 403, code: "soi", message: "Votre propre Tari est écouté par un autre membre du Conservatoire." };
+        const autre = priseActive(e) && e.prise.par !== sess.membre ? e.prise : null;
+        if (b === "prise") {
+          if (c.liberer) { if (e.prise && (e.prise.par === sess.membre || sess.admin)) e.prise = null; }
+          else {
+            if (e.verdict) return { erreur: 409, code: "corrige", message: "Ce Tari a déjà reçu une réponse." };
+            if (autre) return { erreur: 409, code: "pris", message: autre.nom + " écoute déjà ce Tari.", prise: autre };
+            e.prise = { par: sess.membre, nom: moiNom, le: Date.now() };
+          }
+        } else {
+          if (c.envoi && c.envoi !== e.id) return { erreur: 409, code: "nouvel_envoi", message: "Le membre vient d’envoyer une nouvelle version : écoutez-la d’abord." };
+          if (autre) return { erreur: 409, code: "pris", message: autre.nom + " écoute ce Tari : c’est à lui de répondre." };
+          Object.assign(e, { verdict: c.verdict, mot: String(c.mot || "").trim().slice(0, 1000), par: sess.membre, parNom: moiNom, corrigeLe: Date.now(), prise: null });
+        }
+        await stock.ecrireDoc("taris", docId, { ...d, envois, majLe: Date.now() });
+        return { d, e };
+      });
+      if (r.erreur) return json(res, r.erreur, { code: r.code, message: r.message, prise: r.prise });
+      // La réponse met à jour l'état du Tari sur la séance (les mêmes champs que les boutons de la séance).
+      if (b === "verdict" && await stock.lireDoc("seances", r.d.seance)) {
+        const ok = c.verdict === "maitrise";
+        await stock.fusionnerDoc("seances", r.d.seance, { tariEtat: { [r.d.membre]: ok ? "maitrise" : "recu" }, tariRecu: { [r.d.membre]: ok } });
+        prevenir("seances");
+      }
+      prevenir("taris");
+      return json(res, 200, { ok: true, prise: r.e.prise || null });
+    }
+    return json(res, 405, { code: "invalid_argument" });
+  }
+
   /* --- Comptes des membres (administrateur) --- */
   if (parts[0] === "comptes") {
     if (!sess.admin) return json(res, 403, { code: "invalid_argument", message: "Réservé à l’administrateur." });
@@ -438,6 +663,8 @@ async function api(req, res, parts, sess) {
     if (id) return docs[0] ? json(res, 200, docs[0]) : json(res, 404, { code: "not_found" });
     return json(res, 200, { docs });
   }
+  // Les Taris enregistrés ne s'écrivent que par leurs routes (envoi, prise, verdict).
+  if (col === "taris") return json(res, 403, { code: "invalid_argument", message: "Les Taris s’envoient depuis Mon espace." });
   const corps = req.method === "PUT" || req.method === "PATCH" ? await lireCorps(req) : null;
   // Conservatoire : il peut marquer un khassida « en répétition » (et seulement cela).
   const marqueRepetition = col === "khassidas" && req.method === "PATCH" && corps && Object.keys(corps).length > 0
@@ -508,19 +735,7 @@ async function fichier(req, res, urlPath, sess) {
     res.writeHead(200, { "Content-Type": type, "Cache-Control": "no-store" });
     return res.end('<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">' + ICONES + '<script src="/local/claude-local.js"></script></head><body>' + html + "</body></html>");
   }
-  // Lecture par morceaux (Range) : indispensable pour avancer dans l'audio.
-  const range = req.headers.range && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
-  if (range) {
-    let debut = range[1] === "" ? st.size - Number(range[2]) : Number(range[1]);
-    let fin = range[1] !== "" && range[2] !== "" ? Number(range[2]) : st.size - 1;
-    if (isNaN(debut) || debut < 0 || debut >= st.size || fin < debut) { res.writeHead(416, { "Content-Range": "bytes */" + st.size }); return res.end(); }
-    fin = Math.min(fin, st.size - 1);
-    res.writeHead(206, { "Content-Type": type, "Accept-Ranges": "bytes", "Content-Range": `bytes ${debut}-${fin}/${st.size}`, "Content-Length": fin - debut + 1 });
-    return fs.createReadStream(cible, { start: debut, end: fin }).pipe(res);
-  }
-  const cache = rel.startsWith("/marque/") ? "public, max-age=604800" : "no-cache";
-  res.writeHead(200, { "Content-Type": type, "Accept-Ranges": "bytes", "Content-Length": st.size, "Cache-Control": cache });
-  fs.createReadStream(cible).pipe(res);
+  return envoyerFichier(req, res, cible, type, rel.startsWith("/marque/") ? "public, max-age=604800" : "no-cache");
 }
 
 http.createServer(async (req, res) => {
@@ -539,6 +754,7 @@ http.createServer(async (req, res) => {
 }).listen(PORT, async () => {
   console.log("Plateforme du Conservatoire : http://localhost:" + PORT);
   console.log("Données : " + stock.nom);
+  console.log("Audios des Taris : " + AUDIOS + (ffmpegDispo ? " (convertis en m4a avec ffmpeg)" : " (sans ffmpeg : gardés tels quels)"));
   if (await comptes.aucunCompte()) {
     console.log("\nAucun compte pour l’instant. Créez le premier administrateur :");
     console.log('  npm run admin -- "Prénom Nom"\n');

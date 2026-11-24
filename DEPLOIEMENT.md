@@ -14,6 +14,8 @@ Même principe que gobering :
 
 Les données sont dans Neon : le conteneur ne garde rien. Il refuse de démarrer sans `DATABASE_URL`.
 
+**Exception : les audios des Taris** enregistrés par les membres (fichiers trop lourds pour la base). Ils sont sur le disque du VPS, dans le volume Docker `conservatoire-audios` (monté sur `/app/audios`), créé tout seul au premier déploiement et gardé à chaque mise à jour. ffmpeg, inclus dans l'image, convertit chaque envoi en m4a (lisible sur tous les téléphones). Ne lancez jamais `docker compose down -v` : l'option `-v` effacerait ce volume.
+
 ## Première mise en place (une seule fois)
 
 ### 1. DNS
@@ -59,5 +61,7 @@ Dans le dépôt, allez dans Settings → Secrets and variables → Actions, et a
 - **Créer ou recréer un accès administrateur :**
   `docker compose exec app node plateforme/local/admin.mjs "Prénom Nom"`
 - **Voir les journaux :** `docker compose logs --tail=100 app`
+- **Place prise par les audios des Taris :** `docker system df -v | grep conservatoire-audios`
+- **Copie de sauvegarde des audios :** `docker run --rm -v conservatoire-audios:/a -v "$PWD":/b alpine tar czf /b/audios-taris.tgz -C /a .`
 - **Redémarrer :** `docker compose restart app`
 - **Changer le mot de passe Neon :** Neon → Roles → Reset password, puis mettez à jour `.env` sur le VPS et sur le Mac. Lancez ensuite `docker compose up -d` sur le VPS.
