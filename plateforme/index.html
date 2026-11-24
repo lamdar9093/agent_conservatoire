@@ -581,7 +581,8 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
 .dk-tete .pill { flex: none; font-size: 12px; }
 .dk-reduire { flex: none; width: 34px; height: 34px; border: 1px solid var(--rule); border-radius: 50%; background: var(--surface); color: var(--ink-soft); cursor: pointer; display: grid; place-items: center; }
 .dk-reduire svg { width: 16px; height: 16px; transition: transform 0.2s ease; }
-.tari-dock.reduit .dk-reduire svg { transform: rotate(180deg); }
+.tari-dock.reduit .dk-reduire:not(.dk-fermer) svg { transform: rotate(180deg); }
+a.dk-reduire { text-decoration: none; }
 .tari-dock.reduit .dk-plus { display: none; }
 .tari-seul .dk-reduire { display: none; }
 .dk-note { margin: 0; font-size: 13px; color: var(--ink-soft); }
@@ -675,6 +676,11 @@ textarea.copy { width: 100%; min-height: 160px; margin-top: 10px; padding: 10px;
 .mt-go { justify-self: start; margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 14px; }
 .mt-carte.a-faire .mt-go { background: var(--bad); color: var(--surface); }
 .mt-go.doux { background: var(--accent-soft); color: var(--accent); }
+.mt-vide { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--rule); background: var(--paper); font-size: 13.5px; color: var(--ink-soft); }
+.mt-vide .mt-ico { width: 36px; height: 36px; border-radius: 50%; background: var(--bad-soft); border: 0; }
+.mt-vide .mt-ico span { width: 12px; height: 12px; border-radius: 50%; background: var(--bad); }
+.mt-vide b { color: var(--ink); }
+.taris-faits a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .mt-go-rond { width: 10px; height: 10px; border-radius: 50%; background: currentColor; flex: none; }
 @media (max-width: 480px) { .mt-go { justify-self: stretch; justify-content: center; padding: 11px; } }
 /* Liste des Taris à écouter (Conservatoire) */
@@ -723,6 +729,25 @@ a.tq-item:hover { border-color: var(--accent); }
 .tari-ecoute.neuf { padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); }
 .dk-mot { display: block; }
 .dk-form { display: grid; gap: 8px; }
+/* Vocal du correcteur */
+.vocal-ajout { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border-radius: 12px; border: 1px dashed var(--bad); background: var(--bad-soft); color: var(--bad); font: inherit; font-weight: 600; font-size: 14.5px; cursor: pointer; }
+.rec-rond-mini { width: 12px; height: 12px; border-radius: 50%; background: currentColor; flex: none; }
+.vocal { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 6px 6px 6px 8px; border-radius: 999px; background: var(--bad-soft); color: var(--bad); }
+.vocal b { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; flex: none; }
+.vocal .niveau { flex: 1; min-width: 0; height: 26px; }
+.vocal .niveau i { max-width: 4px; }
+.vocal-txt { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vocal.pause .rec-point { animation: none; opacity: 0.45; }
+.vocal-btn { flex: none; border: 0; border-radius: 999px; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--surface); color: var(--ink); }
+.vocal-btn.fin { background: var(--bad); color: var(--surface); }
+.vocal-btn.icone { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; background: transparent; color: var(--bad); }
+.vocal-btn.icone svg { width: 19px; height: 19px; }
+.vocal.revue { background: transparent; padding: 0; min-height: 0; }
+.vocal.revue .lect { flex: 1; }
+.dk-verdict .btn:disabled { opacity: 0.45; }
+.dk-vocal { display: block; margin: 8px 0 2px; white-space: normal; }
+.dk-vocal-tete { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+.dk-vocal-note { display: block; margin-top: 4px; font-size: 13px; font-weight: 600; white-space: normal; }
 .dk-etapes { margin: 0 0 8px; padding: 10px 12px 10px 30px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); font-size: 13px; color: var(--ink-soft); display: grid; gap: 3px; }
 @media (max-width: 720px) { .dk-sugg { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; } .dk-sugg::-webkit-scrollbar { display: none; } .dk-sugg .toggle { flex: none; } }
 @media (min-width: 960px) {
@@ -730,7 +755,7 @@ a.tq-item:hover { border-color: var(--accent); }
   body.lecture.avec-dock .lecture-bar { grid-column: 1 / -1; }
   body.lecture.avec-dock .lecture-frame { grid-column: 1; grid-row: 2; }
   body.lecture.avec-dock .tari-dock { grid-column: 2; grid-row: 2; max-height: none; border-top: 0; border-left: 1px solid var(--rule); box-shadow: -10px 0 30px rgba(10, 30, 28, 0.08); padding: 18px 20px; }
-  body.lecture.avec-dock .dk-reduire { display: none; }
+  body.lecture.avec-dock .dk-reduire:not(.dk-fermer) { display: none; }
   body.lecture.avec-dock .tari-dock.reduit .dk-plus { display: block; }
 }
 /* Pastilles de la barre du bas (téléphone) : sur l'icône, pas sous le libellé */
@@ -2509,6 +2534,7 @@ a.tq-item:hover { border-color: var(--accent); }
     if (vue !== "tari" || avant !== tariVue.sid + "|" + tariVue.mid) {
       arreterLecture(); histOuvert = false; correction = { mot: "", fait: null, changer: null };
       if (studio && studio.etat === "enreg") arreterEnregistrement("cache");
+      if (vocal && (vocal.etat === "enreg" || vocal.etat === "pause")) terminerVocal();
     }
     afficher();
   });
@@ -3296,6 +3322,7 @@ a.tq-item:hover { border-color: var(--accent); }
   var PRISE_MS = 45 * 60000, DUREE_MAX = 15 * 60;
   var ICO_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
   var ICO_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
+  var ICO_FERMER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   var ICO_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
   var MOTS_TARI = ["Bravo, c’est maîtrisé !", "Bien, continue comme ça.", "Revois la prononciation.", "Attention au rythme.", "Le xàjj n’est pas encore juste.", "Chante avec plus d’assurance.", "Réécoute l’audio de référence."];
 
@@ -3428,6 +3455,8 @@ a.tq-item:hover { border-color: var(--accent); }
       (nb ? (nb > 1 ? nb + " Taris" : "Un Tari") + " à enregistrer. Chantez-le ici, sur la plateforme : le Conservatoire l’écoute et vous répond."
         : aFaire.length ? "Envoyé : le Conservatoire va l’écouter et vous répondre ici." : "Aucun Tari à envoyer pour le moment.") + "</p>";
     if (aFaire.length) h += '<div class="mt-liste">' + aFaire.map(carteMonTari).join("") + "</div>";
+    /* Rien de demandé : on explique où et quand le bouton d'enregistrement apparaîtra. */
+    else h += '<div class="mt-vide"><span class="mt-ico" aria-hidden="true"><span></span></span><span>Quand le Conservatoire vous demande un Tari (après une absence, ou pour une partie à retravailler), il apparaît ici avec un bouton rouge <b>«&nbsp;Enregistrer mon Tari&nbsp;»</b>. Vous chantez en lisant le texte du khassida, vous vous réécoutez, puis vous l’envoyez.</span></div>';
     if (faits.length) h += '<h3 class="group">Déjà maîtrisés</h3><ul class="taris-faits">' + faits.map(function (x) {
       return '<li><span class="ok" aria-hidden="true">✓</span><span><a href="' + lienTari(x.s.id) + '">' + esc(titreTari(x.td, x.d, x.s)) + "</a>" +
         (plageTari(x.td) ? " · " + esc(plageTari(x.td)) : "") + ' <span class="muted">· demandé ' + esc(quandDemande(x.s)) + "</span></span></li>";
@@ -3441,7 +3470,7 @@ a.tq-item:hover { border-color: var(--accent); }
     var quand = aFaire ? (depasse ? "Échéance dépassée : pas de dahira ni de prestation tant qu’il n’est pas maîtrisé" : "À maîtriser avant la répétition du " + jourEcheance(x.ech))
       : p ? prenomDe(p.nom) + " du Conservatoire l’écoute en ce moment"
       : "Envoyé " + ilYa(att.le) + " · en attente d’écoute";
-    var mot = x.etat === "retravailler" && e && e.verdict === "retravailler" && e.mot ? motHTML(e) : "";
+    var mot = x.etat === "retravailler" && e && e.verdict === "retravailler" && (e.mot || e.vocal) ? motHTML(e, true) : "";
     var go = x.etat === "attendu" ? "Enregistrer mon Tari" : x.etat === "retravailler" ? "Réenregistrer" : "Écouter mon envoi";
     return '<a class="mt-carte' + (aFaire ? " a-faire" : "") + '" href="' + lienTari(x.s.id) + '">' +
       '<span class="mt-ico" aria-hidden="true">' + (aFaire ? "<span></span>" : p ? "🎧" : "✓") + "</span>" +
@@ -3450,8 +3479,12 @@ a.tq-item:hover { border-color: var(--accent); }
       '<span class="mt-quand' + (aFaire && depasse ? " depasse" : "") + '">' + esc(quand) + "</span>" + mot +
       '<span class="mt-go' + (aFaire ? "" : " doux") + '">' + (aFaire ? '<span class="mt-go-rond" aria-hidden="true"></span>' : "") + go + "</span></span></a>";
   }
-  function motHTML(e) {
-    return '<span class="dk-mot' + (e.verdict === "retravailler" ? " retravailler" : "") + '">' + esc(e.mot || (e.verdict === "maitrise" ? "Maîtrisé." : "À retravailler.")) +
+  /* Réponse du correcteur : son mot écrit et/ou son vocal (sansLecteur : dans une carte cliquable, on l'annonce seulement). */
+  function motHTML(e, sansLecteur) {
+    var texte = e.mot || (e.vocal ? "" : e.verdict === "maitrise" ? "Maîtrisé." : "À retravailler.");
+    return '<span class="dk-mot' + (e.verdict === "retravailler" ? " retravailler" : "") + '">' + esc(texte) +
+      (e.vocal ? (sansLecteur ? '<span class="dk-vocal-note">🎙️ ' + esc(prenomDe(e.parNom) || "Le Conservatoire") + " vous a laissé un vocal</span>"
+        : '<span class="dk-vocal"><span class="dk-vocal-tete">🎙️ Vocal de ' + esc(prenomDe(e.parNom) || "le Conservatoire") + "</span>" + lecteurHTML(audioUrl(e.vocal), e.vocal.duree, true) + "</span>") : "") +
       "<small>— " + esc(e.parNom || "Le Conservatoire") + (e.corrigeLe ? ", " + esc(ilYa(e.corrigeLe)) : "") + "</small></span>";
   }
 
@@ -3482,9 +3515,11 @@ a.tq-item:hover { border-color: var(--accent); }
     }
     rendreDock(dock);
   }
-  function enteteDock(titre, sous, pill) {
+  /* fermer : lien qui fait disparaître le volet (lecture simple du khassida, ou retour à la liste). */
+  function enteteDock(titre, sous, pill, fermer) {
     return '<div class="dk-tete"><span class="dk-titre"><b>' + esc(titre) + "</b>" + (sous ? "<span>" + esc(sous) + "</span>" : "") + "</span>" + (pill || "") +
-      '<button type="button" class="dk-reduire" data-dock-reduire aria-label="' + (dockReduit ? "Agrandir" : "Réduire") + ' le volet" aria-expanded="' + !dockReduit + '">' + ICO_CHEVRON + "</button></div>";
+      '<button type="button" class="dk-reduire" data-dock-reduire aria-label="' + (dockReduit ? "Agrandir" : "Réduire") + ' le volet" aria-expanded="' + !dockReduit + '">' + ICO_CHEVRON + "</button>" +
+      (fermer ? '<a class="dk-reduire dk-fermer" href="' + esc(fermer) + '" aria-label="Fermer le volet">' + ICO_FERMER + "</a>" : "") + "</div>";
   }
   /* Volet du membre : enregistrer, réécouter, envoyer ; puis l'état de son envoi et la réponse du Conservatoire. */
   function dockMembre(t) {
@@ -3493,7 +3528,8 @@ a.tq-item:hover { border-color: var(--accent); }
     var ech = echeanceTari(s), depasse = ech < today();
     var page = tariAvecPage();
     var sous = [plageTari(td), td.consigne, page ? "" : "demandé " + quandDemande(s)].filter(Boolean).join(" · ") || "Le Conservatoire précisera quoi chanter";
-    var h = enteteDock(page ? "Mon Tari" : titreTari(td, d, s), sous, st ? "" : pillEtat(etat)), c;
+    var kh0 = khassidas[td.khassida], fermer = st ? "" : (page && kh0 ? "#khassida/" + encodeURIComponent(kh0.id) : "#moi");
+    var h = enteteDock(page ? "Mon Tari" : titreTari(td, d, s), sous, st ? "" : pillEtat(etat), page ? fermer : ""), c;
     if (st && (st.etat === "autorisation" || st.etat === "fin")) {
       c = '<div class="rec"><button type="button" class="rec-btn attente" disabled aria-label="Un instant"><span class="rec-rond"></span></button><span class="rec-txt"><b>' +
         (st.etat === "fin" ? "Un instant…" : "Autorisez le micro") + "</b><span>" + (st.etat === "fin" ? "Préparation de votre enregistrement." : "Votre téléphone demande l’accès au micro : touchez « Autoriser ».") + "</span></span></div>";
@@ -3519,11 +3555,12 @@ a.tq-item:hover { border-color: var(--accent); }
     } else if (etat === "maitrise") {
       c = '<div class="dk-etat"><span class="dk-etat-ico ok" aria-hidden="true">✓</span><span><b>Tari maîtrisé</b><small>' +
         (e && e.verdict === "maitrise" ? "Validé par " + esc(e.parNom || "le Conservatoire") + ", " + esc(ilYa(e.corrigeLe)) : "Validé par le Conservatoire") + "</small></span></div>" +
-        (e && e.verdict === "maitrise" && e.mot ? motHTML(e) : "") + (e && e.verdict === "maitrise" ? lecteurHTML(audioUrl(e), e.duree) : "");
+        (e && e.verdict === "maitrise" && (e.mot || e.vocal) ? motHTML(e) : "") + (e && e.verdict === "maitrise" ? lecteurHTML(audioUrl(e), e.duree) : "");
     } else if (att) {
       c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">' + (p ? "🎧" : "✓") + "</span><span><b>" + (p ? esc(prenomDe(p.nom)) + " écoute votre Tari" : "Envoyé, en attente d’écoute") + "</b>" +
         "<small>Envoyé " + esc(ilYa(att.le)) + (p ? " · sa réponse s’affichera ici" : " · vous pouvez encore le remplacer") + "</small></span></div>" +
         lecteurHTML(audioUrl(att), att.duree) +
+        '<div class="dk-actions"><a class="btn primary" href="#moi">Terminé</a>' + (page && kh0 ? '<a class="btn" href="#khassida/' + encodeURIComponent(kh0.id) + '">Continuer à lire</a>' : "") + "</div>" +
         (p ? "" : '<div class="dk-plus"><div class="dk-liens"><button type="button" class="linkish" data-studio="enregistrer">↺ Remplacer par un nouvel enregistrement</button></div></div>');
     } else {
       c = (etat === "retravailler" && e && e.verdict === "retravailler" ? motHTML(e) : "") +
@@ -3560,7 +3597,7 @@ a.tq-item:hover { border-color: var(--accent); }
     var s = t.s, mid = t.mid, td = t.td, d = dossierTari(s.id, mid), m = membres[mid], etat = etatAffiche(s, mid);
     var envois = envoisDe(d), e = dernierEnvoi(d), att = enAttente(d), p = priseActive(att), docId = docTariId(s.id, mid);
     var aMoi = !!p && p.par === moiCourant, autre = !!p && !aMoi, pr = prenomDe(m.nom);
-    var h = enteteDock(m.nom, [plageTari(td), tariAvecPage() ? "" : td.consigne, "Tari du " + jourCourt(s.date)].filter(Boolean).join(" · "), pillEtat(etat)), c = "";
+    var h = enteteDock(m.nom, [plageTari(td), tariAvecPage() ? "" : td.consigne, "Tari du " + jourCourt(s.date)].filter(Boolean).join(" · "), pillEtat(etat), tariAvecPage() ? "#taris" + (tarisFiltreKh ? "/" + encodeURIComponent(tarisFiltreKh) : "") : ""), c = "";
     if (correction.fait && correction.fait.docId === docId) {
       var reste = tarisAEcouter().filter(libreOuMien).filter(function (x) { return docTariId(x.s.id, x.mid) !== docId; });
       c = '<div class="dk-fait"><b>' + (correction.fait.verdict === "maitrise" ? "✓ Maîtrisé" : "↻ À retravailler") + " : réponse envoyée à " + esc(pr) + "</b>" +
@@ -3577,7 +3614,7 @@ a.tq-item:hover { border-color: var(--accent); }
         c += '<div class="dk-prise autre"><span>🎧 <b>' + esc(p.nom) + "</b> " + (min < 1 ? "vient de prendre ce Tari" : "écoute ce Tari depuis " + min + " min") + ". Vous pouvez l’écouter ; c’est à lui de répondre.</span></div>";
       }
       else {
-        c += aMoi ? '<div class="dk-prise moi">✓ <span>Vous l’avez pris : les autres voient « pris par ' + esc(prenomDe(p.nom)) + " ».</span>" + '<button type="button" class="linkish" data-tari-liberer="' + esc(docId) + '">Le laisser</button></div>'
+        c += aMoi ? '<div class="dk-prise moi"><span>✓ Vous l’avez pris : les autres voient « pris par ' + esc(prenomDe(p.nom)) + " ».</span>" + '<button type="button" class="linkish" data-tari-liberer="' + esc(docId) + '">Le laisser</button></div>'
           : '<div class="dk-prise"><span>Personne ne l’écoute encore.</span><button type="button" class="btn small primary" data-tari-prendre="' + esc(docId) + '">🎧 Je le prends</button></div>';
         c += formulaireVerdict(docId, att.id, pr);
       }
@@ -3608,8 +3645,129 @@ a.tq-item:hover { border-color: var(--accent); }
     var mot = correction.mot || "";
     return '<div class="dk-plus"><div class="dk-form"><textarea class="dk-champ" id="tari-mot" data-tari-mot maxlength="1000" rows="2" placeholder="Un mot pour ' + esc(prenom) + ' (facultatif) : ce qui est bien, ce qu’il faut reprendre…">' + esc(mot) + "</textarea>" +
       '<div class="dk-sugg">' + MOTS_TARI.map(function (t, i) { var on = mot.indexOf(t) > -1; return '<button type="button" class="toggle" data-tari-sugg="' + i + '" aria-pressed="' + on + '">' + (on ? "✓ " : "") + esc(t) + "</button>"; }).join("") + "</div></div></div>" +
-      '<div class="dk-verdict"><button type="button" class="btn v-retravailler" data-tari-verdict="retravailler" data-doc="' + esc(docId) + '" data-envoi="' + esc(envoiId) + '">↻ À retravailler</button>' +
-      '<button type="button" class="btn v-maitrise" data-tari-verdict="maitrise" data-doc="' + esc(docId) + '" data-envoi="' + esc(envoiId) + '">✓ Maîtrisé</button></div>';
+      vocalHTML(docId) +
+      '<div class="dk-verdict"><button type="button" class="btn v-retravailler" data-tari-verdict="retravailler" data-doc="' + esc(docId) + '" data-envoi="' + esc(envoiId) + '"' + (vocalOccupe(docId) ? " disabled" : "") + '>↻ À retravailler</button>' +
+      '<button type="button" class="btn v-maitrise" data-tari-verdict="maitrise" data-doc="' + esc(docId) + '" data-envoi="' + esc(envoiId) + '"' + (vocalOccupe(docId) ? " disabled" : "") + '>✓ Maîtrisé</button></div>';
+  }
+
+  /* ----- Réponse vocale du correcteur (comme un vocal WhatsApp) -----
+     Il enregistre, met en pause pour réécouter le Tari du membre, reprend, puis termine : le vocal part avec la réponse. */
+  var vocal = null, VOCAL_MAX = 10 * 60;
+  var ICO_POUBELLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/></svg>';
+  function vocalOccupe(docId) { return !!vocal && vocal.docId === docId && ["autorisation", "enreg", "pause", "fin", "envoi"].indexOf(vocal.etat) > -1; }
+  function dureeVocal(st) { return ((st.cumul || 0) + (st.etat === "enreg" ? Date.now() - st.debut : 0)) / 1000; }
+  function vocalHTML(docId) {
+    var v = vocal && vocal.docId === docId ? vocal : null;
+    if (!v) return '<button type="button" class="vocal-ajout" data-vocal="enregistrer"><span class="rec-rond-mini" aria-hidden="true"></span>Répondre par un vocal</button>';
+    if (v.etat === "autorisation" || v.etat === "fin") return '<div class="vocal"><span class="rec-point" aria-hidden="true"></span><span class="vocal-txt">' + (v.etat === "fin" ? "Un instant…" : "Autorisez le micro…") + "</span></div>";
+    if (v.etat === "enreg" || v.etat === "pause") {
+      var niv = v.niveaux || [], barres = "";
+      for (var i = 0; i < 22; i++) barres += '<i style="transform:scaleY(' + Math.max(0.08, niv[niv.length - 22 + i] || 0) + ')"></i>';
+      return '<div class="vocal' + (v.etat === "pause" ? " pause" : "") + '">' +
+        '<button type="button" class="vocal-btn icone" data-vocal="annuler" aria-label="Supprimer le vocal">' + ICO_POUBELLE + "</button>" +
+        '<span class="rec-point" aria-hidden="true"></span><b id="vocal-temps">' + fmtDuree(dureeVocal(v)) + "</b>" +
+        (v.etat === "pause" ? '<span class="vocal-txt">En pause</span>' : '<span class="niveau" id="vocal-niveau" aria-hidden="true">' + barres + "</span>") +
+        (v.pauseOk ? (v.etat === "pause" ? '<button type="button" class="vocal-btn" data-vocal="reprendre">● Reprendre</button>' : '<button type="button" class="vocal-btn" data-vocal="pause">❚❚ Pause</button>') : "") +
+        '<button type="button" class="vocal-btn fin" data-vocal="terminer">Terminer</button></div>' +
+        '<p class="dk-note">' + (v.pauseOk ? "Mettez en pause pour réécouter son Tari (il se met en pause tout seul si vous l’écoutez), puis reprenez. « Terminer » quand vous avez fini." : "« Terminer » quand vous avez fini.") + "</p>";
+    }
+    if (v.etat === "envoi") return '<div class="vocal"><span class="vocal-txt" id="vocal-envoi">Envoi du vocal… ' + Math.round((v.progres || 0) * 100) + " %</span></div>";
+    if (v.etat === "refus") return '<div class="dk-prise autre"><span>🎙️ ' + esc(aideMicro(v.erreur)) + '</span><button type="button" class="btn small" data-vocal="enregistrer">Réessayer</button></div>';
+    return '<div class="vocal revue">' + lecteurHTML(v.url, v.duree, true) + '<button type="button" class="vocal-btn icone" data-vocal="annuler" aria-label="Supprimer le vocal">' + ICO_POUBELLE + "</button></div>" +
+      '<p class="dk-note">🎙️ Votre vocal (' + fmtDuree(v.duree) + ") partira avec votre réponse.</p>";
+  }
+  function demarrerVocal(docId) {
+    if (!enregistrementPossible()) { vocal = { docId: docId, etat: "refus", erreur: "NonSupporte" }; afficher(); return; }
+    arreterLecture(); pauserReference();
+    if (vocal && vocal.url) URL.revokeObjectURL(vocal.url);
+    var st = vocal = { docId: docId, etat: "autorisation", cumul: 0, niveaux: [] };
+    try { var AC = window.AudioContext || window.webkitAudioContext; st.ctx = new AC(); if (st.ctx.resume) st.ctx.resume().catch(function () {}); } catch (e) { st.ctx = null; }
+    afficher();
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true } }).then(function (flux) {
+      if (vocal !== st) { libererMicro(Object.assign(st, { flux: flux })); return; }
+      var mime = mimeEnregistrement(), rec;
+      try { rec = new MediaRecorder(flux, mime ? { mimeType: mime, audioBitsPerSecond: 128000 } : undefined); }
+      catch (e) { try { rec = new MediaRecorder(flux); } catch (e2) { libererMicro(Object.assign(st, { flux: flux })); vocal = { docId: docId, etat: "refus", erreur: "NonSupporte" }; afficher(); return; } }
+      st.flux = flux; st.rec = rec; st.morceaux = []; st.mime = rec.mimeType || mime || "audio/webm";
+      st.pauseOk = typeof rec.pause === "function" && typeof rec.resume === "function";
+      rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) st.morceaux.push(ev.data); };
+      rec.onstop = function () { finVocal(st); };
+      flux.getAudioTracks().forEach(function (x) { x.onended = function () { if (vocal === st) terminerVocal(); }; });
+      try { if (st.ctx) { st.analyseur = st.ctx.createAnalyser(); st.analyseur.fftSize = 1024; st.ctx.createMediaStreamSource(flux).connect(st.analyseur); } } catch (e) { st.analyseur = null; }
+      rec.start(1000);
+      st.debut = Date.now(); st.etat = "enreg";
+      st.minuteur = setInterval(function () {
+        if (vocal !== st || st.etat !== "enreg") return;
+        var el = document.getElementById("vocal-temps"), sec = dureeVocal(st);
+        if (el) el.textContent = fmtDuree(sec);
+        if (sec >= VOCAL_MAX) { terminerVocal(); toast("10 minutes au plus : le vocal s’est arrêté."); }
+      }, 250);
+      afficher();
+      boucleVocal(st);
+    }, function (err) {
+      if (st.ctx && st.ctx.close) st.ctx.close().catch(function () {});
+      if (vocal !== st) return;
+      vocal = { docId: docId, etat: "refus", erreur: (err && err.name) || "NotAllowedError" };
+      afficher();
+    });
+  }
+  function boucleVocal(st) {
+    if (vocal !== st || (st.etat !== "enreg" && st.etat !== "pause")) return;
+    var el = document.getElementById("vocal-niveau"), t = Date.now();
+    if (st.etat === "enreg" && st.analyseur && el && (!st.dernierNiv || t - st.dernierNiv > 90)) {
+      st.dernierNiv = t;
+      var buf = new Uint8Array(st.analyseur.fftSize), max = 0;
+      st.analyseur.getByteTimeDomainData(buf);
+      for (var i = 0; i < buf.length; i++) { var v = Math.abs(buf[i] - 128); if (v > max) max = v; }
+      st.niveaux.push(Math.min(1, Math.pow(max / 100, 0.65)));
+      if (st.niveaux.length > 60) st.niveaux.shift();
+      var b = el.children, n = b.length, l = st.niveaux;
+      for (var j = 0; j < n; j++) b[j].style.transform = "scaleY(" + Math.max(0.08, l[l.length - n + j] || 0) + ")";
+    }
+    st.raf = requestAnimationFrame(function () { boucleVocal(st); });
+  }
+  function pauseVocal(auto) {
+    var st = vocal;
+    if (!st || st.etat !== "enreg") return;
+    if (!st.pauseOk) { terminerVocal(); return; }
+    try { st.rec.pause(); } catch (e) { terminerVocal(); return; }
+    st.cumul += Date.now() - st.debut; st.etat = "pause";
+    afficher();
+    if (auto) toast("Vocal en pause pendant que vous écoutez. Touchez « Reprendre » pour continuer.");
+  }
+  function reprendreVocal() {
+    var st = vocal;
+    if (!st || st.etat !== "pause") return;
+    arreterLecture(); pauserReference();
+    try { st.rec.resume(); } catch (e) { terminerVocal(); return; }
+    st.debut = Date.now(); st.etat = "enreg";
+    afficher();
+  }
+  function terminerVocal() {
+    var st = vocal;
+    if (!st || (st.etat !== "enreg" && st.etat !== "pause")) return;
+    st.duree = dureeVocal(st); st.etat = "fin";
+    afficher();
+    try { if (st.rec.state !== "inactive") st.rec.stop(); else finVocal(st); } catch (e) { finVocal(st); }
+  }
+  function finVocal(st) {
+    if (st.fini) return;
+    st.fini = true;
+    libererMicro(st);
+    if (vocal !== st) return;
+    var blob = new Blob(st.morceaux || [], { type: (st.mime || "audio/webm").split(";")[0] });
+    if (st.annule) { vocal = null; afficher(); return; }
+    if ((st.duree || 0) < 1 || blob.size < 1000) { vocal = null; afficher(); toast("Vocal trop court : recommencez."); return; }
+    vocal = { docId: st.docId, etat: "revue", blob: blob, url: URL.createObjectURL(blob), duree: st.duree };
+    afficher();
+  }
+  function annulerVocal() {
+    var st = vocal;
+    if (!st) return;
+    if (st.etat === "enreg" || st.etat === "pause") { st.annule = true; st.etat = "fin"; try { st.rec.stop(); } catch (e) { finVocal(st); } return; }
+    if (st.url) URL.revokeObjectURL(st.url);
+    libererMicro(st);
+    vocal = null; afficher();
   }
   /* Le volet est mis à jour sans recharger la page du khassida, en gardant la saisie en cours. */
   function rendreDock(html) {
@@ -3768,9 +3926,12 @@ a.tq-item:hover { border-color: var(--accent); }
     champFichier.dataset.sid = sid;
     champFichier.click();
   }
-  document.addEventListener("visibilitychange", function () { if (document.hidden && studio && studio.etat === "enreg") arreterEnregistrement("cache"); });
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden && studio && studio.etat === "enreg") arreterEnregistrement("cache");
+    if (document.hidden && vocal && vocal.etat === "enreg") pauseVocal(false);
+  });
   window.addEventListener("beforeunload", function (e) {
-    if (studio && (studio.etat === "enreg" || studio.etat === "revue" || studio.etat === "envoi")) { e.preventDefault(); e.returnValue = ""; }
+    if ((studio && (studio.etat === "enreg" || studio.etat === "revue" || studio.etat === "envoi")) || (vocal && ["enreg", "pause", "revue", "envoi"].indexOf(vocal.etat) > -1)) { e.preventDefault(); e.returnValue = ""; }
   });
 
   /* ----- Lecteur des envois (un seul audio à la fois) ----- */
@@ -3801,6 +3962,7 @@ a.tq-item:hover { border-color: var(--accent); }
     });
   }
   function jouer(el, fraction) {
+    if (vocal && vocal.etat === "enreg") pauseVocal(true);
     var a = leLecteur(), src = el.dataset.lect;
     pauserReference();
     if (lecteurSrc !== src) { a.src = src; lecteurSrc = src; }
@@ -3970,14 +4132,35 @@ a.tq-item:hover { border-color: var(--accent); }
       return true;
     }
     if (d.tariChanger !== undefined) { correction.changer = d.tariChanger || null; correction.mot = ""; afficher(); return true; }
+    if (d.vocal) {
+      var tv = tariCourant();
+      if (!tv) return true;
+      var docVo = docTariId(tv.s.id, tv.mid);
+      if (d.vocal === "enregistrer") demarrerVocal(docVo);
+      else if (d.vocal === "pause") pauseVocal(false);
+      else if (d.vocal === "reprendre") reprendreVocal();
+      else if (d.vocal === "terminer") terminerVocal();
+      else if (d.vocal === "annuler") annulerVocal();
+      return true;
+    }
     if (d.tariVerdict) {
-      var ta2 = document.getElementById("tari-mot"), verdict = d.tariVerdict, docV = d.doc;
+      var ta2 = document.getElementById("tari-mot"), verdict = d.tariVerdict, docV = d.doc, envoiV = d.envoi, motV = ta2 ? ta2.value : correction.mot;
+      if (vocalOccupe(docV)) { toast("Touchez « Terminer » pour finir votre vocal, puis répondez."); return true; }
       b.disabled = true;
-      tarisApi.repondre(docV, { envoi: d.envoi, verdict: verdict, mot: ta2 ? ta2.value : correction.mot }).then(function () {
-        arreterLecture();
-        correction = { mot: "", fait: { docId: docV, verdict: verdict }, changer: null };
-        afficher();
-      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "La réponse n’a pas pu être envoyée. Réessayez."); });
+      var repondre = function (vf) {
+        tarisApi.repondre(docV, { envoi: envoiV, verdict: verdict, mot: motV, vocal: vf }).then(function () {
+          arreterLecture();
+          if (vocal && vocal.docId === docV) { if (vocal.url) URL.revokeObjectURL(vocal.url); vocal = null; }
+          correction = { mot: "", fait: { docId: docV, verdict: verdict }, changer: null };
+          afficher();
+        }, function (e) { b.disabled = false; if (vocal && vocal.docId === docV && vocal.etat === "envoi") vocal.etat = "revue"; afficher(); toast(e && e.message ? e.message : "La réponse n’a pas pu être envoyée. Réessayez."); });
+      };
+      var vs = vocal && vocal.docId === docV && vocal.etat === "revue" ? vocal : null;
+      if (!vs) { repondre(null); return true; }
+      vs.etat = "envoi"; vs.progres = 0; afficher();
+      tarisApi.vocal(docV, vs.blob, { duree: vs.duree, progres: function (f) { vs.progres = f; var el = document.getElementById("vocal-envoi"); if (el) el.textContent = "Envoi du vocal… " + Math.round(f * 100) + " %"; } })
+        .then(function (r) { repondre({ fichier: r.fichier, duree: r.duree || vs.duree }); },
+          function (e) { vs.etat = "revue"; b.disabled = false; afficher(); toast(e && e.message ? e.message : "Le vocal n’a pas pu être envoyé. Réessayez."); });
       return true;
     }
     return false;

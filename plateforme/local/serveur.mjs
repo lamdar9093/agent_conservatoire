@@ -212,6 +212,32 @@ function convertirEnM4a(source, cible) {
     p.on("exit", (c) => { clearTimeout(minuteur); ok(c === 0); });
   });
 }
+/* Reçoit un audio (corps de la requête), vérifie son format, le convertit en m4a si ffmpeg est là.
+   prefixe = le membre à qui il appartient (il pourra l'écouter). Renvoie { fichier, taille } ou { erreur, code, message }. */
+async function enregistrerAudio(req, prefixe) {
+  if (Number(req.headers["content-length"] || 0) > MAX_AUDIO) return { erreur: 413, code: "trop_gros", message: "Fichier trop lourd : 40 Mo au plus." };
+  const tmp = path.join(AUDIOS, ".recu-" + crypto.randomBytes(8).toString("hex"));
+  let recu;
+  try { recu = await recevoirFichier(req, tmp, MAX_AUDIO); }
+  catch (e) { return { erreur: e.code === "trop_gros" ? 413 : 400, code: e.code, message: e.code === "trop_gros" ? "Fichier trop lourd : 40 Mo au plus." : "L’envoi a été interrompu. Réessayez.", coupe: true }; }
+  const fmt = formatAudio(recu.tete);
+  if (recu.taille < 1000 || !fmt) {
+    await fsp.rm(tmp, { force: true });
+    return { erreur: 415, code: "format", message: recu.taille < 1000 ? "L’enregistrement est vide : recommencez." : "Ce fichier n’est pas un audio reconnu (m4a, mp3, webm, ogg ou wav)." };
+  }
+  const base = prefixe + "--" + crypto.randomBytes(16).toString("hex");
+  let fichier = base + "." + fmt, taille = recu.taille;
+  if (ffmpegDispo && await convertirEnM4a(tmp, path.join(AUDIOS, base + ".m4a"))) {
+    fichier = base + ".m4a";
+    taille = (await fsp.stat(path.join(AUDIOS, fichier))).size;
+    await fsp.rm(tmp, { force: true });
+  } else {
+    if (ffmpegDispo) await fsp.rm(path.join(AUDIOS, base + ".m4a"), { force: true });
+    await fsp.rename(tmp, path.join(AUDIOS, fichier));
+  }
+  return { fichier, taille };
+}
+const dureeDe = (req) => Math.max(0, Math.min(3600, Math.round(10 * (Number(new URL(req.url, "http://x").searchParams.get("duree")) || 0)) / 10));
 /* Un seul traitement à la fois par dossier de Tari (deux membres du Conservatoire qui le prennent en même temps). */
 const verrous = new Map();
 function sousVerrou(cle, fn) {
@@ -506,7 +532,8 @@ async function api(req, res, parts, sess) {
      GET  taris/audio/<fichier>      écouter : le membre lui-même, le Conservatoire, l'admin
      POST taris/<séance>/envoi       le membre envoie son audio (corps = le fichier), ?duree=secondes
      POST taris/<dossier>/prise      le Conservatoire prend le Tari ({ liberer: true } pour le laisser)
-     POST taris/<dossier>/verdict    { envoi, verdict: maitrise | retravailler, mot } */
+     POST taris/<dossier>/vocal      le correcteur envoie sa réponse vocale (corps = le fichier), ?duree=secondes
+     POST taris/<dossier>/verdict    { envoi, verdict: maitrise | retravailler, mot, vocal: { fichier, duree } } */
   if (parts[0] === "taris" && (parts.length > 2 || req.method !== "GET")) {
     const [, a, b] = parts;
     if (a === "audio" && req.method === "GET" && parts.length === 3) {
@@ -523,31 +550,10 @@ async function api(req, res, parts, sess) {
       if (!s) return json(res, 404, { code: "not_found", message: "Cette séance n’existe plus." });
       if (!tariConcerneServeur(s, moi)) return json(res, 403, { code: "pas_concerne", message: "Ce Tari ne vous est pas demandé." });
       if (etatTariServeur(s, moi) === "maitrise") return json(res, 409, { code: "maitrise", message: "Ce Tari est déjà maîtrisé : rien à renvoyer." });
-      if (Number(req.headers["content-length"] || 0) > MAX_AUDIO) return json(res, 413, { code: "trop_gros", message: "Fichier trop lourd : 40 Mo au plus." });
       if (tropDAudios(moi)) return json(res, 429, { code: "rate_limited", message: "Beaucoup d’envois rapprochés : réessayez dans une heure." });
-      const tmp = path.join(AUDIOS, ".recu-" + crypto.randomBytes(8).toString("hex"));
-      let recu;
-      try { recu = await recevoirFichier(req, tmp, MAX_AUDIO); }
-      catch (e) {
-        if (res.destroyed || req.destroyed) return;
-        return json(res, e.code === "trop_gros" ? 413 : 400, { code: e.code, message: e.code === "trop_gros" ? "Fichier trop lourd : 40 Mo au plus." : "L’envoi a été interrompu. Réessayez." });
-      }
-      const fmt = formatAudio(recu.tete);
-      if (recu.taille < 1000 || !fmt) {
-        await fsp.rm(tmp, { force: true });
-        return json(res, 415, { code: "format", message: recu.taille < 1000 ? "L’enregistrement est vide : recommencez." : "Ce fichier n’est pas un audio reconnu (m4a, mp3, webm, ogg ou wav)." });
-      }
-      const base = moi + "--" + crypto.randomBytes(16).toString("hex");
-      let fichier = base + "." + fmt, taille = recu.taille;
-      if (ffmpegDispo && await convertirEnM4a(tmp, path.join(AUDIOS, base + ".m4a"))) {
-        fichier = base + ".m4a";
-        taille = (await fsp.stat(path.join(AUDIOS, fichier))).size;
-        await fsp.rm(tmp, { force: true });
-      } else {
-        if (ffmpegDispo) await fsp.rm(path.join(AUDIOS, base + ".m4a"), { force: true });
-        await fsp.rename(tmp, path.join(AUDIOS, fichier));
-      }
-      const duree = Math.max(0, Math.min(3600, Math.round(10 * (Number(new URL(req.url, "http://x").searchParams.get("duree")) || 0)) / 10));
+      const au = await enregistrerAudio(req, moi);
+      if (au.erreur) { if (au.coupe && (res.destroyed || req.destroyed)) return; return json(res, au.erreur, { code: au.code, message: au.message }); }
+      const fichier = au.fichier, taille = au.taille, duree = dureeDe(req);
       const docId = sid + "~" + moi;
       const r = await sousVerrou(docId, async () => {
         const d = (await stock.lireDoc("taris", docId)) || {};
@@ -572,10 +578,29 @@ async function api(req, res, parts, sess) {
       return json(res, 200, { ok: true, envoi: r.envoi, remplace: !!r.remplace });
     }
 
+    if (b === "vocal") {
+      if (!peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Réservé au Conservatoire." });
+      const d = await stock.lireDoc("taris", a);
+      if (!d) return json(res, 404, { code: "not_found", message: "Ce Tari n’existe plus." });
+      if (d.membre === sess.membre) return json(res, 403, { code: "soi", message: "Votre propre Tari est écouté par un autre membre du Conservatoire." });
+      if (tropDAudios(sess.membre)) return json(res, 429, { code: "rate_limited", message: "Beaucoup d’envois rapprochés : réessayez dans une heure." });
+      const au = await enregistrerAudio(req, d.membre);
+      if (au.erreur) { if (au.coupe && (res.destroyed || req.destroyed)) return; return json(res, au.erreur, { code: au.code, message: au.message }); }
+      return json(res, 200, { ok: true, fichier: au.fichier, duree: dureeDe(req) });
+    }
+
     if (b === "prise" || b === "verdict") {
       if (!peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Réservé au Conservatoire." });
       const docId = a, c = await lireCorps(req);
       if (b === "verdict" && !["maitrise", "retravailler"].includes(c.verdict)) return json(res, 400, { code: "invalid_argument" });
+      // Vocal joint à la réponse : un fichier déjà reçu (route « vocal ») au nom de ce membre.
+      let vocal = null;
+      if (b === "verdict" && c.vocal && c.vocal.fichier) {
+        const mv = FICHIER_AUDIO.exec(String(c.vocal.fichier));
+        const membreDoc = String(a).split("~")[1];
+        if (!mv || mv[1] !== membreDoc || !(await fsp.stat(path.join(AUDIOS, c.vocal.fichier)).catch(() => null))) return json(res, 400, { code: "vocal", message: "Le vocal n’a pas été reçu : réenregistrez-le." });
+        vocal = { fichier: String(c.vocal.fichier), duree: Math.max(0, Math.min(3600, Number(c.vocal.duree) || 0)) };
+      }
       const r = await sousVerrou(docId, async () => {
         const d = await stock.lireDoc("taris", docId);
         const envois = (d && d.envois) || [], e = envois[envois.length - 1];
@@ -592,7 +617,8 @@ async function api(req, res, parts, sess) {
         } else {
           if (c.envoi && c.envoi !== e.id) return { erreur: 409, code: "nouvel_envoi", message: "Le membre vient d’envoyer une nouvelle version : écoutez-la d’abord." };
           if (autre) return { erreur: 409, code: "pris", message: autre.nom + " écoute ce Tari : c’est à lui de répondre." };
-          Object.assign(e, { verdict: c.verdict, mot: String(c.mot || "").trim().slice(0, 1000), par: sess.membre, parNom: moiNom, corrigeLe: Date.now(), prise: null });
+          if (e.vocal && (!vocal || vocal.fichier !== e.vocal.fichier)) fsp.rm(path.join(AUDIOS, e.vocal.fichier), { force: true }).catch(() => {});
+          Object.assign(e, { verdict: c.verdict, mot: String(c.mot || "").trim().slice(0, 1000), vocal, par: sess.membre, parNom: moiNom, corrigeLe: Date.now(), prise: null });
         }
         await stock.ecrireDoc("taris", docId, { ...d, envois, majLe: Date.now() });
         return { d, e };

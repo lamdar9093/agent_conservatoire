@@ -145,24 +145,28 @@
     er.code = j.code || (x.status ? "erreur" : "reseau");
     return er;
   }
+  /* Envoi d'un audio tel quel, avec la progression (fraction de 0 à 1). */
+  function envoiAudio(url, fichier, opts) {
+    opts = opts || {};
+    return new Promise(function (ok, ko) {
+      var x = new XMLHttpRequest();
+      x.open("POST", url + "?duree=" + encodeURIComponent(opts.duree || ""));
+      x.setRequestHeader("Content-Type", fichier.type || "application/octet-stream");
+      if (x.upload && opts.progres) x.upload.onprogress = function (e) { if (e.lengthComputable) opts.progres(e.loaded / e.total); };
+      x.onload = function () {
+        if (x.status === 401) { location.href = "/connexion.html"; return; }
+        if (x.status >= 200 && x.status < 300) { var j = {}; try { j = JSON.parse(x.responseText); } catch (e) { /* vide */ } rafraichir("taris"); ok(j); }
+        else ko(erreurEnvoi(x));
+      };
+      x.onerror = function () { ko(erreurEnvoi(x)); };
+      x.send(fichier);
+    });
+  }
+
   var taris = Object.freeze({
-    /* Envoi du fichier tel quel, avec la progression (fraction de 0 à 1). */
-    envoyer: function (seance, fichier, opts) {
-      opts = opts || {};
-      return new Promise(function (ok, ko) {
-        var x = new XMLHttpRequest();
-        x.open("POST", "/api/taris/" + encodeURIComponent(seance) + "/envoi?duree=" + encodeURIComponent(opts.duree || ""));
-        x.setRequestHeader("Content-Type", fichier.type || "application/octet-stream");
-        if (x.upload && opts.progres) x.upload.onprogress = function (e) { if (e.lengthComputable) opts.progres(e.loaded / e.total); };
-        x.onload = function () {
-          if (x.status === 401) { location.href = "/connexion.html"; return; }
-          if (x.status >= 200 && x.status < 300) { var j = {}; try { j = JSON.parse(x.responseText); } catch (e) { /* vide */ } rafraichir("taris"); ok(j); }
-          else ko(erreurEnvoi(x));
-        };
-        x.onerror = function () { ko(erreurEnvoi(x)); };
-        x.send(fichier);
-      });
-    },
+    envoyer: function (seance, fichier, opts) { return envoiAudio("/api/taris/" + encodeURIComponent(seance) + "/envoi", fichier, opts); },
+    /* Réponse vocale du correcteur : renvoie { fichier, duree }, à joindre ensuite à repondre(). */
+    vocal: function (dossier, fichier, opts) { return envoiAudio("/api/taris/" + encodeURIComponent(dossier) + "/vocal", fichier, opts); },
     prendre: function (dossier) { return appel("POST", "taris/" + encodeURIComponent(dossier) + "/prise", {}).then(function (r) { rafraichir("taris"); return r; }); },
     liberer: function (dossier) { return appel("POST", "taris/" + encodeURIComponent(dossier) + "/prise", { liberer: true }).then(function (r) { rafraichir("taris"); return r; }); },
     repondre: function (dossier, data) { return appel("POST", "taris/" + encodeURIComponent(dossier) + "/verdict", data).then(function (r) { rafraichir("taris"); rafraichir("seances"); return r; }); },
