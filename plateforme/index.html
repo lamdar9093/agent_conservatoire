@@ -732,6 +732,24 @@ a.tq-item:hover { border-color: var(--accent); }
 .dk-form { display: grid; gap: 8px; }
 /* Réglages : sommaire en cartes */
 .reg-liste { display: grid; gap: 10px; }
+/* Mon espace : en-tête compact et « Mon compte » en bas */
+.moi-tete { display: grid; gap: 12px; }
+.moi-id { display: flex; align-items: center; gap: 12px; }
+.moi-avatar { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 17px; letter-spacing: 0.02em; }
+.moi-qui { display: grid; gap: 1px; min-width: 0; }
+.moi-qui b { font-size: 18px; font-weight: 600; }
+.moi-qui small { font-size: 13px; color: var(--ink-soft); }
+.moi-chartes { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 500; }
+.moi-chartes span:nth-child(2) { flex: 1; }
+.moi-chartes:hover { border-color: var(--accent); }
+.moi-compte h2 { margin-bottom: 10px !important; }
+.moi-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 12px; margin-bottom: 10px; border-radius: 10px; background: var(--good-soft); color: var(--good); font-size: 13.5px; font-weight: 500; }
+.moi-ligne > span:first-child { flex: 1 1 200px; }
+.moi-actions { display: flex; gap: 12px; }
+.moi-actions .linkish { color: inherit; font-size: 13.5px; font-weight: 600; }
+.moi-boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.moi-boutons .btn { flex: 1 1 180px; text-align: center; justify-content: center; }
+.btn.danger-doux { color: var(--bad); }
 .recherche { width: 100%; margin: 4px 0 10px; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; }
 .recherche:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 .recherche-vide { margin: 0 0 10px !important; font-size: 13.5px; }
@@ -2190,30 +2208,45 @@ a.tq-item:hover { border-color: var(--accent); }
   var moiCourant = lireMoi();
   function vueMoi() {
     var liste = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) !== "parti"; }).sort(triNom);
-    var html = lienMessages() + '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
-      (monCompte
-        ? '<section class="panel compte"><div><h2>' + esc((membres[monCompte.membre] || {}).nom || monCompte.nom || "Mon espace") + '</h2><p class="muted">' + ROLES_NOMS[monRole] + " · " + esc(tagsKourel(membres[monCompte.membre] || {})) + "</p></div>" +
-          '<div class="row"><a class="btn small" href="/connexion.html?changer=1">Changer mon mot de passe</a><button type="button" class="btn ghost small" data-action="revoir-tour">Revoir la visite</button><button type="button" class="btn ghost small" data-action="deconnexion">Se déconnecter</button></div></section>'
-        : '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
-          '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 240px">Je suis<select id="moi"><option value="">Choisir mon nom…</option>' +
-          liste.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === moiCourant ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") +
-          "</select></label></div></section>");
+    /* Ordre (choix d'expérience) : qui je suis, ce que j'ai à faire (Taris), où j'en suis pour le dahira, mon suivi,
+       mes présences, puis la boîte à idées et « Mon compte » (mot de passe, visite, notifications, déconnexion) tout en bas. */
+    var moiM = membres[moiCourant] || {}, nomMoi = moiM.nom || (monCompte && monCompte.nom) || "Mon espace";
+    var html = monCompte
+      ? '<section class="panel moi-tete"><div class="moi-id"><span class="moi-avatar" aria-hidden="true">' + esc(initiales(nomMoi)) + '</span><span class="moi-qui"><b>' + esc(nomMoi) + "</b><small>" +
+          ROLES_NOMS[monRole] + " · " + esc(tagsKourel(moiM)) + "</small></span></div>" +
+          '<a class="moi-chartes" href="#chartes"><span aria-hidden="true">📜</span><span>Chartes et sanctions du kourel</span><span aria-hidden="true">›</span></a></section>'
+      : '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
+        '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
+        '<div class="row" style="margin-top:10px"><label class="field" style="flex:1 1 240px">Je suis<select id="moi"><option value="">Choisir mon nom…</option>' +
+        liste.map(function (m) { return '<option value="' + esc(m.id) + '"' + (m.id === moiCourant ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") +
+        "</select></label></div></section>";
     var moi = membres[moiCourant];
     /* Mes Taris en premier : c'est l'action à faire (enregistrer), juste sous le nom du membre. */
     if (moi && tarisApi) html += blocMesTaris(moi);
-    html += blocNotifs();
+    /* Notifications : mises en avant tant qu'elles ne sont pas activées ; ensuite, une ligne dans « Mon compte ». */
+    if (!notifsEtat.abonne) html += blocNotifs();
+    /* Messages reçus (Conservatoire, admin) : en haut s'il y a du nouveau, sinon avec la boîte à idées en bas. */
+    if (nbNouveaux()) html += lienMessages();
     if (moi && statutMembre(moi) === "actif") {
+      /* Dahiras à venir : une bannière par situation ; deux samedis dans la même situation tiennent en une seule. */
+      var bannieres = [];
+      var envoyeSeul = tarisApi && mesTaris().some(function (x) { return x.etat === "envoye" || x.etat === "ecoute"; }) && !mesTaris().some(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; });
       prochainsDahiras().forEach(function (dz, i) {
         var e = etatDahira(dz), rs = e.raisons[moi.id] || [];
         var parTari = rs.filter(function (r) { return r.tari; }).map(function (r) { return r.label; });
-        var att = rs.length > 0;
-        /* Tari envoyé sur la plateforme mais pas encore corrigé : on le dit, pour rassurer. */
-        var envoyeSeul = tarisApi && mesTaris().some(function (x) { return x.etat === "envoye" || x.etat === "ecoute"; }) && !mesTaris().some(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; });
-        if (parTari.length) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + (envoyeSeul ? " : votre Tari est envoyé ; une fois validé « maîtrisé » par le Conservatoire, vous pourrez entrer dans le " : " : votre Tari doit être maîtrisé pour entrer dans le ") + esc(parTari.join(" et le ")) + ".</span></div>";
-        else if (att) html += '<div class="me-banner wait">⏳ <span>Dahira du ' + esc(samediLong(dz)) + " : Kourel général, réservé à ceux qui sont venus à la dernière répétition générale.</span></div>";
-        else if ((i === 0 || dahirasCfg[dz]) && !e.fusion && !(e.mode === "k2k1" ? (moi.k1 || moi.k2) : moi[e.mode])) html += '<div class="me-banner info">ℹ️ <span>Dahira du ' + esc(samediLong(dz)) + " : " + esc(MODE_PHRASE[e.mode].replace(/^./, function (c) { return c.toLowerCase(); })) + "</span></div>";
-        else if (i === 0 && (moi.k1 || moi.k2)) html += '<div class="me-banner ok">✅ <span>Dahira du ' + esc(samediLong(dz)) + " : vous pouvez entrer dans le " + esc(e.groupes.filter(function (g) { return g.ok.indexOf(moi) > -1; }).map(function (g) { return g.label; }).join(" et le ") || "kourel") + ".</span></div>";
+        if (parTari.length) bannieres.push({ cls: "wait", ico: "⏳", dz: dz, suite: (envoyeSeul ? " : votre Tari est envoyé ; une fois validé « maîtrisé » par le Conservatoire, vous pourrez entrer dans le " : " : votre Tari doit être maîtrisé pour entrer dans le ") + parTari.join(" et le ") + "." });
+        else if (rs.length) bannieres.push({ cls: "wait", ico: "⏳", dz: dz, suite: " : Kourel général, réservé à ceux qui sont venus à la dernière répétition générale." });
+        else if ((i === 0 || dahirasCfg[dz]) && !e.fusion && !(e.mode === "k2k1" ? (moi.k1 || moi.k2) : moi[e.mode])) bannieres.push({ cls: "info", ico: "ℹ️", dz: dz, suite: " : " + MODE_PHRASE[e.mode].replace(/^./, function (c) { return c.toLowerCase(); }) });
+        else if (i === 0 && (moi.k1 || moi.k2)) bannieres.push({ cls: "ok", ico: "✅", dz: dz, suite: " : vous pouvez entrer dans le " + (e.groupes.filter(function (g) { return g.ok.indexOf(moi) > -1; }).map(function (g) { return g.label; }).join(" et le ") || "kourel") + "." });
       });
+      var fusion = [];
+      bannieres.forEach(function (b) {
+        var f = fusion.filter(function (x) { return x.cls === b.cls && x.suite === b.suite; })[0];
+        if (f) f.dates.push(b.dz); else fusion.push({ cls: b.cls, ico: b.ico, suite: b.suite, dates: [b.dz] });
+      });
+      html += fusion.map(function (f) {
+        return '<div class="me-banner ' + f.cls + '">' + f.ico + " <span>" + (f.dates.length > 1 ? "Dahiras du " + f.dates.map(samediLong).join(" et du ") : "Dahira du " + samediLong(f.dates[0])) + esc(f.suite) + "</span></div>";
+      }).join("");
     }
     if (moi) {
       /* Sans enregistrement sur la plateforme (prototype claude.ai) : la liste simple, Tari à envoyer sur WhatsApp. */
@@ -2607,7 +2640,7 @@ a.tq-item:hover { border-color: var(--accent); }
     if (vue === "taris") return vueTarisListe();
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") vueReglages(); else if (vue === "moi") vueMoi();
     else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
-    if (vue === "moi") app.insertAdjacentHTML("beforeend", blocMessagesMembre());
+    if (vue === "moi") app.insertAdjacentHTML("beforeend", (nbNouveaux() ? "" : lienMessages()) + blocMessagesMembre() + blocCompte());
 
   }
   function lireHash() {
@@ -4346,6 +4379,15 @@ a.tq-item:hover { border-color: var(--accent); }
     else if (b.dataset.notifs === "non") desactiverNotifs();
     else if (b.dataset.notifs === "essai") notifsApi.essai().then(function (r) { toast(r && r.envoyes ? "Essai envoyé : la notification arrive." : "Aucun appareil joignable : désactivez puis réactivez."); }, function () { toast("Envoi impossible."); });
     return true;
+  }
+
+  /* « Mon compte », en bas de Mon espace : ce qui sert rarement (mot de passe, visite, notifications, déconnexion). */
+  function blocCompte() {
+    if (!monCompte) return "";
+    return '<section class="panel moi-compte"><h2>Mon compte</h2>' +
+      (notifsEtat.abonne ? '<div class="moi-ligne"><span>🔔 Notifications activées sur cet appareil</span><span class="moi-actions"><button type="button" class="linkish" data-notifs="essai">Essai</button><button type="button" class="linkish" data-notifs="non">Désactiver</button></span></div>' : "") +
+      '<div class="moi-boutons"><a class="btn" href="/connexion.html?changer=1">Changer mon mot de passe</a><button type="button" class="btn" data-action="revoir-tour">Revoir la visite</button>' +
+      '<button type="button" class="btn ghost danger-doux" data-action="deconnexion">Se déconnecter</button></div></section>';
   }
 
   /* ---------- Visite guidée des onglets (première connexion) ---------- */
