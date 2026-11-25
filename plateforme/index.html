@@ -267,6 +267,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
 .ev-titre b { font-size: 16px; font-weight: 600; }
 .ev-titre .muted { font-size: 13px; }
 .ev-annulee { opacity: 0.72; }
+@media (max-width: 560px) { .ev-tete { flex-wrap: wrap; row-gap: 6px; } .ev-tete > .ev-titre { flex: 1 1 calc(100% - 72px); } .ev-tete > .pill { margin-left: 72px; } }
 .ev-note { margin: 0; color: var(--ink-soft); font-size: 14px; }
 .prog { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
 .prog-tete { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
@@ -732,6 +733,13 @@ a.tq-item:hover { border-color: var(--accent); }
 .dk-form { display: grid; gap: 8px; }
 /* Réglages : sommaire en cartes */
 .reg-liste { display: grid; gap: 10px; }
+/* Tirer pour actualiser (appli de l'écran d'accueil) */
+.tirer { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 6px); z-index: 60; transform: translate(-50%, -60px); opacity: 0; pointer-events: none; transition: opacity 0.15s ease; }
+.tirer.visible { opacity: 1; }
+.tirer-rond { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); color: var(--ink-soft); box-shadow: var(--shadow); }
+.tirer-rond svg { width: 20px; height: 20px; }
+.tirer.pret .tirer-rond { background: var(--accent); color: var(--accent-ink); }
+.tirer.charge .tirer-rond svg { animation: rec-tour 0.8s linear infinite; }
 /* Répétitions : appel du jour en un toucher, filtres de l'appel, séances par mois */
 .appel-jour { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; border: 0; border-radius: 14px; background: var(--accent); color: var(--accent-ink); font: inherit; text-align: left; cursor: pointer; box-shadow: var(--shadow); }
 .appel-jour > span:nth-child(2) { flex: 1; display: grid; gap: 2px; }
@@ -3201,11 +3209,14 @@ h3.group.seances-mois { margin-top: 6px; }
   var prgCol = (function () { try { return localStorage.getItem("prg-col") === "dz" ? "dz" : "rep"; } catch (e) { return "rep"; } })();
   function kourelsDe(k) { return k === "k1" ? ["k1"] : k === "k2" ? ["k2"] : ["k1", "k2"]; }
   function dieuwrigneDe(k) { var id = (reglagesKourels.dieuwrigne || {})[k]; return id && membres[id] ? membres[id] : null; }
-  function nomsDieuwrignes(k) { return kourelsDe(k).map(dieuwrigneDe).filter(Boolean).map(function (m) { return m.nom; }); }
+  /* Le dieuwrigne du Kourel 1 dirige aussi la répétition générale et le Kourel général (choix de l'utilisateur) ;
+     sans dieuwrigne du Kourel 1, personne n'est affiché (on ne devine pas). */
+  function kourelDieuwrigne(k) { return k === "k2" ? "k2" : "k1"; }
+  function nomsDieuwrignes(k) { var m = dieuwrigneDe(kourelDieuwrigne(k)); return m ? [m.nom] : []; }
   function decideurCle(cle) {
     if (peutModifier) return true;
     var d = reglagesKourels.dieuwrigne || {}, k = cle.split("-").pop();
-    return !!moiCourant && kourelsDe(k).some(function (x) { return d[x] === moiCourant; });
+    return !!moiCourant && d[kourelDieuwrigne(k)] === moiCourant;
   }
   function itemsCle(cle, statut) { return ((chants[cle] || {}).items || []).filter(function (x) { return !statut || x.statut === statut; }); }
   function titreItem(x) { var k = x.khassida && khassidas[x.khassida]; return k ? k.titre : (x.titre || "Khassida"); }
@@ -3242,15 +3253,19 @@ h3.group.seances-mois { margin-top: 6px; }
         '<option value="__autre"' + (f.khassida === "__autre" ? " selected" : "") + ">Autre khassida (pas encore dans la liste)…</option></select></label>" +
       (f.khassida === "__autre" ? '<label class="field">Titre du khassida<input type="text" data-pf="titre" value="' + esc(f.titre || "") + '" placeholder="Ex. : Mawahibu Nafih" maxlength="120"></label>' : "") +
       '<label class="field">Ère<input type="text" list="eres-connues" data-pf="ere" value="' + esc(f.ere || "") + '" placeholder="Serigne Cissé" maxlength="80"></label>' +
-      (dec ? "" : '<p class="msg-note">Votre proposition sera visible par le Conservatoire. Le dieuwrigne du kourel décide de la retenir.</p>') +
+      (dec ? "" : '<p class="msg-note">' + (peutSuivi ? "Votre proposition sera visible par le Conservatoire. " : "Votre proposition est envoyée au dieuwrigne. ") + "Le dieuwrigne du kourel décide de la retenir ; votre nom accompagne la proposition.</p>") +
       '<div class="row"><button type="button" class="btn primary small" data-prog-valider>' + (dec ? "Ajouter au programme" : "Proposer") + '</button><button type="button" class="btn ghost small" data-prog-annuler>Annuler</button></div></div>';
   }
   function blocProgramme(cle, k, opts) {
-    var ret = itemsCle(cle, "retenu"), props = peutSuivi ? itemsCle(cle, "propose") : [], dec = peutSuivi && decideurCle(cle), dw = (opts && opts.dieuwrigne) || [];
+    /* Propositions : le Conservatoire les voit toutes ; un membre ne reçoit du serveur que les siennes. */
+    var ret = itemsCle(cle, "retenu"), props = itemsCle(cle, "propose"), dec = peutSuivi && decideurCle(cle), dw = (opts && opts.dieuwrigne) || [];
+    var moiK = membres[moiCourant] || {}, peutProposer = !!programmeApi && (peutSuivi || kourelsDe(k).some(function (x) { return moiK[x]; }));
     var h = '<div class="prog">' + (dw.length ? '<span class="prog-dw">Dieuwrigne' + (dw.length > 1 ? "s" : "") + " : " + esc(dw.join(" et ")) + "</span>" : "");
     h += ret.length ? '<ol class="prog-liste">' + ret.map(function (x, i) {
         var kh = x.khassida && khassidas[x.khassida], href = kh ? pageKhassida(kh) : "", ref = esc(cle) + "|" + esc(x.id);
-        return '<li><span class="prog-num" aria-hidden="true">' + (i + 1) + '</span><span class="prog-kh"><b>' + esc(titreItem(x)) + "</b>" + (x.ere ? "<small>ère " + esc(x.ere) + "</small>" : "") + "</span>" +
+        /* « proposé par » reste affiché quand le dieuwrigne a retenu une proposition. */
+        var sous = [x.ere ? "ère " + x.ere : "", x.propose && x.parNom ? "proposé par " + (x.par === moiCourant ? "vous" : x.parNom) : ""].filter(Boolean).join(" · ");
+        return '<li><span class="prog-num" aria-hidden="true">' + (i + 1) + '</span><span class="prog-kh"><b>' + esc(titreItem(x)) + "</b>" + (sous ? "<small>" + esc(sous) + "</small>" : "") + "</span>" +
           (href ? '<a class="prog-lien" href="' + esc(href) + '">Ouvrir</a>' : "") +
           (dec ? '<span class="prog-outils">' +
             (i > 0 ? '<button type="button" data-prog-haut="' + ref + '" aria-label="Monter ' + esc(titreItem(x)) + '">↑</button>' : "") +
@@ -3266,7 +3281,7 @@ h3.group.seances-mois { margin-top: 6px; }
             : mien ? '<button type="button" class="btn small ghost" data-prog-retirer="' + ref + '">Retirer</button>' : "") + "</div>";
       }).join("") + "</div>";
     }
-    if (peutSuivi && programmeApi) {
+    if (peutProposer) {
       h += progForm && progForm.cle === cle ? formProgramme(dec)
         : '<button type="button" class="prog-ajouter" data-prog-ajouter="' + esc(cle) + '">+ ' + (dec ? "Ajouter un khassida" : "Proposer un khassida") + "</button>";
     }
@@ -3298,12 +3313,16 @@ h3.group.seances-mois { margin-top: 6px; }
       (e.tariBloques.length ? '<span class="pill r">' + e.tariBloques.length + " Tari en attente</span>" : "") + '<span class="dz-go" aria-hidden="true">›</span></button>';
     return h + "</article>";
   }
-  function majPastilleProg() {
+  function nbPropositionsADecider() {
     var n = 0, t = today();
     if (peutSuivi) Object.keys(chants).forEach(function (cle) {
       if (cle.replace(/^(rep|dz)-/, "").slice(0, 10) < t || !decideurCle(cle)) return;
       n += itemsCle(cle, "propose").length;
     });
+    return n;
+  }
+  function majPastilleProg() {
+    var n = nbPropositionsADecider();
     document.querySelectorAll('a[data-view="dahira"]').forEach(function (a) {
       var p = a.querySelector(".pastille");
       if (!n) { if (p) p.remove(); return; }
@@ -3355,7 +3374,7 @@ h3.group.seances-mois { margin-top: 6px; }
       return '<label class="field" style="flex:1 1 220px">Dieuwrigne du ' + TYPES[k] + '<select data-dieuwrigne="' + k + '"><option value="">Personne pour l’instant</option>' +
         l.map(function (m) { return '<option value="' + esc(m.id) + '"' + (d[k] === m.id ? " selected" : "") + ">" + esc(m.nom) + "</option>"; }).join("") + "</select></label>";
     };
-    app.insertAdjacentHTML("afterbegin", '<section class="panel"><h2>Dieuwrignes des kourels</h2><p class="muted">Chaque dieuwrigne décide du programme de son kourel (répétitions et dahira) ; les autres membres du Conservatoire peuvent proposer. Seuls les membres ayant le rôle Conservatoire ou Admin peuvent être choisis.</p>' +
+    app.insertAdjacentHTML("afterbegin", '<section class="panel"><h2>Dieuwrignes des kourels</h2><p class="muted">Chaque dieuwrigne décide du programme de son kourel (répétitions et dahira) ; les autres membres du Conservatoire et les membres peuvent proposer. Le dieuwrigne du Kourel 1 dirige aussi la répétition générale et le Kourel général. Seuls les membres ayant le rôle Conservatoire ou Admin peuvent être choisis.</p>' +
       '<div class="row" style="margin-top:12px">' + choix("k1") + choix("k2") + "</div></section>");
   }
 
@@ -4424,7 +4443,7 @@ h3.group.seances-mois { margin-top: 6px; }
   /* Le chiffre de l'icône suit les pastilles quand la plateforme est ouverte. */
   function majBadgeIcone() {
     if (!navigator.setAppBadge || !("Notification" in window) || Notification.permission !== "granted") return;
-    var n = mesTarisAFaire() + nbTarisAEcouter() + (peutModifier && comptesEtat && comptesEtat.demandes ? Object.keys(comptesEtat.demandes).length : 0);
+    var n = mesTarisAFaire() + nbTarisAEcouter() + nbPropositionsADecider() + (peutModifier && comptesEtat && comptesEtat.demandes ? Object.keys(comptesEtat.demandes).length : 0);
     (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(function () {});
   }
   function blocNotifs() {
@@ -4457,6 +4476,43 @@ h3.group.seances-mois { margin-top: 6px; }
       '<button type="button" class="btn ghost danger-doux" data-action="deconnexion">Se déconnecter</button></div></section>';
   }
 
+  /* ---------- Appli sur l'écran d'accueil : tirer vers le bas pour actualiser ----------
+     Safari et Chrome le font déjà dans le navigateur ; l'appli ajoutée à l'écran d'accueil, non. On tire depuis le haut
+     de la page, on relâche : la page se recharge (données et dernière version). Pas pendant la lecture d'un khassida,
+     ni pendant un enregistrement. Au retour dans l'appli après une absence, les données se remettent à jour seules. */
+  function initTirerPourActualiser() {
+    var cache = 0;
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { cache = Date.now(); return; }
+      if (cache && Date.now() - cache > 30000) window.dispatchEvent(new Event("conservatoire-actualiser"));
+    });
+    if (!estAppli) return;
+    /* Android : on coupe l'éventuel geste du navigateur pour qu'il n'y ait jamais deux actualisations. */
+    if (/Android/i.test(navigator.userAgent)) document.documentElement.style.overscrollBehaviorY = "contain";
+    var ind = document.createElement("div"), depart = null, dist = 0, SEUIL = 120;
+    ind.className = "tirer"; ind.setAttribute("aria-hidden", "true");
+    ind.innerHTML = '<span class="tirer-rond"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span>';
+    document.body.appendChild(ind);
+    var occupe = function () { return document.body.classList.contains("lecture") || tourEtat || (studio && studio.etat !== "revue") || (vocal && vocal.etat !== "revue") || document.querySelector("dialog[open]"); };
+    document.addEventListener("touchstart", function (e) {
+      depart = window.scrollY <= 0 && e.touches.length === 1 && !occupe() ? e.touches[0].clientY : null; dist = 0;
+    }, { passive: true });
+    document.addEventListener("touchmove", function (e) {
+      if (depart == null) return;
+      dist = e.touches[0].clientY - depart;
+      if (dist <= 0 || window.scrollY > 0) { ind.style.transform = ""; ind.classList.remove("visible", "pret"); return; }
+      var y = Math.min(dist * 0.5, 90);
+      ind.classList.add("visible"); ind.classList.toggle("pret", dist > SEUIL);
+      ind.style.transform = "translate(-50%, " + y + "px) rotate(" + Math.min(180, dist * 1.4) + "deg)";
+    }, { passive: true });
+    document.addEventListener("touchend", function () {
+      if (depart == null) return;
+      depart = null;
+      if (dist > SEUIL) { ind.classList.add("charge"); ind.style.transform = "translate(-50%, 60px)"; setTimeout(function () { location.reload(); }, 250); return; }
+      ind.classList.remove("visible", "pret"); ind.style.transform = "";
+    });
+  }
+
   /* ---------- Visite guidée des onglets (première connexion) ---------- */
   var tourEtat = null;
   function iconeOnglet(v) {
@@ -4479,10 +4535,10 @@ h3.group.seances-mois { margin-top: 6px; }
     /* Programme : le texte dépend du rôle (admin, dieuwrigne d'un kourel, autre membre du Conservatoire, membre). */
     var mesKourels = ["k1", "k2"].filter(function (k) { return (reglagesKourels.dieuwrigne || {})[k] === moiCourant; });
     e.push({ vue: "dahira", titre: "Programme", texte: !peutSuivi
-      ? "Ce que votre kourel chantera aux prochaines répétitions et au dahira du samedi, avec l’ère de chaque khassida."
+      ? "Ce que votre kourel chantera aux prochaines répétitions et au dahira du samedi, avec l’ère de chaque khassida. Vous pouvez aussi proposer un khassida : le dieuwrigne décide."
       : "Ce que chaque kourel chantera aux répétitions et au dahira du samedi, avec l’ère de chaque khassida. " +
         (peutModifier ? "Vous et les dieuwrignes décidez ; les autres membres du Conservatoire proposent."
-          : mesKourels.length ? "Comme dieuwrigne du " + mesKourels.map(function (k) { return TYPES[k]; }).join(" et du ") + ", vous décidez du programme ; les autres membres du Conservatoire proposent."
+          : mesKourels.length ? "Comme dieuwrigne du " + mesKourels.map(function (k) { return TYPES[k]; }).join(" et du ") + (mesKourels.indexOf("k1") > -1 ? " (et donc de la répétition générale et du Kourel général)" : "") + ", vous décidez du programme ; les autres proposent."
           : "Le dieuwrigne de chaque kourel décide ; vous pouvez proposer.") + " Vous y voyez aussi qui va prester au dahira." });
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
     e.push({ vue: "moi", titre: "Mon espace", texte: (tarisApi ? "Vos Taris : enregistrez-les ici, le Conservatoire les écoute et vous répond. Aussi vos présences, vos progrès et les chartes."
@@ -4500,6 +4556,10 @@ h3.group.seances-mois { margin-top: 6px; }
       return peutSuivi
         ? { vue: "khassidas", titre: "Les Taris s’écoutent ici", texte: "Les membres enregistrent maintenant leur Tari sur la plateforme. Écoutez-les depuis l’onglet Khassidas et répondez : maîtrisé, ou à retravailler avec un mot. Quand vous en prenez un, les autres voient « pris par vous » : personne ne corrige à deux." }
         : { vue: "moi", titre: "Enregistrez votre Tari ici", texte: "Plus besoin de l’envoyer sur WhatsApp : dans Mon espace, touchez « Enregistrer mon Tari », chantez en lisant le texte, puis envoyez. Le Conservatoire l’écoute et vous répond ici." };
+    } },
+    { cle: "proposer", contenu: function () {
+      if (peutSuivi || !programmeApi) return null;
+      return { vue: "dahira", titre: "Proposez un khassida", texte: "Dans l’onglet Programme, touchez « + Proposer un khassida » sous une répétition ou un dahira de votre kourel. Le dieuwrigne décide de le retenir ; votre nom accompagne la proposition." };
     } },
     { cle: "notifications", contenu: function () {
       if (!notifsApi || notifsEtat.abonne) return null;
@@ -4640,6 +4700,7 @@ h3.group.seances-mois { margin-top: 6px; }
       tarisApi = rr[1] ? rr[5] : null;
       notifsApi = rr[1] ? rr[6] : null;
       initNotifs();
+      initTirerPourActualiser();
       if (messagesApi) chargerMessages();
       peutModifier = !!rr[0];
       monCompte = rr[1];

@@ -54,6 +54,13 @@
     };
   } catch (e) { /* sans EventSource : pas de mise à jour en direct */ }
 
+  /* Actualiser tout ce qui est affiché (retour dans l'appli, « tirer pour actualiser ») sans recharger la page. */
+  window.addEventListener("conservatoire-actualiser", function () {
+    Object.keys(ecoutes).forEach(rafraichir);
+    window.dispatchEvent(new Event("conservatoire-comptes"));
+    window.dispatchEvent(new Event("conservatoire-messages"));
+  });
+
   function chemin(p) {
     var parts = String(p).split("/");
     if (parts.length !== 2) throw new Error("Chemin de document attendu : collection/id");

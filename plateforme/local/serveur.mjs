@@ -114,6 +114,13 @@ async function badgePour(membre) {
     }
   }
   if (c.admin) n += Object.keys((await comptes.demandes()) || {}).length;
+  if (suivi) {
+    const dw = (((await stock.lireDoc("reglages", "kourels")) || {}).dieuwrigne) || {};
+    for (const ch of await stock.lireCollection("chants")) {
+      const info = infoChant(ch.id);
+      if (info && info.date >= aujourdhui() && (c.admin || dw[kourelDecideur(info)] === membre)) n += (ch.data.items || []).filter((x) => x.statut === "propose").length;
+    }
+  }
   return n;
 }
 /* Tari demandé dans une séance : on attend 90 secondes que le Conservatoire ait fini de choisir (mode, membres, khassida),
@@ -334,8 +341,9 @@ function filtrerPourMembre(col, docs, moi) {
     return { id: d.id, data: s };
   });
   // Programme de chant : un membre ne voit que ce qui est retenu, sans les propositions ni leurs auteurs.
-  if (col === "chants") return docs.map((d) => ({ id: d.id, data: { items: (d.data.items || []).filter((x) => x.statut === "retenu")
-    .map((x) => ({ id: x.id, khassida: x.khassida, titre: x.titre, ere: x.ere, statut: x.statut })) } }));
+  if (col === "chants") return docs.map((d) => ({ id: d.id, data: { items: (d.data.items || []).filter((x) => x.statut === "retenu" || (x.statut === "propose" && x.par === moi))
+    .map((x) => ({ id: x.id, khassida: x.khassida, titre: x.titre, ere: x.ere, statut: x.statut, propose: !!x.propose,
+      parNom: x.propose || x.par === moi ? x.parNom : undefined, par: x.par === moi ? x.par : undefined })) } }));
   // Taris enregistrés : chacun ne voit que les siens.
   if (col === "taris") return docs.filter((d) => d.data.membre === moi);
   return docs;
@@ -346,10 +354,12 @@ function infoChant(cle) {
   const m = /^(rep|dz)-(\d{4}-\d{2}-\d{2})-(k1|k2|rg|general)$/.exec(cle);
   return m ? { sorte: m[1], date: m[2], k: m[3], kourels: m[3] === "k1" ? ["k1"] : m[3] === "k2" ? ["k2"] : ["k1", "k2"] } : null;
 }
+/* Qui décide : le dieuwrigne du kourel ; pour la répétition générale et le Kourel général, celui du Kourel 1. */
+const kourelDecideur = (info) => (info.k === "k2" ? "k2" : "k1");
 async function decideChant(sess, info) {
   if (sess.admin) return true;
   const d = (((await stock.lireDoc("reglages", "kourels")) || {}).dieuwrigne) || {};
-  return info.kourels.some((k) => d[k] === sess.membre);
+  return d[kourelDecideur(info)] === sess.membre;
 }
 
 /* Ce qu'un compte voit d'une collection selon son rôle. */
@@ -559,9 +569,15 @@ async function api(req, res, parts, sess) {
      Le dieuwrigne du kourel (reglages/kourels.dieuwrigne) et l'admin décident : ce qu'ils ajoutent est retenu.
      Un autre membre du Conservatoire propose : sa proposition attend que le dieuwrigne la retienne ou l'écarte. */
   if (parts[0] === "chants" && (parts.length > 2 || req.method !== "GET")) {
-    if (!peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Réservé au Conservatoire." });
     const cle = parts[1] || "", info = infoChant(cle);
     if (!info || !nomValide(cle)) return json(res, 400, { code: "invalid_argument" });
+    // Un membre simple propose un khassida pour un événement à venir de son kourel, et peut retirer sa propre proposition.
+    if (!peut(sess, "suivi")) {
+      const mm = (await stock.lireDoc("membres", sess.membre)) || {};
+      const geste = parts[2] === "items" && ((!parts[3] && req.method === "POST") || (parts[3] && req.method === "DELETE"));
+      if (!geste) return json(res, 403, { code: "invalid_argument", message: "Seul le dieuwrigne du kourel décide du programme." });
+      if (!info.kourels.some((k) => mm[k]) || info.date < aujourdhui()) return json(res, 403, { code: "invalid_argument", message: "Vous pouvez proposer seulement pour un programme à venir de votre kourel." });
+    }
     const decideur = await decideChant(sess, info);
     const items = ((await stock.lireDoc("chants", cle)) || {}).items || [];
     const moiNom = ((await stock.lireDoc("membres", sess.membre)) || {}).nom || sess.membre;
@@ -573,8 +589,12 @@ async function api(req, res, parts, sess) {
       const kh = c.khassida && nomValide(String(c.khassida)) ? await stock.lireDoc("khassidas", String(c.khassida)) : null;
       const titre = kh ? kh.titre : String(c.titre || "").trim().slice(0, 120);
       if (!titre) return json(res, 400, { code: "titre", message: "Choisissez un khassida ou écrivez son titre." });
+      const simple = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const deja = items.filter((x) => kh ? x.khassida === String(c.khassida) : simple(x.titre) === simple(titre))[0];
+      if (deja) return json(res, 409, { code: "doublon", message: deja.statut === "retenu" ? "Ce khassida est déjà au programme." : "Ce khassida est déjà proposé : le dieuwrigne va décider." });
+      if (!decideur && items.filter((x) => x.statut === "propose" && x.par === sess.membre).length >= 3) return json(res, 429, { code: "trop", message: "Vous avez déjà 3 propositions en attente pour ce programme : attendez la décision du dieuwrigne." });
       items.push({ id: crypto.randomBytes(5).toString("hex"), khassida: kh ? String(c.khassida) : "", titre, ere: ere(c.ere !== undefined ? c.ere : kh && kh.ere),
-        statut: decideur ? "retenu" : "propose", par: sess.membre, parNom: moiNom, le: Date.now() });
+        statut: decideur ? "retenu" : "propose", propose: !decideur, par: sess.membre, parNom: moiNom, le: Date.now() });
       message = decideur ? "ajoute" : "propose";
     } else if (parts[2] === "items" && parts[3]) {
       const i = items.findIndex((x) => x.id === parts[3]);
@@ -600,6 +620,14 @@ async function api(req, res, parts, sess) {
     } else return json(res, 405, { code: "invalid_argument" });
     await stock.ecrireDoc("chants", cle, { items, majLe: Date.now(), majPar: moiNom });
     prevenir("chants");
+    if (message === "propose") {
+      const dw = (((await stock.lireDoc("reglages", "kourels")) || {}).dieuwrigne) || {};
+      let cibles = [dw[kourelDecideur(info)]].filter(Boolean);
+      if (!cibles.length) cibles = await admins();
+      const jour = new Date(info.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      const it = items[items.length - 1];
+      notifs.notifier(cibles.filter((x) => x !== sess.membre), { titre: "💡 Proposition pour le programme", texte: moiNom + " propose « " + it.titre + " » pour " + (info.sorte === "rep" ? "la répétition du " : "le dahira du ") + jour + ".", url: "/#dahira" }).catch((e) => console.error(e));
+    }
     return json(res, 200, { ok: true, decideur, message });
   }
 
