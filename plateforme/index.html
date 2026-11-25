@@ -769,6 +769,7 @@ body.vue-membre.vue-discipline .bottom-nav a[data-view="seances"] { display: gri
 .appel-ico { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; background: rgba(255, 255, 255, 0.16); }
 .appel-jour.fait .appel-ico { background: var(--accent-soft); }
 .appel-filtres { display: flex; gap: 6px; overflow-x: auto; margin-top: 12px; padding-bottom: 2px; scrollbar-width: none; }
+.acces-filtres { flex-wrap: wrap; overflow: visible; margin-top: 10px; }
 .appel-filtres::-webkit-scrollbar { display: none; }
 .appel-filtres .toggle { flex: none; padding: 7px 12px; font-size: 13.5px; }
 h3.group.seances-mois { margin-top: 6px; }
@@ -2294,12 +2295,30 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     return html;
   }
+  var accesFiltre = "tous";
+  var FILTRES_ACCES = [
+    ["tous", "Tous", function () { return true; }],
+    ["actif", "✓ Ont accès", function (c) { return !!c && !c.temporaire; }],
+    ["temp", "Mot de passe temporaire", function (c) { return !!c && !!c.temporaire; }],
+    ["sans", "Sans accès", function (c) { return !c; }],
+    ["admin", "Admins", function (c) { return !!c && !!c.admin; }],
+    ["conservatoire", "Conservatoire", function (c) { return !!c && !c.admin && !!c.conservatoire; }],
+    ["discipline", "Discipline", function (c) { return !!c && !!c.discipline; }]
+  ];
   function vueAcces() {
     if (!comptesEtat) { chargerComptes(); comptesEtat = { comptes: {}, chargement: true }; }
     var cs = comptesEtat.comptes || {};
     var liste = Object.keys(membres).map(function (k) { return membres[k]; }).filter(function (m) { return statutMembre(m) !== "parti"; }).sort(triNom);
     var inv = comptesEtat.invitation;
-    var avec = liste.filter(function (m) { return cs[m.id]; }).length, actifs = liste.filter(function (m) { return cs[m.id] && !cs[m.id].temporaire; }).length;
+    /* Filtres en tête de liste : voir d'un coup qui a déjà accès, qui attend, qui n'a rien, et qui est au Conservatoire ou à la Discipline. */
+    var compteA = {};
+    FILTRES_ACCES.forEach(function (f) { compteA[f[0]] = liste.filter(function (m) { return f[2](cs[m.id]); }).length; });
+    if (!compteA[accesFiltre]) accesFiltre = "tous";
+    var filtreA = FILTRES_ACCES.filter(function (f) { return f[0] === accesFiltre; })[0];
+    var listeVue = liste.filter(function (m) { return filtreA[2](cs[m.id]); });
+    var filtresAcces = '<div class="appel-filtres acces-filtres" role="group" aria-label="Afficher">' + FILTRES_ACCES.filter(function (f) { return f[0] === "tous" || compteA[f[0]]; }).map(function (f) {
+      return '<button type="button" class="toggle" data-acces-filtre="' + f[0] + '" aria-pressed="' + (accesFiltre === f[0]) + '">' + f[1] + " · " + compteA[f[0]] + "</button>";
+    }).join("") + "</div>";
     var html = '<section class="panel" id="acces"><h2>Accès des membres</h2>' +
       '<p class="muted">Partagez le lien d’inscription dans le groupe WhatsApp : chaque membre choisit son nom, son numéro et son mot de passe. Vous validez ensuite chaque demande ici. Mot de passe oublié : le membre refait une demande avec le même lien.</p>' +
       (inv ? '<div class="acces-lien"><span class="titre">🔗 Lien d’inscription</span><code>' + esc(inv.lien) + "</code>" +
@@ -2311,10 +2330,9 @@ h3.group.seances-mois { margin-top: 6px; }
       (comptesEtat.adresse && !comptesEtat.adressePublique && /localhost|127\.0\.0\.1/.test(comptesEtat.adresse)
         ? '<div class="me-banner wait" style="margin-top:12px">⚠️ <span>Les liens partagés pointent vers <b>' + esc(comptesEtat.adresse) + "</b> : ils ne marcheront pour les membres qu’une fois la plateforme en ligne (réglage PUBLIC_URL sur le VPS).</span></div>" : "") +
       vueDemandes(cs) +
-      '<h3 class="group">Tous les membres</h3>' + champRecherche("acces") +
-      '<div class="stats" style="margin-top:0"><span class="pill p">' + actifs + " avec accès" + '</span>' + (avec - actifs ? '<span class="pill r">' + (avec - actifs) + " mot" + (avec - actifs > 1 ? "s" : "") + " de passe temporaire" + (avec - actifs > 1 ? "s" : "") + "</span>" : "") + "<span class=\"pill n\">" + (liste.length - avec) + " sans accès</span></div>" +
+      '<h3 class="group">Tous les membres</h3>' + champRecherche("acces") + filtresAcces +
       '<p class="muted" style="font-size:12.5px;margin-top:8px">En secours, vous pouvez aussi créer un mot de passe temporaire pour un membre et le lui envoyer sur WhatsApp.</p>' +
-      '<div class="list" style="margin-top:12px">' + liste.map(function (m) {
+      '<div class="list" style="margin-top:12px">' + listeVue.map(function (m) {
         var c = cs[m.id], tel = m.telephone || "";
         var etat = !c ? '<span class="pill n">Pas d’accès</span>'
           : c.temporaire ? (c.expireTemp && c.expireTemp < Date.now() ? '<span class="pill a">Mot de passe expiré</span>' : '<span class="pill r">' + (c.envoyeLe ? "Envoyé le " + dateCourte(c.envoyeLe) : "Pas encore envoyé") + "</span>")
@@ -2906,6 +2924,7 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     if (b.dataset.accesPlus) { accesOuvert = accesOuvert && accesOuvert.id === b.dataset.accesPlus && accesOuvert.plus ? null : { id: b.dataset.accesPlus, plus: true }; afficher(); return; }
     if (b.dataset.accesConfirmer) { accesOuvert = { id: b.dataset.accesConfirmer, plus: true, confirmer: true }; afficher(); return; }
+    if (b.dataset.accesFiltre) { accesFiltre = b.dataset.accesFiltre; accesOuvert = null; afficher(); return; }
     if (b.dataset.action === "acces-fermer") { accesOuvert = null; afficher(); return; }
     if ((b.dataset.accesRole || b.dataset.accesRoleOk) && comptesApi) {
       var pr2 = b.dataset.accesRoleOk ? [b.dataset.accesRoleOk, "admin"] : b.dataset.accesRole.split("|");
