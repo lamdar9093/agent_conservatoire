@@ -361,7 +361,10 @@ button { font: inherit; color: inherit; }
   font-size: 12.5px;
 }
 .mini svg { width: 13px; height: 13px; }
-body.no-calage .play-seg { display: none; }
+body.no-calage .play-seg, body.no-calage .boucle-seg { display: none; }
+/* Boucle d'un beuyite : bouton à côté de « Écouter », allumé tant que le beuyite se répète. */
+.mini.boucle-seg[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.card.en-boucle { border-color: var(--accent); }
 .ar {
   margin-top: 10px;
   direction: rtl;
@@ -805,6 +808,7 @@ dialog.ms::backdrop { background: var(--scrim); }
         '<span class="num">' + esc(nom(s)) + "</span>" +
         '<span class="head-actions">' +
           '<button type="button" class="mini play-seg" data-play="' + s.id + '" aria-label="Écouter : ' + esc(nom(s)) + '">' + ICON.play + "Écouter</button>" +
+          '<button type="button" class="mini boucle-seg" data-boucle="' + s.id + '" aria-pressed="false" aria-label="Écouter en boucle : ' + esc(nom(s)) + '" title="Écouter ce beuyite en boucle">' + ICON.loop + "Boucle</button>" +
           '<button type="button" class="mini" data-page="' + s.page + '" aria-label="Voir le manuscrit : ' + esc(PAGES[s.page]) + '">Manuscrit</button>' +
         "</span>" +
       "</header>" +
@@ -841,7 +845,7 @@ dialog.ms::backdrop { background: var(--scrim); }
     $("#t-ph").setAttribute("aria-pressed", String(state.ph));
     $("#t-fr").setAttribute("aria-pressed", String(state.fr));
     $("#follow").setAttribute("aria-pressed", String(state.follow));
-    $("#loop").setAttribute("aria-pressed", String(state.loop));
+    majBoucle();
     $("#speed").textContent = state.speed === 1 ? "1×" : String(state.speed).replace(".", ",") + "×";
     audio.playbackRate = state.speed;
     var c = CONSIGNES[state.kourel];
@@ -944,6 +948,8 @@ dialog.ms::backdrop { background: var(--scrim); }
     document.body.classList.add("en-calage");
     state.calage = { idx: 2, debut: 2, fin: SEGMENTS.length - 1, temps: { ouverture: null, v1: 0 } };
     state.loop = false;
+    boucleId = null;
+    majBoucle();
     setActive(null);
     applyView();
     $("#calage-panel").hidden = false;
@@ -1156,11 +1162,33 @@ dialog.ms::backdrop { background: var(--scrim); }
       : (ordre.length ? "Qâlû liya-rkan" : "Audio de référence");
     if (state.scene) renderScene();
   }
+  /* Boucle : un beuyite précis se répète (bouton « Boucle » sur le beuyite, ou bouton de la barre sur le beuyite en cours). */
+  var boucleId = null;
+  function majBoucle() {
+    state.loop = !!boucleId;
+    var bs = document.querySelectorAll("[data-boucle]");
+    for (var i = 0; i < bs.length; i++) bs[i].setAttribute("aria-pressed", String(bs[i].getAttribute("data-boucle") === boucleId));
+    var cs = document.querySelectorAll(".card");
+    for (var j = 0; j < cs.length; j++) cs[j].classList.toggle("en-boucle", cs[j].id === boucleId);
+    var l = document.getElementById("loop");
+    if (l) l.setAttribute("aria-pressed", String(!!boucleId));
+  }
+  function basculerBoucle(id) {
+    if (!id) { toast("Lancez d’abord un beuyite, puis touchez la boucle."); return; }
+    if (boucleId === id) { boucleId = null; majBoucle(); toast("Boucle arrêtée : la lecture continue."); return; }
+    var b = bounds(id);
+    if (!b) { toast(ordre.length ? "Ce passage n’est pas chanté dans l’enregistrement." : "Calez d’abord le texte sur l’audio pour répéter un beuyite."); return; }
+    boucleId = id;
+    majBoucle();
+    var t = audio.currentTime || 0;
+    if (audio.paused || t < b.start || t >= b.end) { audio.currentTime = b.start + 0.01; tick(); jouer(); }
+    toast(nom(byId(id)) + " en boucle. Touchez « Boucle » encore pour arrêter.");
+  }
   function tick() {
     var t = audio.currentTime || 0;
-    if (state.loop && activeId && !state.calage) {
-      var b = bounds(activeId);
-      if (b && t >= b.end - 0.08) { audio.currentTime = b.start; t = b.start; }
+    if (boucleId && !state.calage) {
+      var b = bounds(boucleId);
+      if (b && (t >= b.end - 0.08 || t < b.start - 1)) { audio.currentTime = b.start; t = b.start; }
     }
     if (!state.calage) {
       var cur = segmentAt(t);
@@ -1202,6 +1230,7 @@ dialog.ms::backdrop { background: var(--scrim); }
   }
   function ecouter(id) {
     var b = bounds(id);
+    if (boucleId && boucleId !== id) { boucleId = null; majBoucle(); }
     if (!b) {
       if (ordre.length) toast("Ce passage n’est pas chanté dans l’enregistrement.");
       else toast("Calez d’abord le texte sur l’audio pour écouter beuyite par beuyite.");
@@ -1273,10 +1302,12 @@ dialog.ms::backdrop { background: var(--scrim); }
       var card = document.getElementById(chip);
       if (card) card.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
       lastUserScroll = Date.now();
+      if (boucleId && boucleId !== chip) { boucleId = null; majBoucle(); }
       if (bounds(chip)) { audio.currentTime = bounds(chip).start + 0.01; tick(); }
       return;
     }
     if (b.getAttribute("data-play")) { ecouter(b.getAttribute("data-play")); return; }
+    if (b.getAttribute("data-boucle")) { basculerBoucle(b.getAttribute("data-boucle")); return; }
     if (b.getAttribute("data-page")) { openMs(Number(b.getAttribute("data-page"))); return; }
     var action = b.getAttribute("data-action");
     if (action === "calage") { startCalage(); return; }
@@ -1322,9 +1353,7 @@ dialog.ms::backdrop { background: var(--scrim); }
   });
   $("#loop").addEventListener("click", function () {
     if (!ordre.length) { toast("Calez d’abord le texte sur l’audio pour répéter un beuyite."); return; }
-    state.loop = !state.loop;
-    applyView();
-    toast(state.loop ? "Boucle activée : le beuyite en cours se répète." : "Boucle désactivée.");
+    basculerBoucle(boucleId || activeId);
   });
   $("#follow").addEventListener("click", function () {
     state.follow = !state.follow;
