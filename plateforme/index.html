@@ -730,6 +730,21 @@ a.tq-item:hover { border-color: var(--accent); }
 .tari-ecoute.neuf { padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); }
 .dk-mot { display: block; }
 .dk-form { display: grid; gap: 8px; }
+/* Réglages : sommaire en cartes */
+.reg-liste { display: grid; gap: 10px; }
+.recherche { width: 100%; margin: 4px 0 10px; padding: 11px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; }
+.recherche:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.recherche-vide { margin: 0 0 10px !important; font-size: 13.5px; }
+@media (min-width: 720px) { .reg-liste { grid-template-columns: 1fr 1fr; } }
+.reg-carte { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color 0.15s ease; }
+.reg-carte:hover { border-color: var(--accent); }
+.reg-ico { flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; font-size: 22px; background: var(--accent-soft); }
+.reg-corps { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.reg-corps b { font-size: 16px; font-weight: 600; }
+.reg-corps small { font-size: 13px; color: var(--ink-soft); }
+.reg-corps .reg-etat { color: var(--accent); font-weight: 600; }
+.reg-corps .reg-etat.alerte { color: var(--warn); }
+.reg-go { flex: none; font-size: 22px; color: var(--ink-soft); }
 /* Notifications (Mon espace) */
 .notifs-tete { display: flex; gap: 12px; align-items: flex-start; }
 .notifs-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; background: var(--accent-soft); }
@@ -777,7 +792,7 @@ a.tq-item:hover { border-color: var(--accent); }
   <div class="wrap">
     <div class="brand">
       <a class="brand-name" href="#khassidas"><img class="logo" src="/marque/logo.webp" width="46" height="46" alt="" decoding="async"><span><b>Conservatoire</b><small>Dahira Mafatihul Bichri Touba Estrie</small></span></a>
-      <span class="brand-side"><span class="role" id="role">Chargement…</span><a class="gear" href="#reglages" data-view="reglages" aria-label="Réglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/></svg></a></span>
+      <span class="brand-side"><span class="role" id="role">Chargement…</span><a class="gear" href="#reglages" data-view="reglages" aria-label="Réglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a></span>
     </div>
     <nav class="tabs" aria-label="Sections">
       <a href="#khassidas" data-view="khassidas"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c2.6-1 5.6-1 9 1 3.4-2 6.4-2 9-1V19c-2.6-1-5.6-1-9 1-3.4-2-6.4-2-9-1z"/><path d="M12 6.5V20"/></svg><span>Khassidas</span></a>
@@ -785,7 +800,7 @@ a.tq-item:hover { border-color: var(--accent); }
       <a href="#dahira" data-view="dahira"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg><span>Programme</span></a>
       <a href="#bilan" data-view="bilan"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M2.5 20h19"/></svg><span>Bilan</span></a>
       <a href="#moi" data-view="moi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c1-3.9 3.8-6.1 7-6.1s6 2.2 7 6.1"/></svg><span>Mon espace</span></a>
-      <a href="#reglages" data-view="reglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.9 1.9M16.6 16.6l1.9 1.9M5.5 18.5l1.9-1.9M16.6 7.4l1.9-1.9"/></svg><span>Réglages</span></a>
+      <a href="#reglages" data-view="reglages"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Réglages</span></a>
     </nav>
   </div>
 </header>
@@ -1959,9 +1974,9 @@ a.tq-item:hover { border-color: var(--accent); }
         '<button class="btn primary" type="submit">Ajouter</button></form>';
     }
     /* Actifs */
-    html += '<h3 class="group">Actifs · ' + actifs.length + '</h3><div class="list">' + (actifs.length ? actifs.map(function (m) {
-      if (!peutModifier) return '<div class="member"><span style="flex:1">' + esc(m.nom) + '</span><span class="chip">' + esc(tagsKourel(m)) + "</span></div>";
-      return '<div class="member"><input type="text" value="' + esc(m.nom) + '" data-nom="' + esc(m.id) + '" aria-label="Nom">' +
+    html += champRecherche("membres") + '<h3 class="group">Actifs · ' + actifs.length + '</h3><div class="list">' + (actifs.length ? actifs.map(function (m) {
+      if (!peutModifier) return '<div class="member"' + ' data-cherche="' + esc(cleRecherche(m.nom)) + '"' + '><span style="flex:1">' + esc(m.nom) + '</span><span class="chip">' + esc(tagsKourel(m)) + "</span></div>";
+      return '<div class="member" data-cherche="' + esc(cleRecherche(m.nom)) + '"><input type="text" value="' + esc(m.nom) + '" data-nom="' + esc(m.id) + '" aria-label="Nom">' +
         '<button type="button" class="toggle" data-k="k1" data-id="' + esc(m.id) + '" aria-pressed="' + !!m.k1 + '">Kourel 1</button>' +
         '<button type="button" class="toggle" data-k="k2" data-id="' + esc(m.id) + '" aria-pressed="' + !!m.k2 + '">Kourel 2</button>' +
         '<span class="actions"><button type="button" class="btn ghost small" data-action="pause" data-id="' + esc(m.id) + '">Pause</button>' +
@@ -1972,7 +1987,7 @@ a.tq-item:hover { border-color: var(--accent); }
     if (pause.length) {
       html += '<h3 class="group">En pause · ' + pause.length + '</h3><div class="list">' + pause.map(function (m) {
         var depasse = m.retour && m.retour < today();
-        return '<div class="member off-soft"><span class="who"><b>' + esc(m.nom) + "</b> <span class=\"chip\">" + esc(tagsKourel(m)) + "</span>" +
+        return '<div class="member off-soft" data-cherche="' + esc(cleRecherche(m.nom)) + '"><span class="who"><b>' + esc(m.nom) + "</b> <span class=\"chip\">" + esc(tagsKourel(m)) + "</span>" +
           '<span class="meta">' + (peutModifier
             ? 'En pause depuis le <input type="date" class="date-inline" data-depuis="' + esc(m.id) + '" value="' + esc(m.depuis || "") + '" aria-label="Date de début de la pause">'
             : "En pause depuis le " + esc(court(m.depuis))) + (m.motif ? " · " + esc(m.motif) : "") +
@@ -1987,7 +2002,7 @@ a.tq-item:hover { border-color: var(--accent); }
       html += '<h3 class="group"><button type="button" class="linkish" data-action="voir-partis">' + (voirPartis ? "▾" : "▸") + " Partis · " + partis.length + "</button></h3>";
       if (voirPartis) {
         html += '<div class="list">' + partis.map(function (m) {
-          return '<div class="member off"><span class="who"><b>' + esc(m.nom) + '</b><span class="meta">Parti le ' + esc(court(m.depuis)) + (m.motif ? " · " + esc(m.motif) : "") + " · historique conservé dans les bilans</span></span>" +
+          return '<div class="member off" data-cherche="' + esc(cleRecherche(m.nom)) + '"><span class="who"><b>' + esc(m.nom) + '</b><span class="meta">Parti le ' + esc(court(m.depuis)) + (m.motif ? " · " + esc(m.motif) : "") + " · historique conservé dans les bilans</span></span>" +
             (peutModifier ? '<span class="actions"><button type="button" class="btn ghost small" data-action="reactiver" data-id="' + esc(m.id) + '">Réintégrer</button></span>' : "") + "</div>";
         }).join("") + "</div>";
       }
@@ -2128,7 +2143,7 @@ a.tq-item:hover { border-color: var(--accent); }
       (comptesEtat.adresse && !comptesEtat.adressePublique && /localhost|127\.0\.0\.1/.test(comptesEtat.adresse)
         ? '<div class="me-banner wait" style="margin-top:12px">⚠️ <span>Les liens partagés pointent vers <b>' + esc(comptesEtat.adresse) + "</b> : ils ne marcheront pour les membres qu’une fois la plateforme en ligne (réglage PUBLIC_URL sur le VPS).</span></div>" : "") +
       vueDemandes(cs) +
-      '<h3 class="group">Tous les membres</h3>' +
+      '<h3 class="group">Tous les membres</h3>' + champRecherche("acces") +
       '<div class="stats" style="margin-top:0"><span class="pill p">' + actifs + " avec accès" + '</span>' + (avec - actifs ? '<span class="pill r">' + (avec - actifs) + " mot" + (avec - actifs > 1 ? "s" : "") + " de passe temporaire" + (avec - actifs > 1 ? "s" : "") + "</span>" : "") + "<span class=\"pill n\">" + (liste.length - avec) + " sans accès</span></div>" +
       '<p class="muted" style="font-size:12.5px;margin-top:8px">En secours, vous pouvez aussi créer un mot de passe temporaire pour un membre et le lui envoyer sur WhatsApp.</p>' +
       '<div class="list" style="margin-top:12px">' + liste.map(function (m) {
@@ -2137,7 +2152,7 @@ a.tq-item:hover { border-color: var(--accent); }
           : c.temporaire ? (c.expireTemp && c.expireTemp < Date.now() ? '<span class="pill a">Mot de passe expiré</span>' : '<span class="pill r">' + (c.envoyeLe ? "Envoyé le " + dateCourte(c.envoyeLe) : "Pas encore envoyé") + "</span>")
           : '<span class="pill p">' + (c.derniereConnexion ? "Connecté · " + dateCourte(c.derniereConnexion) : "Accès validé") + "</span>";
         if (comptesEtat.demandes && comptesEtat.demandes[m.id]) etat += ' <span class="pill r">Demande à valider</span>';
-        var h = '<div class="acces-row"><span class="who"><b>' + esc(m.nom) + "</b> " + etat + (c && c.admin ? ' <span class="chip">Admin</span>' : c && c.conservatoire ? ' <span class="chip">Conservatoire</span>' : "") + "</span>" +
+        var h = '<div class="acces-row" data-cherche="' + esc(cleRecherche(m.nom)) + '"><span class="who"><b>' + esc(m.nom) + "</b> " + etat + (c && c.admin ? ' <span class="chip">Admin</span>' : c && c.conservatoire ? ' <span class="chip">Conservatoire</span>' : "") + "</span>" +
           '<input type="tel" class="tel" data-tel="' + esc(m.id) + '" value="' + esc(tel) + '" placeholder="+1 819 555 1234" aria-label="WhatsApp de ' + esc(m.nom) + '">' +
           '<span class="actions"><button type="button" class="btn small ' + (c ? "" : "primary") + '" data-acces="' + esc(m.id) + '">' + (c ? "Nouveau mot de passe" : "Créer l’accès") + "</button>" +
           (c ? '<button type="button" class="btn ghost small" data-acces-plus="' + esc(m.id) + '" aria-label="Plus d’options">⋯</button>' : "") + "</span>";
@@ -2354,7 +2369,7 @@ a.tq-item:hover { border-color: var(--accent); }
         '<div class="kh-list">' + l.map(carteKh).join("") + "</div></div>";
     });
     if (peutSuivi && tous.length) html += '<p class="muted kh-aide">« Marquer en répétition » : le khassida que le kourel travaille en ce moment passe en tête de son kourel, pour tous les membres.</p>';
-    if (peutModifier) html += '<p class="muted kh-aide">Pour ajouter un khassida ou changer son kourel, allez dans <a href="#reglages">Réglages</a>.</p>';
+    if (peutModifier) html += '<p class="muted kh-aide">Pour ajouter un khassida ou changer son kourel, allez dans <a href="#reglages/khassidas">Réglages › Khassidas</a>.</p>';
     app.innerHTML = entreeTaris() + html + "</section>";
   }
   function vueLecture() {
@@ -2439,6 +2454,76 @@ a.tq-item:hover { border-color: var(--accent); }
     });
   }
 
+  /* Recherche d'un membre dans les longues listes (Accès, Membres) : filtre sur place, sans recharger. */
+  var recherches = {};
+  function cleRecherche(t) { return String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+  function champRecherche(k) {
+    return '<input type="search" class="recherche" data-recherche="' + k + '" value="' + esc(recherches[k] || "") + '" placeholder="Rechercher un membre…" aria-label="Rechercher un membre" autocomplete="off">';
+  }
+  function appliquerRecherche() {
+    document.querySelectorAll("[data-recherche]").forEach(function (champ) {
+      var q = cleRecherche(champ.value).trim(), zone = champ.closest("section") || app, vus = 0;
+      zone.querySelectorAll("[data-cherche]").forEach(function (l) { var ok = !q || l.dataset.cherche.indexOf(q) > -1; l.hidden = !ok; if (ok) vus++; });
+      var info = zone.querySelector(".recherche-vide");
+      if (q && !vus) { if (!info) { info = document.createElement("p"); info.className = "recherche-vide muted"; champ.insertAdjacentElement("afterend", info); } info.textContent = "Aucun membre ne correspond à « " + champ.value.trim() + " »."; }
+      else if (info) info.remove();
+    });
+  }
+  app.addEventListener("input", function (e) { var k = e.target.dataset && e.target.dataset.recherche; if (k) { recherches[k] = e.target.value; appliquerRecherche(); } });
+
+  /* ---------- Réglages : un sommaire, puis une rubrique par page (pour ne pas se perdre dans une longue liste) ---------- */
+  var reglagesRubrique = null;
+  var RUBRIQUES = [
+    { id: "acces", ico: "🔑", titre: "Accès des membres", texte: "Demandes d’inscription à valider, lien du groupe, mots de passe et rôles." },
+    { id: "membres", ico: "👥", titre: "Membres", texte: "La liste, le kourel de chacun, pause ou départ, numéro WhatsApp." },
+    { id: "kourels", ico: "🕌", titre: "Kourels et répétitions", texte: "Le dieuwrigne de chaque kourel et le lieu habituel des répétitions." },
+    { id: "khassidas", ico: "📖", titre: "Khassidas", texte: "Le répertoire : ajouter un khassida, choisir son kourel et son ère." },
+    { id: "sauvegarde", ico: "💾", titre: "Sauvegarde", texte: "Une copie de toutes les données, et le tableau des présences pour Excel." }
+  ];
+  function etatRubrique(id) {
+    if (id === "acces") {
+      var nd = comptesEtat && comptesEtat.demandes ? Object.keys(comptesEtat.demandes).length : 0;
+      if (nd) return { txt: nd + " demande" + (nd > 1 ? "s" : "") + " d’accès à valider", alerte: true, pastille: nd };
+      var cs = (comptesEtat && comptesEtat.comptes) || {};
+      var n = Object.keys(membres).filter(function (k) { return statutMembre(membres[k]) !== "parti" && cs[k] && !cs[k].temporaire; }).length;
+      return { txt: comptesEtat && !comptesEtat.chargement ? (n > 1 ? n + " membres ont leur accès" : n + " membre a son accès") : "" };
+    }
+    if (id === "membres") {
+      var l = Object.keys(membres).map(function (k) { return membres[k]; }), na = l.filter(function (m) { return statutMembre(m) === "actif"; }).length, np = l.filter(function (m) { return statutMembre(m) === "pause"; }).length;
+      return { txt: na + " actif" + (na > 1 ? "s" : "") + (np ? " · " + np + " en pause" : "") };
+    }
+    if (id === "kourels") {
+      var manque = ["k1", "k2"].filter(function (k) { return !dieuwrigneDe(k); });
+      return manque.length ? { txt: "Dieuwrigne à choisir : " + manque.map(function (k) { return TYPES[k]; }).join(" et "), alerte: true }
+        : { txt: "Dieuwrignes : " + ["k1", "k2"].map(function (k) { return dieuwrigneDe(k).nom.split(" ")[0] + " (" + ABR[k] + ")"; }).join(" · ") };
+    }
+    if (id === "khassidas") { var nk = Object.keys(khassidas).length; return { txt: nk + " khassida" + (nk > 1 ? "s" : "") + " dans le répertoire" }; }
+    var der = lireDerniereSauvegarde();
+    return !der || der < isoPlus(today(), -30) ? { txt: der ? "Dernière sauvegarde le " + court(der) + " : à refaire" : "Aucune sauvegarde depuis cet appareil", alerte: true } : { txt: "Dernière sauvegarde le " + court(der) };
+  }
+  function vueReglages() {
+    var r = reglagesRubrique, act = document.activeElement, focusRecherche = act && act.dataset && act.dataset.recherche;
+    if (!r) {
+      app.innerHTML = '<div class="prg-intro"><h1>Réglages</h1><p>Ce que seul l’admin règle. Choisissez une rubrique.</p></div>' +
+        '<nav class="reg-liste" aria-label="Rubriques des réglages">' + RUBRIQUES.map(function (x) {
+          var e = etatRubrique(x.id);
+          return '<a class="reg-carte" href="#reglages/' + x.id + '"><span class="reg-ico" aria-hidden="true">' + x.ico + "</span>" +
+            "<span class=\"reg-corps\"><b>" + esc(x.titre) + "</b><small>" + esc(x.texte) + "</small>" + (e.txt ? '<small class="reg-etat' + (e.alerte ? " alerte" : "") + '">' + esc(e.txt) + "</small>" : "") + "</span>" +
+            (e.pastille ? '<span class="pastille">' + e.pastille + "</span>" : "") + '<span class="reg-go" aria-hidden="true">›</span></a>';
+        }).join("") + "</nav>";
+      return;
+    }
+    if (r === "acces") { app.innerHTML = ""; if (comptesApi) vueAcces(); else app.innerHTML = '<div class="empty">Chargement des accès…</div>'; }
+    else if (r === "membres") vueMembres();
+    else if (r === "kourels") { app.innerHTML = ""; vueLieuHabituel(); vueDieuwrignes(); }
+    else if (r === "khassidas") vueKhassidas(false);
+    else { app.innerHTML = ""; vueSauvegarde(); }
+    app.insertAdjacentHTML("afterbegin", '<div><a class="btn ghost" href="#reglages">← Réglages</a></div>');
+    appliquerRecherche();
+    // La recherche garde le curseur si la page se met à jour pendant la saisie.
+    if (focusRecherche) { var c = app.querySelector('[data-recherche="' + focusRecherche + '"]'); if (c) { c.focus({ preventScroll: true }); var n = c.value.length; try { c.setSelectionRange(n, n); } catch (e) { /* champ sans sélection */ } } }
+  }
+
   /* ---------- Sauvegarde des données ---------- */
   function lireDerniereSauvegarde() { try { return localStorage.getItem("presences-sauvegarde") || ""; } catch (e) { return ""; } }
   function ecrireDerniereSauvegarde(v) { try { localStorage.setItem("presences-sauvegarde", v); } catch (e) { /* stockage indisponible */ } }
@@ -2520,15 +2605,17 @@ a.tq-item:hover { border-color: var(--accent); }
     if (vue === "khassida") return vueLecture();
     if (vue === "tari") return vueTari();
     if (vue === "taris") return vueTarisListe();
-    if (vue === "bilan") vueBilan(); else if (vue === "reglages") { vueMembres(); vueKhassidas(true); vueSauvegarde(); } else if (vue === "moi") vueMoi();
+    if (vue === "bilan") vueBilan(); else if (vue === "reglages") vueReglages(); else if (vue === "moi") vueMoi();
     else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
     if (vue === "moi") app.insertAdjacentHTML("beforeend", blocMessagesMembre());
-    if (vue === "reglages") { vueLieuHabituel(); vueDieuwrignes(); }
-    if (vue === "reglages" && comptesApi) vueAcces();
+
   }
   function lireHash() {
     var h = location.hash.replace("#", "");
-    if (h === "membres") h = "reglages";
+    if (h === "membres") h = "reglages/membres";
+    var mrg = /^reglages\/(acces|membres|kourels|khassidas|sauvegarde)$/.exec(h);
+    if (mrg) { vue = "reglages"; reglagesRubrique = mrg[1]; return; }
+    reglagesRubrique = null;
     var mk = /^khassida\/([^\/]+)(?:\/v(\d+))?$/.exec(h);
     if (mk) { vue = "khassida"; lecture = { id: decodeURIComponent(mk[1]), vers: mk[2] ? Number(mk[2]) : null }; return; }
     /* Taris : #tari/séance (le sien), #tari/séance/membre (écoute du Conservatoire), #taris ou #taris/khassida (liste) */
@@ -4291,7 +4378,7 @@ a.tq-item:hover { border-color: var(--accent); }
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
     e.push({ vue: "moi", titre: "Mon espace", texte: (tarisApi ? "Vos Taris : enregistrez-les ici, le Conservatoire les écoute et vous répond. Aussi vos présences, vos progrès et les chartes."
       : "Vos présences, vos Taris, vos progrès et les chartes.") + " C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
-    if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Les accès des membres et leur rôle, la liste des membres, les khassidas et la sauvegarde des données." });
+    if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Un sommaire de cinq rubriques, chacune sur sa page : accès des membres (les demandes à valider y sont signalées), membres, kourels et répétitions, khassidas, sauvegarde." });
     e.push({ fin: true, titre: "C’est parti !", texte: "Vous pourrez revoir cette visite à tout moment depuis Mon espace." });
     return e;
   }

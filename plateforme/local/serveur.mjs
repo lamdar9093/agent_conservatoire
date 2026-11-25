@@ -442,7 +442,7 @@ async function api(req, res, parts, sess) {
     if (typeof corps.motDePasse !== "string" || corps.motDePasse.length < 8) return json(res, 400, { code: "court", message: "Choisissez un mot de passe d’au moins 8 caractères." });
     await comptes.demander(m.id, String(corps.telephone).trim().slice(0, 30), corps.motDePasse);
     prevenir("_comptes");
-    admins().then((l) => notifs.notifier(l, { titre: "Nouvelle demande d’accès", texte: m.data.nom + " demande l’accès à la plateforme : à valider.", url: "/#reglages" })).catch((e) => console.error(e));
+    admins().then((l) => notifs.notifier(l, { titre: "Nouvelle demande d’accès", texte: m.data.nom + " demande l’accès à la plateforme : à valider.", url: "/#reglages/acces" })).catch((e) => console.error(e));
     return json(res, 200, { ok: true, identifiant: m.id, nom: m.data.nom, telephone: String(corps.telephone).trim() });
   }
   // Visite guidée des onglets : vue une fois par personne (enregistré sur son compte, valable sur tous ses appareils).
