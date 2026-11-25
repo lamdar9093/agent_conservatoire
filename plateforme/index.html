@@ -745,8 +745,8 @@ a.tq-item:hover { border-color: var(--accent); }
 .tari-aide { margin: 4px 0 0 !important; font-size: 12.5px; color: var(--ink-soft); }
 .tari-aide a { color: var(--accent); font-weight: 600; }
 /* Commission de discipline */
-body.vue-membre.vue-discipline .tabs a[data-view="seances"] { display: inline-flex !important; }
-body.vue-membre.vue-discipline .bottom-nav a[data-view="seances"] { display: grid !important; }
+body.vue-membre.vue-discipline .tabs a[data-view="seances"], body.vue-membre.vue-discipline .tabs a[data-view="bilan"] { display: inline-flex !important; }
+body.vue-membre.vue-discipline .bottom-nav a[data-view="seances"], body.vue-membre.vue-discipline .bottom-nav a[data-view="bilan"] { display: grid !important; }
 .chip.disc-chip { background: var(--warn-soft); color: var(--warn); }
 .disc-liste { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
 .disc-liste li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
@@ -2794,9 +2794,10 @@ h3.group.seances-mois { margin-top: 6px; }
     if (!db) return;
     if (!charge.m || !charge.s || !charge.r) { app.innerHTML = '<div class="empty">Chargement…</div>'; return; }
     /* Un membre (non administrateur) ne voit ni les séances de tous, ni le bilan, ni les réglages. */
-    if (!peutSuivi && ["bilan", "reglages"].indexOf(vue) > -1) vue = "moi";
-    /* La commission de discipline (même sans le rôle Conservatoire) voit les séances pour noter les sanctions. */
-    if (!peutSuivi && !estDiscipline && vue === "seances") vue = "moi";
+    if (!peutSuivi && vue === "reglages") vue = "moi";
+    /* La commission de discipline (même sans le rôle Conservatoire) voit les séances pour noter les sanctions,
+       et le bilan des présences (pas le suivi des membres, demande de l'utilisateur). */
+    if (!peutSuivi && !estDiscipline && (vue === "seances" || vue === "bilan")) vue = "moi";
     /* Le Conservatoire n'a pas les réglages (accès, membres, khassidas, sauvegardes). */
     if (!peutModifier && vue === "reglages") vue = "seances";
     if (vue === "messages" && !peutSuivi) vue = "moi";
@@ -4676,6 +4677,7 @@ h3.group.seances-mois { margin-top: 6px; }
           : mesKourels.length ? "Comme dieuwrigne du " + mesKourels.map(function (k) { return TYPES[k]; }).join(" et du ") + (mesKourels.indexOf("k1") > -1 ? " (et donc de la répétition générale et du Kourel général)" : "") + ", vous décidez du programme ; les autres proposent."
           : "Le dieuwrigne de chaque kourel décide ; vous pouvez proposer.") + " Vous y voyez aussi qui va prester au dahira." });
     if (peutSuivi) e.push({ vue: "bilan", titre: "Bilan", texte: "Les présences et retards de chacun, et le suivi des membres : qui accompagner, qui est prêt pour le Kourel 1." });
+    else if (estDiscipline) e.push({ vue: "bilan", titre: "Bilan", texte: "Pour la commission de discipline : les présences, retards et absences de chacun, par séance ou par mois." });
     e.push({ vue: "moi", titre: "Mon espace", texte: (tarisApi ? "Vos Taris : enregistrez-les ici, le Conservatoire les écoute et vous répond. Aussi vos présences, vos progrès et les chartes."
       : "Vos présences, vos Taris, vos progrès et les chartes.") + " C’est aussi ici que vous proposez une idée (signée ou anonyme) ou signalez un souci." });
     if (peutModifier) e.push({ vue: "reglages", titre: "Réglages", texte: "Un sommaire de cinq rubriques, chacune sur sa page : accès des membres (les demandes à valider y sont signalées), membres, kourels et répétitions, khassidas, sauvegarde." });
