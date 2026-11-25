@@ -735,6 +735,9 @@ a.tq-item:hover { border-color: var(--accent); }
 .reg-liste { display: grid; gap: 10px; }
 /* Tari d'une séance : quoi, où en est chacun, pour quand */
 .tari-quoi { margin: 8px 0 0 !important; font-size: 15px; }
+.ere-champ { display: grid; gap: 6px; flex: 1 1 100%; }
+.ere-lbl small { font-weight: 400; color: var(--ink-soft); }
+.ere-choix { display: flex; flex-wrap: wrap; gap: 6px; }
 .tari-barre { height: 6px; margin-top: 10px; border-radius: 3px; background: var(--rule); overflow: hidden; }
 .tari-barre span { display: block; height: 100%; background: var(--good); border-radius: 3px; }
 .tari-etats { display: grid; gap: 8px; margin-top: 10px; }
@@ -2653,7 +2656,7 @@ h3.group.seances-mois { margin-top: 6px; }
         '<label class="field" style="flex:1 1 200px">Titre<input type="text" id="k-titre" required placeholder="Mawahibu Nafih"></label>' +
         '<label class="field" style="flex:1 1 160px">Titre en arabe (facultatif)<input type="text" id="k-ar" dir="rtl" lang="ar"></label>' +
         '<label class="field">Nombre de beuyites<input type="number" id="k-vers" min="1" style="width:100px"></label>' +
-        '<label class="field">Ère<input type="text" id="k-ere" list="eres-connues" placeholder="Serigne Cissé" style="width:170px"></label>' +
+        champEre("k-ere", "", "") +
         '<label class="field">Kourel<select id="k-kourel"><option value="">Tous les membres</option><option value="k1">Kourel 1</option><option value="k2">Kourel 2</option><option value="k1k2">Kourels 1 et 2</option></select></label>' +
         '<label class="field" style="flex:1 1 220px">Lien de la page (facultatif)<input type="url" id="k-lien" placeholder="https://claude.ai/artifact/…"></label>' +
         '<button class="btn primary" type="submit">Ajouter le khassida</button></form>';
@@ -2940,6 +2943,15 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     if (b.dataset.accesPlus) { accesOuvert = accesOuvert && accesOuvert.id === b.dataset.accesPlus && accesOuvert.plus ? null : { id: b.dataset.accesPlus, plus: true }; afficher(); return; }
     if (b.dataset.accesConfirmer) { accesOuvert = { id: b.dataset.accesConfirmer, plus: true, confirmer: true }; afficher(); return; }
+    /* Ère touchée : elle remplit le champ (toucher la même la retire). */
+    if (b.dataset.erePour) {
+      var ch = document.getElementById(b.dataset.erePour);
+      if (ch) {
+        ch.value = b.getAttribute("aria-pressed") === "true" ? "" : b.dataset.ere;
+        ch.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      return;
+    }
     if (b.dataset.accesFiltre) { accesFiltre = b.dataset.accesFiltre; accesOuvert = null; afficher(); return; }
     if (b.dataset.action === "acces-fermer") { accesOuvert = null; afficher(); return; }
     if ((b.dataset.accesRole || b.dataset.accesRoleOk) && comptesApi) {
@@ -3249,6 +3261,8 @@ h3.group.seances-mois { margin-top: 6px; }
   app.addEventListener("input", function (e) {
     var t = e.target;
     if (progForm && t.dataset && (t.dataset.pf === "titre" || t.dataset.pf === "ere")) progForm[t.dataset.pf] = t.value;
+    /* Champ « Ère » : le bouton de l'ère écrite s'allume. */
+    if (t.id && t.closest && t.closest(".ere-champ")) t.closest(".ere-champ").querySelectorAll("[data-ere]").forEach(function (x) { x.setAttribute("aria-pressed", String(!!t.value.trim() && cleRecherche(x.dataset.ere) === cleRecherche(t.value.trim()))); });
   });
   app.addEventListener("change", function (e) {
     var t = e.target;
@@ -3373,10 +3387,25 @@ h3.group.seances-mois { margin-top: 6px; }
   function titreItem(x) { var k = x.khassida && khassidas[x.khassida]; return k ? k.titre : (x.titre || "Khassida"); }
   function cleDahira(dz, k) { return "dz-" + dz + "-" + (k === "tout" ? "general" : k); }
   function ligneProgramme(x, i) { return (i + 1) + ". " + titreItem(x) + (x.ere ? " · ère " + x.ere : ""); }
-  function datalistEres() {
+  /* Ères connues : les habituelles, plus toute ère déjà écrite sur un khassida ou au programme (une nouvelle ère s'ajoute ainsi d'elle-même). */
+  function eresConnues() {
     var eres = ["Serigne Cissé", "Serigne Mayib", "Serigne Massamba", "Baye Moustapha Diop"];
-    Object.keys(khassidas).forEach(function (k) { var e = khassidas[k].ere; if (e && eres.indexOf(e) < 0) eres.push(e); });
-    return '<datalist id="eres-connues">' + eres.map(function (e) { return '<option value="' + esc(e) + '">'; }).join("") + "</datalist>";
+    var ajout = function (e) { e = String(e || "").trim(); if (e && !eres.some(function (x) { return cleRecherche(x) === cleRecherche(e); })) eres.push(e); };
+    Object.keys(khassidas).forEach(function (k) { ajout(khassidas[k].ere); });
+    Object.keys(chants || {}).forEach(function (c) { ((chants[c] || {}).items || []).forEach(function (x) { ajout(x.ere); }); });
+    return eres;
+  }
+  function datalistEres() {
+    return '<datalist id="eres-connues">' + eresConnues().map(function (e) { return '<option value="' + esc(e) + '">'; }).join("") + "</datalist>";
+  }
+  /* Champ « Ère » : les ères connues en boutons à toucher, et le champ pour en écrire une nouvelle si elle n'y est pas. */
+  function champEre(idChamp, attrs, valeur) {
+    var v = String(valeur || "");
+    return '<div class="field ere-champ"><span class="ere-lbl">Ère <small>touchez-en une, ou écrivez-en une nouvelle</small></span>' +
+      '<span class="ere-choix" role="group" aria-label="Ères connues">' + eresConnues().map(function (e) {
+        return '<button type="button" class="toggle" data-ere-pour="' + idChamp + '" data-ere="' + esc(e) + '" aria-pressed="' + (cleRecherche(v) === cleRecherche(e)) + '">' + esc(e) + "</button>";
+      }).join("") + "</span>" +
+      '<input type="text" id="' + idChamp + '" ' + attrs + ' value="' + esc(v) + '" placeholder="Autre ère : écrivez son nom" maxlength="80" aria-label="Ère" autocomplete="off"></div>';
   }
   function dateBloc(iso) {
     var d = asDate(iso), j = d.toLocaleDateString("fr-FR", { weekday: "short" }).replace(".", "");
@@ -3403,7 +3432,7 @@ h3.group.seances-mois { margin-top: 6px; }
         kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (f.khassida === k.id ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") +
         '<option value="__autre"' + (f.khassida === "__autre" ? " selected" : "") + ">Autre khassida (pas encore dans la liste)…</option></select></label>" +
       (f.khassida === "__autre" ? '<label class="field">Titre du khassida<input type="text" data-pf="titre" value="' + esc(f.titre || "") + '" placeholder="Ex. : Mawahibu Nafih" maxlength="120"></label>' : "") +
-      '<label class="field">Ère<input type="text" list="eres-connues" data-pf="ere" value="' + esc(f.ere || "") + '" placeholder="Serigne Cissé" maxlength="80"></label>' +
+      champEre("pf-ere", 'data-pf="ere"', f.ere) +
       (dec ? "" : '<p class="msg-note">' + (peutSuivi ? "Votre proposition sera visible par le Conservatoire. " : "Votre proposition est envoyée au dieuwrigne. ") + "Le dieuwrigne du kourel décide de la retenir ; votre nom accompagne la proposition.</p>") +
       '<div class="row"><button type="button" class="btn primary small" data-prog-valider>' + (dec ? "Ajouter au programme" : "Proposer") + '</button><button type="button" class="btn ghost small" data-prog-annuler>Annuler</button></div></div>';
   }
