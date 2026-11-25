@@ -732,6 +732,19 @@ a.tq-item:hover { border-color: var(--accent); }
 .dk-form { display: grid; gap: 8px; }
 /* Réglages : sommaire en cartes */
 .reg-liste { display: grid; gap: 10px; }
+/* Répétitions : appel du jour en un toucher, filtres de l'appel, séances par mois */
+.appel-jour { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; border: 0; border-radius: 14px; background: var(--accent); color: var(--accent-ink); font: inherit; text-align: left; cursor: pointer; box-shadow: var(--shadow); }
+.appel-jour > span:nth-child(2) { flex: 1; display: grid; gap: 2px; }
+.appel-jour b { font-size: 17px; font-weight: 600; }
+.appel-jour small { font-size: 13px; opacity: 0.85; }
+.appel-jour > span:last-child { font-size: 24px; }
+.appel-jour.fait { background: var(--surface); color: var(--ink); border: 1px solid var(--accent); box-shadow: none; }
+.appel-ico { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; background: rgba(255, 255, 255, 0.16); }
+.appel-jour.fait .appel-ico { background: var(--accent-soft); }
+.appel-filtres { display: flex; gap: 6px; overflow-x: auto; margin-top: 12px; padding-bottom: 2px; scrollbar-width: none; }
+.appel-filtres::-webkit-scrollbar { display: none; }
+.appel-filtres .toggle { flex: none; padding: 7px 12px; font-size: 13.5px; }
+h3.group.seances-mois { margin-top: 6px; }
 /* Mon espace : en-tête compact et « Mon compte » en bas */
 .moi-tete { display: grid; gap: 12px; }
 .moi-id { display: flex; align-items: center; gap: 12px; }
@@ -867,7 +880,7 @@ a.tq-item:hover { border-color: var(--accent); }
   };
   var membres = {}, seances = [], charge = { m: false, s: false, r: false };
   var utilisateur = null, monCompte = null, comptesApi = null, comptesEtat = null, accesOuvert = null;
-  var vue = "seances", seanceOuverte = null, confirmerSuppression = false;
+  var vue = "seances", seanceOuverte = null, confirmerSuppression = false, filtreAppel = "tous", formSeance = false, toutesSeances = false, seanceAttendue = null;
   var lecture = null;
   var dahiraOuvert = null, apercuDahira = false, rappelOuvert = null, programmes = {}, editRep = null, discOuvert = null, supprRep = null;
   var filtre = { periode: "mois", kourel: "tous" };
@@ -1049,7 +1062,19 @@ a.tq-item:hover { border-color: var(--accent); }
     var html = banniereTaris();
     if (peutSuivi) {
       var d = today();
-      html += '<section class="panel"><h2>Nouvelle séance</h2><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
+      /* Jour de répétition (aujourd'hui, ou hier si l'appel n'a pas été fait) : l'appel en un toucher. */
+      [d, isoPlus(d, -1)].forEach(function (jour, k) {
+        repetitionsDu(jour).forEach(function (r) {
+          var sid = jour + "-" + r.type, sx = seances.filter(function (x) { return x.id === sid; })[0];
+          if (k === 1 && sx) return;
+          var quand = k === 0 ? "aujourd’hui" : "hier, " + jourCourt(jour).toLowerCase();
+          html += sx
+            ? '<button type="button" class="appel-jour fait" data-open="' + esc(sid) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><b>Reprendre l’appel · ' + esc(TYPES[r.type]) + "</b><small>" + esc(quand) + " · " + compter(sx).P + " présents, " + compter(sx).A + " absent" + (compter(sx).A > 1 ? "s" : "") + '</small></span><span aria-hidden="true">›</span></button>'
+            : '<button type="button" class="appel-jour" data-appel-jour="' + esc(jour + "|" + r.type + "|" + r.horaire) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><b>Faire l’appel · ' + esc(TYPES[r.type]) + "</b><small>" + esc(quand) + (r.horaire ? " · " + esc(r.horaire) : "") + " · tout le monde présent, touchez seulement les absents et retards</small></span><span aria-hidden=\"true\">›</span></button>";
+        });
+      });
+      html += !formSeance ? '<div><button type="button" class="btn ghost" data-action="seance-form">+ Nouvelle séance (autre date)</button></div>' :
+        '<section class="panel"><div class="detail-head"><h2>Nouvelle séance</h2><button type="button" class="btn ghost small" data-action="seance-form">Fermer</button></div><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
         '<form class="row" id="f-seance" style="margin-top:12px">' +
         '<label class="field">Date<input type="date" id="s-date" value="' + d + '" required></label>' +
         '<label class="field">Répétition<select id="s-type">' +
@@ -1111,12 +1136,22 @@ a.tq-item:hover { border-color: var(--accent); }
     if (!seances.length) {
       html += '<div class="empty">Aucune séance enregistrée pour l’instant.' + (peutSuivi ? " Créez la première ci-dessus." : "") + "</div>";
     } else {
-      html += '<section class="list" aria-label="Séances">' + seances.map(function (s) {
-        var tc = tariCompte(s);
-        return '<button type="button" class="seance" data-open="' + esc(s.id) + '"><span class="when"><b>' + esc(jourLong(s.date)) + '</b><span><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
-          (tc.dus ? ' <span class="pill ' + (tc.recus === tc.dus ? "p" : "r") + '">Tari ' + tc.recus + "/" + tc.dus + "</span>" : "") + "</span></span>" +
-          '<span class="counts">' + countsHTML(compter(s)) + "</span></button>";
-      }).join("") + "</section>";
+      var parMois = {};
+      seances.forEach(function (x) { (parMois[x.date.slice(0, 7)] = parMois[x.date.slice(0, 7)] || []).push(x); });
+      var mois = Object.keys(parMois).sort().reverse(), vus = toutesSeances ? mois : mois.slice(0, 2);
+      html += vus.map(function (mo) {
+        var l = parMois[mo];
+        return '<h3 class="group seances-mois">' + esc(moisLabel(mo)) + " · " + l.length + " séance" + (l.length > 1 ? "s" : "") + '</h3><section class="list" aria-label="Séances de ' + esc(moisLabel(mo)) + '">' + l.map(function (s) {
+          var tc = tariCompte(s);
+          return '<button type="button" class="seance" data-open="' + esc(s.id) + '"><span class="when"><b>' + esc(jourLong(s.date)) + '</b><span><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
+            (tc.dus ? ' <span class="pill ' + (tc.recus === tc.dus ? "p" : "r") + '">Tari ' + tc.recus + "/" + tc.dus + "</span>" : "") + "</span></span>" +
+            '<span class="counts">' + countsHTML(compter(s)) + "</span></button>";
+        }).join("") + "</section>";
+      }).join("");
+      if (mois.length > vus.length) {
+        var reste = mois.slice(vus.length).reduce(function (n, mo) { return n + parMois[mo].length; }, 0);
+        html += '<div><button type="button" class="btn ghost small" data-action="seances-tout">Voir les mois précédents (' + reste + " séance" + (reste > 1 ? "s" : "") + ")</button></div>";
+      }
     }
     app.innerHTML = html;
     var f = document.getElementById("f-seance");
@@ -1142,11 +1177,14 @@ a.tq-item:hover { border-color: var(--accent); }
     var statuts = {};
     participants.forEach(function (id) { statuts[id] = "P"; });
     db.doc("seances/" + id).set({ date: date, type: type, horaire: horaire || "", participants: participants, statuts: statuts, creeLe: new Date().toISOString() })
-      .then(function () { seanceOuverte = id; afficher(); toast("Séance créée : " + participants.length + " membres, tous présents par défaut."); }, echec);
+      .then(function () { seanceAttendue = id; seanceOuverte = id; filtreAppel = "tous"; formSeance = false; afficher(); window.scrollTo(0, 0); toast("Séance créée : " + participants.length + " membres, tous présents par défaut."); }, echec);
   }
 
   function vueSeance(s) {
+    /* Séance tout juste créée : elle arrive de la base un instant après ; on l'attend au lieu de revenir à la liste. */
+    if (!s && seanceAttendue && seanceAttendue === seanceOuverte) { app.innerHTML = '<div class="empty">Ouverture de la séance…</div>'; return; }
     if (!s) { seanceOuverte = null; return vueSeances(); }
+    if (seanceAttendue === s.id) seanceAttendue = null;
     var c = compter(s);
     var noms = (s.participants || []).map(function (id) { return { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé", m: membres[id] }; }).sort(triNom);
     var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
@@ -1156,7 +1194,44 @@ a.tq-item:hover { border-color: var(--accent); }
         : (horaireDe(s) ? ' <span class="muted">' + esc(horaireDe(s)) + "</span>" : "")) + "</div>" +
       '<div class="counts">' + countsHTML(c) + "</div></div>";
     var tc = tariCompte(s), tmode = s.tari || "aucun";
-    html += '<div class="people">' + noms.map(function (p) {
+    /* Le Tari en haut (avant la liste, qui peut être longue) : on le demande juste après l'appel. */
+    var tb = "";
+    tb += '<div class="tari-box"><div class="row" style="align-items:center;justify-content:space-between"><b>Tari</b>' +
+      (peutSuivi && !tariEdition ? '<button type="button" class="btn ghost small" data-action="edit-tari">' + (tmode === "aucun" ? "Demander un Tari" : "Modifier") + "</button>" : "") + "</div>";
+    if (peutSuivi && tariEdition) {
+      tb += '<p class="muted" style="margin-top:6px">Qui doit envoyer son Tari ?</p><span class="seg" role="group" aria-label="Qui doit envoyer son Tari">' + Object.keys(TARI).map(function (k) {
+          return '<button type="button" data-tari="' + k + '" aria-pressed="' + (tmode === k) + '">' + TARI[k] + "</button>";
+        }).join("") + "</span>" + (tmode === "choisis" ? choixTariHTML(s) : "") + tariDetailHTML(s) +
+        '<div class="row" style="margin-top:10px"><button type="button" class="btn primary small" data-action="fin-tari">Terminé</button>' +
+        (tmode !== "aucun" && !confirmerTari ? '<button type="button" class="btn danger small" data-action="suppr-tari">Supprimer le Tari</button>' : "") + "</div>" +
+        (confirmerTari ? '<div class="confirm"><b>Supprimer ce Tari ?</b><span>La demande et les Taris déjà cochés comme reçus pour cette séance seront effacés.</span>' +
+          '<div class="row"><button type="button" class="btn danger" data-action="ok-suppr-tari">Oui, supprimer</button><button type="button" class="btn" data-action="non-suppr-tari">Annuler</button></div></div>' : "");
+    } else if (tmode === "aucun") {
+      tb += '<p class="muted" style="margin-top:6px">Pas de Tari demandé pour cette séance.</p>';
+    } else {
+      var tt = tariTexte(s.tariDetail || {});
+      tb += '<p style="margin-top:6px">' + (tt ? "À envoyer : " + tt : "Contenu à préciser.") + "</p>" +
+        '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " maîtrisé" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + (tc.retravail ? " · " + tc.retravail + " à retravailler" : "") + " · à maîtriser avant la répétition du " + esc(jourEcheance(echeanceTari(s))) + "</p>" +
+        (tarisApi ? '<p class="muted" style="margin-top:4px;font-size:13px">🎙️ Les membres concernés l’enregistrent depuis Mon espace ; vous l’écoutez dans <a href="#taris" style="color:var(--accent);font-weight:600">Taris</a>.</p>' : "");
+    }
+    tb += "</div>";
+    html += tb;
+    /* Filtres de l'appel : toute la liste pendant l'appel ; ensuite, seulement les absents, les retards ou les Taris. */
+    var compteF = { tous: noms.length, absents: 0, retards: 0, tari: 0 };
+    noms.forEach(function (p) { if (!requis(s, p.id)) return; var v = choixDe(s, p.id); if (v === "A" || v === "E") compteF.absents++; if (v === "R") compteF.retards++; if (tariConcerne(s, p.id)) compteF.tari++; });
+    if (filtreAppel !== "tous" && !compteF[filtreAppel]) filtreAppel = "tous";
+    if (compteF.absents || compteF.retards || compteF.tari) {
+      html += '<div class="appel-filtres" role="group" aria-label="Afficher">' + [["tous", "Tout le monde"], ["absents", "Absents"], ["retards", "Retards"], ["tari", "Tari"]].filter(function (f) { return f[0] === "tous" || compteF[f[0]]; }).map(function (f) {
+        return '<button type="button" class="toggle" data-appel-filtre="' + f[0] + '" aria-pressed="' + (filtreAppel === f[0]) + '">' + f[1] + " · " + compteF[f[0]] + "</button>";
+      }).join("") + "</div>";
+    }
+    var nomsVus = noms.filter(function (p) {
+      if (filtreAppel === "tous") return true;
+      if (!requis(s, p.id)) return false;
+      var v = choixDe(s, p.id);
+      return filtreAppel === "absents" ? (v === "A" || v === "E") : filtreAppel === "retards" ? v === "R" : tariConcerne(s, p.id);
+    });
+    html += '<div class="people">' + nomsVus.map(function (p) {
         var v = choixDe(s, p.id);
         var tariHtml = "";
         if (requis(s, p.id) && tariConcerne(s, p.id)) {
@@ -1217,25 +1292,6 @@ a.tq-item:hover { border-color: var(--accent); }
         }
       }
     }
-    html += '<div class="tari-box"><div class="row" style="align-items:center;justify-content:space-between"><b>Tari</b>' +
-      (peutSuivi && !tariEdition ? '<button type="button" class="btn ghost small" data-action="edit-tari">' + (tmode === "aucun" ? "Demander un Tari" : "Modifier") + "</button>" : "") + "</div>";
-    if (peutSuivi && tariEdition) {
-      html += '<p class="muted" style="margin-top:6px">Qui doit envoyer son Tari ?</p><span class="seg" role="group" aria-label="Qui doit envoyer son Tari">' + Object.keys(TARI).map(function (k) {
-          return '<button type="button" data-tari="' + k + '" aria-pressed="' + (tmode === k) + '">' + TARI[k] + "</button>";
-        }).join("") + "</span>" + (tmode === "choisis" ? choixTariHTML(s) : "") + tariDetailHTML(s) +
-        '<div class="row" style="margin-top:10px"><button type="button" class="btn primary small" data-action="fin-tari">Terminé</button>' +
-        (tmode !== "aucun" && !confirmerTari ? '<button type="button" class="btn danger small" data-action="suppr-tari">Supprimer le Tari</button>' : "") + "</div>" +
-        (confirmerTari ? '<div class="confirm"><b>Supprimer ce Tari ?</b><span>La demande et les Taris déjà cochés comme reçus pour cette séance seront effacés.</span>' +
-          '<div class="row"><button type="button" class="btn danger" data-action="ok-suppr-tari">Oui, supprimer</button><button type="button" class="btn" data-action="non-suppr-tari">Annuler</button></div></div>' : "");
-    } else if (tmode === "aucun") {
-      html += '<p class="muted" style="margin-top:6px">Pas de Tari demandé pour cette séance.</p>';
-    } else {
-      var tt = tariTexte(s.tariDetail || {});
-      html += '<p style="margin-top:6px">' + (tt ? "À envoyer : " + tt : "Contenu à préciser.") + "</p>" +
-        '<p class="muted" style="margin-top:4px">' + TARI[tmode] + " · " + tc.recus + " maîtrisé" + (tc.recus > 1 ? "s" : "") + " sur " + tc.dus + (tc.retravail ? " · " + tc.retravail + " à retravailler" : "") + " · à maîtriser avant la répétition du " + esc(jourEcheance(echeanceTari(s))) + "</p>" +
-        (tarisApi ? '<p class="muted" style="margin-top:4px;font-size:13px">🎙️ Les membres concernés l’enregistrent depuis Mon espace ; vous l’écoutez dans <a href="#taris" style="color:var(--accent);font-weight:600">Taris</a>.</p>' : "");
-    }
-    html += "</div>";
     if (peutSuivi) {
       html += confirmerSuppression
         ? '<div class="confirm"><b>Supprimer cette séance et ses présences ?</b><div class="row"><button type="button" class="btn danger" data-del>Oui, supprimer</button><button type="button" class="btn" data-nodel>Annuler</button></div></div>'
@@ -1436,6 +1492,13 @@ a.tq-item:hover { border-color: var(--accent); }
   /* Programme d'une répétition à venir : programmes/{date-type} {horaire, lieu, khassida, tout, de, a, note, taris, envoye}. */
   function titreRepetition(ty) { return ty === "rg" ? "RÉPÉTITION GÉNÉRALE" : "RÉPÉTITION " + (TYPES[ty] || "").toUpperCase(); }
   function dernierDimancheDuMois(iso) { return asDate(iso).getDay() === 0 && isoPlus(iso, 7).slice(0, 7) !== iso.slice(0, 7); }
+  function repetitionsDu(jour) {
+    var l = [], j = asDate(jour).getDay();
+    var hab = j === 4 ? "k1" : j === 5 ? "k2" : (j === 0 && dernierDimancheDuMois(jour)) ? "rg" : null;
+    if (hab) l.push(hab);
+    Object.keys(programmes).forEach(function (id) { if (id.slice(0, 10) === jour && programmes[id].extra && l.indexOf(id.slice(11)) < 0) l.push(id.slice(11)); });
+    return l.map(function (ty) { var p = progDe(jour + "-" + ty); return p.annulee || p.masquee ? null : { type: ty, horaire: p.horaire }; }).filter(Boolean);
+  }
   function prochainesRepetitions() {
     var l = [], t = today();
     for (var i = 0; i <= 8; i++) {
@@ -2678,7 +2741,11 @@ a.tq-item:hover { border-color: var(--accent); }
     if (clicProgramme(b)) return;
     if (clicTaris(b)) return;
     if (clicNotifs(b)) return;
-    if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
+    if (b.dataset.appelFiltre) { filtreAppel = b.dataset.appelFiltre; afficher(); return; }
+    if (b.dataset.action === "seance-form") { formSeance = !formSeance; afficher(); if (formSeance) { var sd = document.getElementById("s-date"); if (sd) sd.focus(); } return; }
+    if (b.dataset.action === "seances-tout") { toutesSeances = true; afficher(); return; }
+    if (b.dataset.appelJour) { var pj = b.dataset.appelJour.split("|"); creerSeance(pj[0], pj[1], pj[2] || ""); return; }
+    if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; filtreAppel = "tous"; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.hasAttribute("data-back")) { seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.dataset.rappel) { rappelOuvert = b.dataset.rappel; afficher(); window.scrollTo(0, 0); return; }
     if (b.dataset.action === "copier-rappel" && rappelOuvert) {
