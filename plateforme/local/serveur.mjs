@@ -345,8 +345,14 @@ function filtrerPourMembre(col, docs, moi, discipline) {
   if (col === "chants") return docs.map((d) => ({ id: d.id, data: { items: (d.data.items || []).filter((x) => x.statut === "retenu" || (x.statut === "propose" && x.par === moi))
     .map((x) => ({ id: x.id, khassida: x.khassida, titre: x.titre, ere: x.ere, statut: x.statut, propose: !!x.propose,
       parNom: x.propose || x.par === moi ? x.parNom : undefined, par: x.par === moi ? x.par : undefined })) } }));
-  // Taris enregistrés : chacun ne voit que les siens.
-  if (col === "taris") return docs.filter((d) => d.data.membre === moi);
+  // Taris enregistrés : chacun ne voit que les siens. La commission de discipline voit la liste de tous (qui a envoyé,
+  // quoi, la réponse « maîtrisé / à retravailler »), sans les audios ni le mot du correcteur : elle n'écoute pas (choix de l'utilisateur).
+  if (col === "taris") {
+    if (!discipline) return docs.filter((d) => d.data.membre === moi);
+    return docs.map((d) => d.data.membre === moi ? d : { id: d.id, data: { ...d.data, envois: (d.data.envois || []).map((e) => ({
+      id: e.id, le: e.le, duree: e.duree, khassida: e.khassida, titre: e.titre, de: e.de, a: e.a, tout: e.tout,
+      prise: e.prise, verdict: e.verdict, par: e.par, parNom: e.parNom, corrigeLe: e.corrigeLe })) } });
+  }
   return docs;
 }
 
@@ -405,7 +411,7 @@ function filtrerPour(sess, col, docs) {
   return filtrerPourMembre(col, docs, sess.membre, sess.discipline);
 }
 
-/* Khassidas visibles par un membre (null = tous : administrateur et Conservatoire).
+/* Khassidas visibles par un membre (null = tous : administrateur, Conservatoire et commission de discipline).
    Un membre voit : les khassidas de son ou ses kourels, ceux sans kourel indiqué, ceux prévus au programme
    d'une répétition générale à venir (les deux kourels la chantent ensemble) ou d'une répétition à venir de son kourel,
    et ceux d'un Tari qui le concerne et qu'il n'a pas encore maîtrisé (même règle que la page : Tari pour tous,
@@ -413,7 +419,8 @@ function filtrerPour(sess, col, docs) {
 const aujourdhui = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const KOURELS = { k1: ["k1"], k2: ["k2"], k1k2: ["k1", "k2"] };
 async function khassidasVisibles(sess) {
-  if (peut(sess, "suivi")) return null;
+  // La commission de discipline suit les Taris de tous les kourels (qui doit quoi, qui l'a maîtrisé) : elle voit tout le répertoire.
+  if (peut(sess, "suivi") || sess.discipline) return null;
   const m = (await stock.lireDoc("membres", sess.membre)) || {};
   const ok = new Set(), t = aujourdhui();
   for (const d of await stock.lireCollection("khassidas")) {

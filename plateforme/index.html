@@ -737,8 +737,10 @@ a.tq-item:hover { border-color: var(--accent); }
 .tari-quoi { margin: 8px 0 0 !important; font-size: 15px; }
 .tari-barre { height: 6px; margin-top: 10px; border-radius: 3px; background: var(--rule); overflow: hidden; }
 .tari-barre span { display: block; height: 100%; background: var(--good); border-radius: 3px; }
-.tari-etats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.tari-etats .pill { font-size: 12.5px; text-decoration: none; }
+.tari-etats { display: grid; gap: 8px; margin-top: 10px; }
+.tari-etats .pill { font-size: 12.5px; text-decoration: none; white-space: nowrap; }
+.tari-ligne { display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; }
+.tari-noms { flex: 1 1 200px; min-width: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink); }
 .tari-fini { margin: 8px 0 0 !important; color: var(--good); font-weight: 600; }
 .tari-quand { margin: 8px 0 0 !important; font-size: 13.5px; color: var(--ink-soft); }
 .tari-quand.depasse { color: var(--bad); font-weight: 500; }
@@ -1271,23 +1273,35 @@ h3.group.seances-mois { margin-top: 6px; }
       tb += '<p class="muted" style="margin-top:6px">Pas de Tari demandé pour cette séance.</p>';
     } else {
       /* Lisible d'un coup d'œil : quoi chanter, où en est chacun, et pour quand. */
-      var tt = tariTexte(s.tariDetail || {}), ech = echeanceTari(s), etats = { maitrise: 0, ecouter: 0, retravailler: 0, attendu: 0 };
-      (s.participants || []).forEach(function (id) {
-        if (!requis(s, id) || !tariConcerne(s, id)) return;
-        var e = tarisApi ? etatAffiche(s, id) : (etatTari(s, id) === "recu" ? "retravailler" : etatTari(s, id));
-        etats[e === "envoye" || e === "ecoute" ? "ecouter" : e]++;
+      var tt = tariTexte(s.tariDetail || {}), ech = echeanceTari(s), etats = { maitrise: 0, ecouter: 0, retravailler: 0, attendu: 0 }, nomsE = { maitrise: [], ecouter: [], retravailler: [], attendu: [] };
+      noms.forEach(function (p) {
+        if (!requis(s, p.id) || !tariConcerne(s, p.id)) return;
+        var e = tarisApi ? etatAffiche(s, p.id) : (etatTari(s, p.id) === "recu" ? "retravailler" : etatTari(s, p.id));
+        e = e === "envoye" || e === "ecoute" ? "ecouter" : e;
+        if (!etats.hasOwnProperty(e)) return;
+        etats[e]++; nomsE[e].push(p.nom);
       });
+      /* Une ligne par état avec les noms (même à 15 ou 20 membres, on voit qui) ; les « maîtrisés » restent un chiffre
+         dès qu'il y en a beaucoup : ce qui compte, c'est qui doit encore envoyer ou retravailler. */
+      var ligneEtat = function (cle, pastille) {
+        if (!etats[cle]) return "";
+        var l = nomsE[cle], montrer = cle !== "maitrise" || tc.dus <= 6;
+        return '<div class="tari-ligne">' + pastille + (montrer ? '<span class="tari-noms">' + esc(l.join(", ")) + "</span>" : "") + "</div>";
+      };
       var fini = tc.dus > 0 && etats.maitrise === tc.dus;
-      tb += '<p class="tari-quoi">' + (tt || "Le Conservatoire doit encore préciser quoi chanter : touchez « Modifier ».") + "</p>" +
+      /* Khassida d'un autre kourel que le sien (un membre ne voit que le répertoire de son kourel) : on le dit, sans « pas encore précisé ». */
+      var khCache = !tt && (s.tariDetail || {}).khassida;
+      tb += '<p class="tari-quoi">' + (tt || (khCache ? '<span class="muted">Un khassida du répertoire du ' + esc(TYPES[s.type] || "kourel") + " : les membres concernés le voient dans Mon espace.</span>"
+        : peutSuivi ? "Le Conservatoire doit encore préciser quoi chanter : touchez « Modifier »." : '<span class="muted">Le Conservatoire n’a pas encore précisé quoi chanter.</span>')) + "</p>" +
         '<div class="tari-barre" aria-hidden="true"><span style="width:' + (tc.dus ? Math.round(100 * etats.maitrise / tc.dus) : 0) + '%"></span></div>' +
         (fini ? '<p class="tari-fini">✓ ' + (tc.dus > 1 ? "Tous l’ont maîtrisé" : "Maîtrisé") + "</p>"
           : '<div class="tari-etats">' +
-            (etats.maitrise ? '<span class="pill p">✓ ' + etats.maitrise + " maîtrisé" + (etats.maitrise > 1 ? "s" : "") + "</span>" : "") +
-            (etats.ecouter ? '<a class="pill e" href="#taris">🎧 ' + etats.ecouter + " à écouter</a>" : "") +
-            (etats.retravailler ? '<span class="pill r">↻ ' + etats.retravailler + " à retravailler</span>" : "") +
-            (etats.attendu ? '<span class="pill a">' + etats.attendu + " pas encore envoyé" + (etats.attendu > 1 ? "s" : "") + "</span>" : "") + "</div>" +
+            ligneEtat("attendu", '<span class="pill a">' + etats.attendu + " pas encore envoyé" + (etats.attendu > 1 ? "s" : "") + "</span>") +
+            ligneEtat("ecouter", ((peutSuivi || estDiscipline) && tarisApi ? '<a class="pill e" href="#taris">' : '<span class="pill e">') + "🎧 " + etats.ecouter + " à écouter" + ((peutSuivi || estDiscipline) && tarisApi ? "</a>" : "</span>")) +
+            ligneEtat("retravailler", '<span class="pill r">↻ ' + etats.retravailler + " à retravailler</span>") +
+            ligneEtat("maitrise", '<span class="pill p">✓ ' + etats.maitrise + " maîtrisé" + (etats.maitrise > 1 ? "s" : "") + "</span>") + "</div>" +
             '<p class="tari-quand' + (ech < today() ? " depasse" : "") + '">' + (ech < today() ? "Échéance dépassée (répétition du " + esc(jourEcheance(ech)) + ")" : "À maîtriser avant la répétition du " + esc(jourEcheance(ech))) + "</p>" +
-            (tarisApi ? '<p class="tari-aide">Les membres l’enregistrent dans Mon espace ; vous l’écoutez dans <a href="#taris">Taris</a>.</p>' : ""));
+            (tarisApi && peutSuivi ? '<p class="tari-aide">Les membres l’enregistrent dans Mon espace ; vous l’écoutez dans <a href="#taris">Taris</a>.</p>' : ""));
     }
     tb += "</div>";
     html += tb;
@@ -1315,7 +1329,8 @@ h3.group.seances-mois { margin-top: 6px; }
             ? '<div class="tari-etat"><span class="lbl">' + (indiv ? "Partie à retravailler" : "Tari") + '</span><span class="seg" role="group" aria-label="Tari de ' + esc(p.nom) + '">' + Object.keys(ETATS_TARI).map(function (k) {
                 return '<button type="button" data-tarietat="' + esc(p.id) + "|" + k + '" data-te="' + k + '" aria-pressed="' + (et === k) + '">' + ETATS_TARI[k] + "</button>";
               }).join("") + "</span>" + (indiv ? '<button type="button" class="linkish" data-indiv="' + esc(p.id) + '">Retirer</button>' : "") + lienEcoute(s, p.id) + "</div>"
-            : '<span class="pill ' + (et === "maitrise" ? "p" : "r") + '">Tari : ' + ETATS_TARI[et].toLowerCase() + "</span>";
+            : (function () { var ea = ETATS_AFF[tarisApi ? etatAffiche(s, p.id) : (et === "recu" ? "retravailler" : et)] || ETATS_AFF.attendu;
+                return '<span class="pill ' + ea[1] + '">Tari : ' + ea[0].toLowerCase() + "</span>"; })();
         }
         var disc = "";
         if (requis(s, p.id) && v !== "A" && v !== "E") {
@@ -2802,7 +2817,7 @@ h3.group.seances-mois { margin-top: 6px; }
     if (!peutModifier && vue === "reglages") vue = "seances";
     if (vue === "messages" && !peutSuivi) vue = "moi";
     /* Taris : la liste est au Conservatoire ; chacun n'ouvre que son propre Tari (le Conservatoire, ceux de tous). */
-    if (vue === "taris" && !(peutSuivi && tarisApi)) vue = "moi";
+    if (vue === "taris" && !((peutSuivi || estDiscipline) && tarisApi)) vue = "moi";
     if (vue === "tari" && (!tarisApi || !tariVue || (tariVue.mid && tariVue.mid !== moiCourant && !peutSuivi))) vue = "moi";
     majPastilleTaris(); majPastilleMsg(); majBadgeIcone();
     var actif = vue === "khassida" || vue === "taris" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi"
@@ -3752,6 +3767,11 @@ h3.group.seances-mois { margin-top: 6px; }
   }
   /* Onglet Khassidas (Conservatoire, admin) : toujours une entrée vers les Taris, mise en avant quand il y en a à écouter. */
   function entreeTaris() {
+    if (tarisApi && estDiscipline && !peutSuivi) {
+      var nEnv = tarisDemandes().filter(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; }).length;
+      return '<a class="chartes-lien" href="#taris"><span aria-hidden="true">🎙️</span><span><b>Taris des membres</b><small>Qui a envoyé, qui ne l’a pas encore fait, qui l’a maîtrisé' +
+        (nEnv ? " · " + nEnv + " pas encore envoyé" + (nEnv > 1 ? "s" : "") : "") + "</small></span><span aria-hidden=\"true\">›</span></a>";
+    }
     if (!tarisApi || !peutSuivi) return "";
     var fort = banniereTaris();
     if (fort) return fort;
@@ -4386,10 +4406,14 @@ h3.group.seances-mois { margin-top: 6px; }
       var d = tarisDocs[id], dec = envoisDe(d).filter(function (y) { return y.verdict; }).pop();
       return { d: d, dec: dec, m: membres[d.membre] };
     }).filter(function (x) { return x.dec && x.m && filtre(x.dec.khassida); }).sort(function (a, b) { return b.dec.corrigeLe - a.dec.corrigeLe; });
-    var nLibres = ae.filter(libreOuMien).length;
-    var html = '<section class="panel"><h2>Taris</h2><p class="muted">Les Taris enregistrés par les membres. Prenez-en un pour l’écouter : les autres membres du Conservatoire voient qu’il est pris, pour ne pas corriger à deux.</p>' +
+    /* Commission de discipline (sans le Conservatoire) : la même liste, en lecture, sans écouter ni corriger. */
+    var lecture = !peutSuivi;
+    var nLibres = lecture ? ae.length : ae.filter(libreOuMien).length;
+    var html = '<section class="panel"><h2>Taris</h2><p class="muted">' + (lecture
+      ? "Où en est chaque Tari : qui l’a envoyé, qui ne l’a pas encore fait, ce que le Conservatoire a répondu. L’écoute et la correction sont faites par le Conservatoire."
+      : "Les Taris enregistrés par les membres. Prenez-en un pour l’écouter : les autres membres du Conservatoire voient qu’il est pris, pour ne pas corriger à deux.") + "</p>" +
       (tarisFiltreKh ? '<a class="chip-filtre" href="#taris" aria-label="Voir tous les khassidas">' + esc(titreGroupe(tarisFiltreKh)) + ' <span aria-hidden="true">✕</span></a>' : "") +
-      '<span class="seg seg-full kh-filtre" role="group" aria-label="Taris">' + [["ecouter", "À écouter" + (nLibres ? " · " + nLibres : "")], ["envoyer", "À envoyer" + (aEnv.length ? " · " + aEnv.length : "")], ["historique", "Historique"]].map(function (o) {
+      '<span class="seg seg-full kh-filtre" role="group" aria-label="Taris">' + [["ecouter", (lecture ? "Envoyés" : "À écouter") + (nLibres ? " · " + nLibres : "")], ["envoyer", "À envoyer" + (aEnv.length ? " · " + aEnv.length : "")], ["historique", "Historique"]].map(function (o) {
         return '<button type="button" data-taris-onglet="' + o[0] + '" aria-pressed="' + (tarisOnglet === o[0]) + '">' + o[1] + "</button>";
       }).join("") + "</span>";
     var moiAussi = mesTaris().filter(function (x) { return x.etat === "attendu" || x.etat === "retravailler"; })[0];
@@ -4404,10 +4428,10 @@ h3.group.seances-mois { margin-top: 6px; }
       vide = "Aucune réponse donnée pour l’instant.";
     } else {
       liste = ae; item = itemAEcouter; khDe = function (x) { return x.td.khassida; }; kourelDe = function (x) { return x.s.type; };
-      vide = "Aucun Tari à écouter pour l’instant. Quand un membre enregistre son Tari depuis Mon espace, il apparaît ici.";
+      vide = lecture ? "Aucun Tari en attente d’écoute pour l’instant." : "Aucun Tari à écouter pour l’instant. Quand un membre enregistre son Tari depuis Mon espace, il apparaît ici.";
     }
     if (!liste.length) html += '<div class="empty" style="margin-top:14px">' + vide + "</div>";
-    var unite = function (n) { return tarisOnglet === "ecouter" ? n + " à écouter" : tarisOnglet === "envoyer" ? n + " en attente" : n + " réponse" + (n > 1 ? "s" : ""); };
+    var unite = function (n) { return tarisOnglet === "ecouter" ? n + (lecture ? " envoyé" + (n > 1 ? "s" : "") : " à écouter") : tarisOnglet === "envoyer" ? n + " en attente" : n + " réponse" + (n > 1 ? "s" : ""); };
     [["k1", "Kourel 1"], ["k2", "Kourel 2"], ["rg", "Répétition générale"]].forEach(function (k) {
       var duKourel = liste.filter(function (x) { return (kourelDe(x) || "rg") === k[0]; });
       if (!duKourel.length) return;
@@ -4430,21 +4454,22 @@ h3.group.seances-mois { margin-top: 6px; }
     return '<div class="tq-item ecouter' + (p && !aMoi ? " pris" : " neuf") + '"><span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
       '<span class="tq-corps"><b>' + esc(x.m.nom) + "</b><small>" + esc(infos) + "</small>" +
       (p ? '<small class="' + (aMoi ? "tq-moi" : "tq-pris") + '">🎧 ' + (aMoi ? "Pris par vous" : "Pris par " + esc(p.nom)) + " · " + esc(ilYa(p.le)) + "</small>" : "") + "</span>" +
-      (p && !aMoi ? '<a class="btn small ghost" href="' + lienTari(x.s.id, x.mid) + '">Voir</a>'
+      (!peutSuivi ? '<span class="pill e">' + (p ? "En écoute" : "Pas encore écouté") + "</span>"
+        : p && !aMoi ? '<a class="btn small ghost" href="' + lienTari(x.s.id, x.mid) + '">Voir</a>'
         : '<button type="button" class="btn small primary" data-tari-ouvrir="' + esc(x.s.id + "|" + x.mid) + '">' + (aMoi ? "Reprendre" : "Écouter et corriger") + "</button>") + "</div>";
   }
   function itemAEnvoyer(x) {
-    var depasse = x.ech < today();
-    return '<a class="tq-item" href="' + lienTari(x.s.id, x.mid) + '"><span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
+    var depasse = x.ech < today(), lien = peutSuivi || x.mid === moiCourant;
+    return (lien ? '<a class="tq-item" href="' + lienTari(x.s.id, x.mid) + '">' : '<div class="tq-item">') + '<span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
       '<span class="tq-corps"><b>' + esc(x.m.nom) + (x.mid === moiCourant ? " (vous)" : "") + "</b><small>" + esc([plageTari(x.td), "demandé le " + jourCourt(x.s.date)].filter(Boolean).join(" · ")) + "</small>" +
-      '<small class="' + (depasse ? "tq-retard" : "") + '">' + (depasse ? "Échéance dépassée" : "À maîtriser avant le " + esc(jourCourt(x.ech))) + "</small></span>" + pillEtat(x.etat) + "</a>";
+      '<small class="' + (depasse ? "tq-retard" : "") + '">' + (depasse ? "Échéance dépassée" : "À maîtriser avant le " + esc(jourCourt(x.ech))) + "</small></span>" + pillEtat(x.etat) + (lien ? "</a>" : "</div>");
   }
   function itemHistorique(x) {
-    var d = x.d, n = envoisDe(d).length;
-    return '<a class="tq-item" href="' + lienTari(d.seance, d.membre) + '"><span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
+    var d = x.d, n = envoisDe(d).length, lien = peutSuivi || d.membre === moiCourant;
+    return (lien ? '<a class="tq-item" href="' + lienTari(d.seance, d.membre) + '">' : '<div class="tq-item">') + '<span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
       '<span class="tq-corps"><b>' + esc(x.m.nom) + "</b><small>" + esc([plageTari(x.dec), n + " envoi" + (n > 1 ? "s" : "")].filter(Boolean).join(" · ")) + "</small>" +
       "<small>Réponse de " + esc(x.dec.parNom || "…") + " · " + esc(ilYa(x.dec.corrigeLe)) + "</small></span>" +
-      (x.dec.verdict === "maitrise" ? '<span class="pill p">Maîtrisé</span>' : '<span class="pill r">À retravailler</span>') + "</a>";
+      (x.dec.verdict === "maitrise" ? '<span class="pill p">Maîtrisé</span>' : '<span class="pill r">À retravailler</span>') + (lien ? "</a>" : "</div>");
   }
 
   /* ----- Clics ----- */
