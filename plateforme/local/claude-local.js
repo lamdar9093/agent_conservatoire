@@ -99,7 +99,7 @@
     isOwner: admin,
     can: function () { return admin(); },
     /* Compte connecté : { membre, nom, admin, role } (role : membre, conservatoire ou admin) */
-    compte: function () { return moi().then(function (r) { return r.connecte ? { membre: r.membre, nom: r.nom, admin: !!r.admin, role: r.role || (r.admin ? "admin" : "membre"), tourVu: !!r.tourVu, vu: r.vu || [] } : null; }); },
+    compte: function () { return moi().then(function (r) { return r.connecte ? { membre: r.membre, nom: r.nom, admin: !!r.admin, discipline: !!r.discipline, role: r.role || (r.admin ? "admin" : "membre"), tourVu: !!r.tourVu, vu: r.vu || [] } : null; }); },
     /* Visite guidée vue : enregistrée sur le compte. */
     tourVu: function () { return appel("POST", "moi/tour", {}); },
     /* Nouveauté vue (bulle affichée une seule fois) */
@@ -112,6 +112,7 @@
     temporaire: function (id, opts) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/temporaire", opts || {}); },
     envoye: function (id) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/envoye", {}); },
     role: function (id, role) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/role", { role: role }); },
+    discipline: function (id, oui) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/discipline", { oui: !!oui }); },
     revoquer: function (id) { return appel("DELETE", "comptes/" + encodeURIComponent(id)); },
     valider: function (id) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/valider", {}); },
     refuser: function (id) { return appel("POST", "comptes/" + encodeURIComponent(id) + "/refuser", {}); },

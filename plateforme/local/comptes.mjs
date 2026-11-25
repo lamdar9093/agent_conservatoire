@@ -62,7 +62,7 @@ export function creerComptes(stock) {
       const compte = await fiche(s.membre);
       if (!compte) return null;
       cache.set(id, { session: s, lu: Date.now() });
-      return { id, membre: s.membre, admin: !!compte.admin, conservatoire: !compte.admin && !!compte.conservatoire, temporaire: !!compte.temporaire };
+      return { id, membre: s.membre, admin: !!compte.admin, conservatoire: !compte.admin && !!compte.conservatoire, discipline: !!compte.discipline, temporaire: !!compte.temporaire };
     },
 
     /* Connexion : identifiant (lamine-dieng), nom (Lamine Dieng) ou numéro de téléphone. */
@@ -161,7 +161,7 @@ export function creerComptes(stock) {
       if (!d) return { erreur: "demande" };
       const avant = await fiche(membre);
       await stock.ecrireDoc("_comptes", membre, {
-        hash: d.hash, temporaire: false, expireTemp: null, admin: !!(avant && avant.admin), conservatoire: !!(avant && avant.conservatoire),
+        hash: d.hash, temporaire: false, expireTemp: null, admin: !!(avant && avant.admin), conservatoire: !!(avant && avant.conservatoire), discipline: !!(avant && avant.discipline),
         creeLe: (avant && avant.creeLe) || Date.now(), modifieLe: Date.now(), envoyeLe: null, inscrit: true,
         derniereConnexion: (avant && avant.derniereConnexion) || null,
         // Reste « à prévenir » dans Réglages tant que l'administrateur n'a pas envoyé le message WhatsApp.
@@ -177,7 +177,7 @@ export function creerComptes(stock) {
     async liste() {
       const r = {};
       for (const d of await stock.lireCollection("_comptes")) {
-        r[d.id] = { admin: !!d.data.admin, conservatoire: !d.data.admin && !!d.data.conservatoire, temporaire: !!d.data.temporaire, expireTemp: d.data.expireTemp || null,
+        r[d.id] = { admin: !!d.data.admin, conservatoire: !d.data.admin && !!d.data.conservatoire, discipline: !!d.data.discipline, temporaire: !!d.data.temporaire, expireTemp: d.data.expireTemp || null,
           derniereConnexion: d.data.derniereConnexion || null, envoyeLe: d.data.envoyeLe || null, creeLe: d.data.creeLe || null,
           inscrit: !!d.data.inscrit, reinitialisation: !!d.data.reinitialisation, valideLe: d.data.valideLe || null,
           // Comptes validés avant ce champ : à prévenir s'ils n'ont jamais été prévenus ni connectés.
@@ -192,7 +192,8 @@ export function creerComptes(stock) {
       const estAdmin = admin === undefined ? !!(avant && avant.admin) : !!admin;
       await stock.ecrireDoc("_comptes", membre, {
         hash: await chiffrer(mdp), temporaire: true, expireTemp: Date.now() + DUREE_TEMPORAIRE,
-        admin: estAdmin, conservatoire: !estAdmin && !!(avant && avant.conservatoire),
+        admin: estAdmin, conservatoire: !estAdmin && !!(avant && avant.conservatoire), discipline: !!(avant && avant.discipline),
+        tourVu: (avant && avant.tourVu) || null, vu: (avant && avant.vu) || {},
         creeLe: (avant && avant.creeLe) || Date.now(), modifieLe: Date.now(), envoyeLe: null,
         derniereConnexion: (avant && avant.derniereConnexion) || null
       });
@@ -207,6 +208,13 @@ export function creerComptes(stock) {
       if (!f) return { erreur: "compte" };
       if (role !== "admin" && f.admin && (await nombreAdmins()) <= 1) return { erreur: "dernier-admin" };
       await stock.fusionnerDoc("_comptes", membre, { admin: role === "admin", conservatoire: role === "conservatoire" });
+      cache.clear();
+      return { ok: true };
+    },
+    /* Commission de discipline : une casquette en plus du rôle (cumulable avec Membre, Conservatoire ou Admin). */
+    async definirDiscipline(membre, oui) {
+      if (!(await fiche(membre))) return { erreur: "compte" };
+      await stock.fusionnerDoc("_comptes", membre, { discipline: !!oui });
       cache.clear();
       return { ok: true };
     },

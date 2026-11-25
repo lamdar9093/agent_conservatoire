@@ -331,13 +331,14 @@ async function envoyerFichier(req, res, cible, type, cache) {
 }
 
 /* Ce qu'un membre (non administrateur) peut voir. */
-function filtrerPourMembre(col, docs, moi) {
+function filtrerPourMembre(col, docs, moi, discipline) {
   if (col === "membres") return docs.map((d) => ({ id: d.id, data: { nom: d.data.nom, k1: d.data.k1, k2: d.data.k2, statut: d.data.statut, actif: d.data.actif, depuis: d.data.depuis } }));
   if (col === "evaluations") return docs.filter((d) => d.id === moi);
   if (col === "seances") return docs.map((d) => {
     const s = { ...d.data };
     if (s.prevenus) { const p = {}; for (const k of Object.keys(s.prevenus)) p[k] = s.prevenus[k] ? (k === moi ? s.prevenus[k] : { motif: "", note: "" }) : s.prevenus[k]; s.prevenus = p; }
-    if (s.discipline) s.discipline = s.discipline[moi] ? { [moi]: s.discipline[moi] } : {};
+    if (s.discipline && !discipline) s.discipline = s.discipline[moi] ? { [moi]: s.discipline[moi] } : {};
+    if (s.retardsPrevenus && !discipline) s.retardsPrevenus = s.retardsPrevenus[moi] ? { [moi]: s.retardsPrevenus[moi] } : {};
     return { id: d.id, data: s };
   });
   // Programme de chant : un membre ne voit que ce qui est retenu, sans les propositions ni leurs auteurs.
@@ -353,6 +354,37 @@ function filtrerPourMembre(col, docs, moi) {
 function infoChant(cle) {
   const m = /^(rep|dz)-(\d{4}-\d{2}-\d{2})-(k1|k2|rg|general)$/.exec(cle);
   return m ? { sorte: m[1], date: m[2], k: m[3], kourels: m[3] === "k1" ? ["k1"] : m[3] === "k2" ? ["k2"] : ["k1", "k2"] } : null;
+}
+/* Sanctions (tenue, coiffure) : la commission de discipline, le dieuwrigne du kourel de la séance et l'admin.
+   Le Conservatoire seul ne sanctionne pas (choix de l'utilisateur, 24 novembre 2026), sauf s'il a aussi la casquette Discipline. */
+async function peutSanctionner(sess, s) {
+  if (sess.admin || sess.discipline) return true;
+  const d = (((await stock.lireDoc("reglages", "kourels")) || {}).dieuwrigne) || {};
+  return !!s && d[s.type === "k2" ? "k2" : "k1"] === sess.membre;
+}
+/* Sanction notée : le membre est prévenu une minute après (le temps de corriger une erreur de toucher). */
+const sanctionsEnAttente = new Map();
+function planifierSanctions(sid, avant, apres) {
+  const a = (avant && avant.discipline) || {}, b = (apres && apres.discipline) || {};
+  for (const mid of Object.keys(b)) for (const type of ["tenue", "coiffure"]) {
+    if (!(b[mid] || {})[type] || ((a[mid] || {})[type])) continue;
+    const cle = sid + "~" + mid + "~" + type;
+    clearTimeout(sanctionsEnAttente.get(cle));
+    sanctionsEnAttente.set(cle, setTimeout(() => annoncerSanction(sid, mid, type).catch((e) => console.error(e)), Number(process.env.DELAI_NOTIF_SANCTION || 60000)));
+  }
+}
+async function annoncerSanction(sid, mid, type) {
+  sanctionsEnAttente.delete(sid + "~" + mid + "~" + type);
+  const s = await stock.lireDoc("seances", sid);
+  if (!s || !(((s.discipline || {})[mid] || {})[type])) return;
+  let texte = "Coiffure non conforme : vous ne participez pas à cette séance.";
+  if (type === "tenue") {
+    const mois = s.date.slice(0, 7);
+    const rang = (await stock.lireCollection("seances")).filter((x) => x.data.date.slice(0, 7) === mois && (x.data.date < s.date || (x.data.date === s.date && x.data.type <= s.type)) && (((x.data.discipline || {})[mid] || {}).tenue)).length;
+    texte = rang >= 2 ? "Tenue non conforme, deuxième fois ce mois-ci : vous ne participez pas à cette séance." : "Avertissement : tenue non conforme. Une deuxième fois ce mois-ci écarte de la séance.";
+  }
+  const jour = new Date(s.date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  await notifs.notifier([mid], { titre: "Commission de discipline", texte: texte + " (répétition du " + jour + ")", url: "/#moi" });
 }
 /* Qui décide : le dieuwrigne du kourel ; pour la répétition générale et le Kourel général, celui du Kourel 1. */
 const kourelDecideur = (info) => (info.k === "k2" ? "k2" : "k1");
@@ -370,7 +402,7 @@ function filtrerPour(sess, col, docs) {
     if (col === "membres") return docs.map((d) => { const { telephone, ...data } = d.data; return { id: d.id, data }; });
     return docs;
   }
-  return filtrerPourMembre(col, docs, sess.membre);
+  return filtrerPourMembre(col, docs, sess.membre, sess.discipline);
 }
 
 /* Khassidas visibles par un membre (null = tous : administrateur et Conservatoire).
@@ -470,7 +502,7 @@ async function api(req, res, parts, sess) {
   if (parts[0] === "moi") {
     if (!sess) return json(res, 200, { connecte: false, aucunCompte: await comptes.aucunCompte() });
     const m = await stock.lireDoc("membres", sess.membre), c = (await stock.lireDoc("_comptes", sess.membre)) || {};
-    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, role: roleDe(sess), doitChanger: sess.temporaire, tourVu: !!c.tourVu, vu: Object.keys(c.vu || {}), k1: !!(m && m.k1), k2: !!(m && m.k2) });
+    return json(res, 200, { connecte: true, membre: sess.membre, nom: m ? m.nom : sess.membre, admin: sess.admin, discipline: !!sess.discipline, role: roleDe(sess), doitChanger: sess.temporaire, tourVu: !!c.tourVu, vu: Object.keys(c.vu || {}), k1: !!(m && m.k1), k2: !!(m && m.k2) });
   }
   if (parts[0] === "deconnexion" && req.method === "POST") {
     if (sess) await comptes.deconnecter(sess.id);
@@ -776,6 +808,11 @@ async function api(req, res, parts, sess) {
     }
     if (action === "refuser" && req.method === "POST") { await comptes.refuser(membre); prevenir("_comptes"); return json(res, 200, { ok: true }); }
     if (action === "envoye" && req.method === "POST") { await comptes.marquerEnvoye(membre); return json(res, 200, { ok: true }); }
+    if (action === "discipline" && req.method === "POST") {
+      const r = await comptes.definirDiscipline(membre, !!(await lireCorps(req)).oui);
+      if (!r.erreur) prevenir("_comptes");
+      return r.erreur ? json(res, 400, { code: r.erreur, message: "Ce membre n’a pas encore d’accès." }) : json(res, 200, { ok: true });
+    }
     if (action === "role" && req.method === "POST") {
       const r = await comptes.definirRole(membre, String((await lireCorps(req)).role || ""));
       if (!r.erreur) prevenir("_comptes");
@@ -805,7 +842,16 @@ async function api(req, res, parts, sess) {
   // Conservatoire : il peut marquer un khassida « en répétition » (et seulement cela).
   const marqueRepetition = col === "khassidas" && req.method === "PATCH" && corps && Object.keys(corps).length > 0
     && Object.keys(corps).every((k) => ["enRepetition", "enRepetitionLe", "enRepetitionPar"].includes(k));
-  if (!peut(sess, marqueRepetition ? "suivi" : PERMISSION_COLLECTION[col])) return json(res, 403, { code: "invalid_argument", message: "Vous n’avez pas le droit de modifier ceci." });
+  let gesteDiscipline = false;
+  if (col === "seances" && id && (req.method === "PATCH" || req.method === "PUT")) {
+    const avantS = await stock.lireDoc("seances", id);
+    const changeDisc = req.method === "PATCH" ? "discipline" in corps : JSON.stringify(corps.discipline || {}) !== JSON.stringify((avantS && avantS.discipline) || {});
+    if (changeDisc && !(await peutSanctionner(sess, avantS || corps))) return json(res, 403, { code: "discipline", message: "Les sanctions sont notées par la commission de discipline, le dieuwrigne ou l’admin." });
+    // Commission de discipline (même sans le rôle Conservatoire) : sanctions et retards prévenus seulement.
+    gesteDiscipline = req.method === "PATCH" && Object.keys(corps).length > 0 && Object.keys(corps).every((k) => ["discipline", "retardsPrevenus"].includes(k))
+      && (sess.discipline || ("discipline" in corps && await peutSanctionner(sess, avantS)));
+  }
+  if (!gesteDiscipline && !peut(sess, marqueRepetition ? "suivi" : PERMISSION_COLLECTION[col])) return json(res, 403, { code: "invalid_argument", message: "Vous n’avez pas le droit de modifier ceci." });
   // Conservatoire : il crée une séance et fait l'appel, mais seul l'administrateur la supprime
   // ou change ce qui la définit (date, répétition, horaire), même en cas d'erreur.
   if (col === "seances" && !sess.admin) {
@@ -818,10 +864,11 @@ async function api(req, res, parts, sess) {
     if (refuse) return json(res, 403, { code: "admin_seance", message: "Seul l’administrateur peut modifier ou supprimer une séance. Contactez-le si c’est une erreur." });
   }
   const avantSeance = col === "seances" && req.method !== "DELETE" ? await stock.lireDoc("seances", id) : null;
-  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); if (col === "seances") planifierTari(id, avantSeance); return json(res, 200, { ok: true }); }
+  const apresSeance = async () => { if (col !== "seances") return; planifierTari(id, avantSeance); planifierSanctions(id, avantSeance, await stock.lireDoc("seances", id)); };
+  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); await apresSeance(); return json(res, 200, { ok: true }); }
   if (req.method === "PATCH") {
     if (!(await stock.fusionnerDoc(col, id, corps))) return json(res, 404, { code: "not_found" });
-    prevenir(col); await apresMembre(col, id); if (col === "seances") planifierTari(id, avantSeance); return json(res, 200, { ok: true });
+    prevenir(col); await apresMembre(col, id); await apresSeance(); return json(res, 200, { ok: true });
   }
   if (req.method === "DELETE") { await stock.supprimerDoc(col, id); prevenir(col); return json(res, 200, { ok: true }); }
   return json(res, 405, { code: "invalid_argument" });

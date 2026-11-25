@@ -733,6 +733,14 @@ a.tq-item:hover { border-color: var(--accent); }
 .dk-form { display: grid; gap: 8px; }
 /* Réglages : sommaire en cartes */
 .reg-liste { display: grid; gap: 10px; }
+/* Commission de discipline */
+body.vue-membre.vue-discipline .tabs a[data-view="seances"] { display: inline-flex !important; }
+body.vue-membre.vue-discipline .bottom-nav a[data-view="seances"] { display: grid !important; }
+.chip.disc-chip { background: var(--warn-soft); color: var(--warn); }
+.disc-liste { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.disc-liste li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.disc-liste li > span:last-child { display: grid; gap: 1px; font-weight: 500; }
+.disc-liste small { font-size: 12.5px; color: var(--ink-soft); font-weight: 400; }
 /* Tirer pour actualiser (appli de l'écran d'accueil) */
 .tirer { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 6px); z-index: 60; transform: translate(-50%, -60px); opacity: 0; pointer-events: none; transition: opacity 0.15s ease; }
 .tirer.visible { opacity: 1; }
@@ -879,11 +887,11 @@ h3.group.seances-mois { margin-top: 6px; }
   var app = document.getElementById("app");
   /* Droits : peutModifier = administrateur (tout) ; peutSuivi = administrateur ou Conservatoire
      (séances, appel, motifs d’absence, sanctions, Tari, évaluations, bilan). */
-  var db = null, peutModifier = false, peutSuivi = false, monRole = "membre";
+  var db = null, peutModifier = false, peutSuivi = false, monRole = "membre", estDiscipline = false;
   var ROLES_NOMS = { membre: "Membre", conservatoire: "Conservatoire", admin: "Administrateur" };
   var ROLES_AIDE = {
     membre: "Consulte les khassidas, le dahira, les chartes et son propre espace.",
-    conservatoire: "Fait l’appel, note les retards, motifs d’absence et sanctions, suit les Taris, évalue les membres et voit le bilan. Ne voit pas les numéros WhatsApp ni les réglages.",
+    conservatoire: "Fait l’appel, note les retards et motifs d’absence, suit les Taris, évalue les membres et voit le bilan. Les sanctions (tenue, coiffure) : seulement avec la casquette Commission de discipline, ou comme dieuwrigne. Ne voit pas les numéros WhatsApp ni les réglages.",
     admin: "Tous les droits : accès des membres, numéros WhatsApp, membres, rappels, dahira, khassidas et réglages."
   };
   var membres = {}, seances = [], charge = { m: false, s: false, r: false };
@@ -952,6 +960,12 @@ h3.group.seances-mois { margin-top: 6px; }
     })
       .filter(Boolean).sort(function (x, y) { return x.localeCompare(y, "fr"); });
   }
+  /* Sanctions : la commission de discipline, le dieuwrigne du kourel de la séance (générale : celui du Kourel 1) et l'admin ;
+     le Conservatoire seul ne sanctionne pas (choix de l'utilisateur). Retard prévenu : celui qui fait l'appel ou la Discipline. */
+  function peutSanctionner(s) { return peutModifier || estDiscipline || (!!s && !!moiCourant && ((reglagesKourels.dieuwrigne || {})[s.type === "k2" ? "k2" : "k1"] === moiCourant)); }
+  function peutRetards() { return peutSuivi || estDiscipline; }
+  var MOTIFS_RETARD = ["Travail", "Transport", "Voyage", "Études", "Famille", "Autre"];
+  function retardPrevenu(s, id) { return ((s.statuts || {})[id] || "P") === "R" ? (s.retardsPrevenus || {})[id] || null : null; }
   /* Discipline (chartes) : tenue non conforme = avertissement, récidive dans le mois = écarté ; coiffure non conforme = écarté. */
   function marquesDe(s, id) { return (s.discipline || {})[id] || {}; }
   function tenueRang(s, id) {
@@ -1051,13 +1065,14 @@ h3.group.seances-mois { margin-top: 6px; }
 
   function compter(s) {
     var c = { P: 0, R: 0, A: 0, E: 0 };
-    (s.participants || []).forEach(function (id) { if (!requis(s, id)) return; var v = (s.statuts || {})[id] || "P"; c[v] = (c[v] || 0) + 1; if (aPrevenu(s, id)) c.E++; });
+    c.RP = 0;
+    (s.participants || []).forEach(function (id) { if (!requis(s, id)) return; var v = (s.statuts || {})[id] || "P"; c[v] = (c[v] || 0) + 1; if (aPrevenu(s, id)) c.E++; if (retardPrevenu(s, id)) c.RP++; });
     return c;
   }
   function countsHTML(c) {
     var sans = c.A - (c.E || 0);
     return '<span class="pill p">' + c.P + " présent" + (c.P > 1 ? "s" : "") + "</span>" +
-      (c.R ? '<span class="pill r">' + c.R + " retard" + (c.R > 1 ? "s" : "") + "</span>" : "") +
+      (c.R ? '<span class="pill r">' + c.R + " retard" + (c.R > 1 ? "s" : "") + (c.RP ? " (" + txtPrevenu(c.RP) + ")" : "") + "</span>" : "") +
       (sans ? '<span class="pill a">' + sans + " absent" + (sans > 1 ? "s" : "") + "</span>" : "") +
       (c.E ? '<span class="pill e">' + txtPrevenu(c.E) + "</span>" : "");
   }
@@ -1188,6 +1203,24 @@ h3.group.seances-mois { margin-top: 6px; }
       .then(function () { seanceAttendue = id; seanceOuverte = id; filtreAppel = "tous"; formSeance = false; afficher(); window.scrollTo(0, 0); toast("Séance créée : " + participants.length + " membres, tous présents par défaut."); }, echec);
   }
 
+  /* Mon espace : les sanctions des 3 derniers mois, signées « Commission de discipline » (jamais le nom de qui a noté). */
+  function blocDisciplineMoi(moi) {
+    var depuis = isoPlus(today(), -90), l = [];
+    seances.forEach(function (s) {
+      if (s.date < depuis || (s.participants || []).indexOf(moi.id) < 0) return;
+      consequences(s, moi.id).forEach(function (c) { l.push({ s: s, c: c }); });
+    });
+    if (!l.length) return "";
+    l.sort(function (a, b) { return a.s.date < b.s.date ? 1 : -1; });
+    return '<section class="panel"><h2>Discipline</h2><p class="muted">Notées par la commission de discipline, d’après les chartes du kourel. Elles ne visent pas à exclure : elles rappellent la responsabilité de psalmodier les écrits du Cheikh.</p>' +
+      '<ul class="disc-liste">' + l.map(function (x) {
+        var detail = x.c.txt.split(" : ")[1] || x.c.txt;
+        return '<li><span class="pill ' + x.c.cls + '">' + (x.c.ecarte ? "Écarté de la séance" : "Avertissement") + "</span><span>" + esc(detail.charAt(0).toUpperCase() + detail.slice(1)) +
+          '<small>Répétition du ' + esc(asDate(x.s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })) + "</small></span></li>";
+      }).join("") + '</ul><a class="moi-chartes" href="#chartes" style="margin-top:10px"><span aria-hidden="true">📜</span><span>Relire les chartes et sanctions</span><span aria-hidden="true">›</span></a></section>';
+  }
+  /* Le bouton ⋯ d'un membre : Tari individuel (Conservatoire), tenue et coiffure (Discipline, dieuwrigne, admin). */
+  function outilsPersonne(s, id) { return peutSanctionner(s) || (peutSuivi && (s.tari || "aucun") === "absents"); }
   function vueSeance(s) {
     /* Séance tout juste créée : elle arrive de la base un instant après ; on l'attend au lieu de revenir à la liste. */
     if (!s && seanceAttendue && seanceAttendue === seanceOuverte) { app.innerHTML = '<div class="empty">Ouverture de la séance…</div>'; return; }
@@ -1254,10 +1287,10 @@ h3.group.seances-mois { margin-top: 6px; }
         if (requis(s, p.id) && v !== "A" && v !== "E") {
           var mq = marquesDe(s, p.id), cs = consequences(s, p.id);
           disc = (cs.length ? '<div class="disc-pills">' + cs.map(function (c) { return '<span class="pill ' + c.cls + '">' + esc(c.txt) + "</span>"; }).join("") + "</div>" : "") +
-            (peutSuivi && discOuvert === p.id ? '<div class="disc">' +
-              ((s.tari || "aucun") === "absents" ? '<button type="button" class="toggle indiv" data-indiv="' + esc(p.id) + '" aria-pressed="' + !!(s.tariIndividuel || {})[p.id] + '">Partie à retravailler (Tari)</button>' : "") +
-              '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|tenue" aria-pressed="' + !!mq.tenue + '">Tenue non conforme</button>' +
-              '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|coiffure" aria-pressed="' + !!mq.coiffure + '">Coiffure non conforme</button>' +
+            (discOuvert === p.id && outilsPersonne(s, p.id) ? '<div class="disc">' +
+              (peutSuivi && (s.tari || "aucun") === "absents" ? '<button type="button" class="toggle indiv" data-indiv="' + esc(p.id) + '" aria-pressed="' + !!(s.tariIndividuel || {})[p.id] + '">Partie à retravailler (Tari)</button>' : "") +
+              (peutSanctionner(s) ? '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|tenue" aria-pressed="' + !!mq.tenue + '">Tenue non conforme</button>' +
+                '<button type="button" class="toggle" data-disc="' + esc(p.id) + '|coiffure" aria-pressed="' + !!mq.coiffure + '">Coiffure non conforme</button>' : "") +
               "</div>" : "");
         }
         var ctrl = !requis(s, p.id)
@@ -1266,8 +1299,20 @@ h3.group.seances-mois { margin-top: 6px; }
           ? '<span class="seg" role="group" aria-label="Statut de ' + esc(p.nom) + '">' + Object.keys(CHOIX).map(function (k) {
               return '<button type="button" data-set="' + esc(p.id) + '" data-v="' + k + '" aria-pressed="' + (v === k || (k === "A" && v === "E")) + '">' + CHOIX[k] + "</button>";
             }).join("") + "</span>"
-          : '<span class="pill ' + v.toLowerCase() + '">' + (v === "E" ? "Absent · a prévenu" : STATUTS[v]) + "</span>";
+          : '<span class="pill ' + v.toLowerCase() + '">' + (v === "E" ? "Absent · a prévenu" : v === "R" && retardPrevenu(s, p.id) ? "Retard · a prévenu" : STATUTS[v]) + "</span>";
         var motifs = "";
+        /* Retard : il reste compté ; on note seulement s'il a prévenu et pourquoi (travail qui finit tard, voyage…). */
+        if (v === "R" && requis(s, p.id)) {
+          var rp = retardPrevenu(s, p.id);
+          if (peutRetards()) {
+            motifs += '<div class="motifs"><span class="lbl">A-t-il prévenu ?</span>' +
+              '<button type="button" class="toggle" data-retard-prev="' + esc(p.id) + '|1" aria-pressed="' + !!rp + '">Oui</button>' +
+              '<button type="button" class="toggle" data-retard-prev="' + esc(p.id) + '|0" aria-pressed="' + !rp + '">Non</button></div>';
+            if (rp) motifs += '<div class="motifs"><span class="lbl">Motif :</span>' + MOTIFS_RETARD.map(function (mo) {
+                return '<button type="button" class="toggle" data-retard-motif="' + esc(p.id) + '" data-m="' + mo + '" aria-pressed="' + (rp.motif === mo) + '">' + mo + "</button>";
+              }).join("") + (rp.motif ? '<input type="text" data-retard-note="' + esc(p.id) + '" value="' + esc(rp.note || "") + '" placeholder="' + (rp.motif === "Autre" ? "Précisez" : "Précision (facultatif)") + '" aria-label="Précision du retard">' : "") + "</div>";
+          } else if (rp && rp.motif) motifs += '<div class="motifs"><span class="lbl">Retard prévenu : ' + esc(rp.motif + (rp.note ? " · " + rp.note : "")) + "</span></div>";
+        }
         if (peutSuivi && (v === "A" || v === "E") && requis(s, p.id)) {
           motifs += '<div class="motifs"><span class="lbl">A-t-il prévenu ?</span>' +
             '<button type="button" class="toggle" data-set="' + esc(p.id) + '" data-v="E" aria-pressed="' + (v === "E") + '">Oui</button>' +
@@ -1285,7 +1330,7 @@ h3.group.seances-mois { margin-top: 6px; }
         var etat = p.m && statutMembre(p.m) !== "actif" ? " · " + (statutMembre(p.m) === "pause" ? "en pause" : "parti") : "";
         return '<div class="person' + (v === "E" ? " prev" : "") + '"><span class="name">' + esc(p.nom) + (p.m ? ' <span class="tags">' + esc(tagsKourel(p.m) + etat) + "</span>" : "") +
           (peutSuivi && ajusterListe ? ' <button type="button" class="linkish" data-action="retirer" data-id="' + esc(p.id) + '">Retirer</button>' : "") +
-          (peutSuivi && requis(s, p.id) && v !== "A" && v !== "E" ? ' <button type="button" class="plus-btn" data-action="' + (discOuvert === p.id ? "disc-fermer" : "disc-ouvrir") + '" data-id="' + esc(p.id) + '" aria-label="Tari individuel, tenue, coiffure" aria-expanded="' + (discOuvert === p.id) + '">⋯</button>' : "") +
+          (outilsPersonne(s, p.id) && requis(s, p.id) && v !== "A" && v !== "E" ? ' <button type="button" class="plus-btn" data-action="' + (discOuvert === p.id ? "disc-fermer" : "disc-ouvrir") + '" data-id="' + esc(p.id) + '" aria-label="Tari individuel, tenue, coiffure" aria-expanded="' + (discOuvert === p.id) + '">⋯</button>' : "") +
           "</span>" + ctrl + motifs + tariHtml + disc + "</div>";
       }).join("") + "</div>";
     if (peutSuivi) {
@@ -1808,6 +1853,7 @@ h3.group.seances-mois { margin-top: 6px; }
         var st = stats[id] || (stats[id] = { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé", total: 0, P: 0, R: 0, A: 0, E: 0, suite: 0, tdus: 0, trecus: 0 });
         st.total++; st[v]++;
         if (aPrevenu(s, id)) st.E++;
+        if (retardPrevenu(s, id)) st.RP = (st.RP || 0) + 1;
         if (tariConcerne(s, id)) { st.tdus++; if (etatTari(s, id) === "maitrise") st.trecus++; }
         var cq = consequences(s, id);
         st.avert = (st.avert || 0) + cq.filter(function (c) { return !c.ecarte; }).length;
@@ -1936,7 +1982,7 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     if (retards.length) {
       L.push("🟡 *Retards* (" + retards.length + ")");
-      retards.forEach(function (st) { L.push("• " + st.nom + " : " + pluriel(st.R, "retard")); });
+      retards.forEach(function (st) { L.push("• " + st.nom + " : " + pluriel(st.R, "retard") + (st.RP ? " (" + txtPrevenu(st.RP) + ")" : "")); });
       L.push("");
     }
     if (assidus.length) {
@@ -1989,7 +2035,7 @@ h3.group.seances-mois { margin-top: 6px; }
     L.push("*" + jour + "*" + (horaireDe(s) ? " · " + horaireDe(s) : ""));
     L.push("");
     var c = compter(s);
-    L.push(pluriel(c.P, "présent") + " · " + pluriel(c.R, "retard") + " · " + pluriel(c.A, "absent") + (c.E ? " (" + c.E + (c.E > 1 ? " ont" : " a") + " prévenu)" : ""));
+    L.push(pluriel(c.P, "présent") + " · " + pluriel(c.R, "retard") + (c.RP ? " (" + c.RP + (c.RP > 1 ? " ont" : " a") + " prévenu)" : "") + " · " + pluriel(c.A, "absent") + (c.E ? " (" + c.E + (c.E > 1 ? " ont" : " a") + " prévenu)" : ""));
     L.push("");
     var absents = stats.filter(function (st) { return st.A && !st.E; }).sort(fr);
     var prevenus = stats.filter(function (st) { return st.E; }).sort(fr);
@@ -1997,7 +2043,7 @@ h3.group.seances-mois { margin-top: 6px; }
     var presents = stats.filter(function (st) { return st.P; }).sort(fr);
     if (absents.length) { L.push("🔴 *Absents" + (prevenus.length ? " sans prévenir" : "") + "* (" + absents.length + ")"); puces(L, absents.map(function (st) { return st.nom; })); L.push(""); }
     if (prevenus.length) { L.push("🔵 *Absents ayant prévenu* (" + prevenus.length + ")"); puces(L, prevenus.map(function (st) { return st.nom; })); L.push(""); }
-    if (retards.length) { L.push("🟡 *En retard* (" + retards.length + ")"); puces(L, retards.map(function (st) { return st.nom; })); L.push(""); }
+    if (retards.length) { L.push("🟡 *En retard* (" + retards.length + ")"); puces(L, retards.map(function (st) { return st.nom + (retardPrevenu(s, st.id) ? " (a prévenu)" : ""); })); L.push(""); }
     if (presents.length) { L.push("🟢 *Présents* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom; })); L.push(""); }
     lignesPause(L, s.type, stats, s.date);
     if (s.tari && s.tari !== "aucun") {
@@ -2241,7 +2287,7 @@ h3.group.seances-mois { margin-top: 6px; }
           : c.temporaire ? (c.expireTemp && c.expireTemp < Date.now() ? '<span class="pill a">Mot de passe expiré</span>' : '<span class="pill r">' + (c.envoyeLe ? "Envoyé le " + dateCourte(c.envoyeLe) : "Pas encore envoyé") + "</span>")
           : '<span class="pill p">' + (c.derniereConnexion ? "Connecté · " + dateCourte(c.derniereConnexion) : "Accès validé") + "</span>";
         if (comptesEtat.demandes && comptesEtat.demandes[m.id]) etat += ' <span class="pill r">Demande à valider</span>';
-        var h = '<div class="acces-row" data-cherche="' + esc(cleRecherche(m.nom)) + '"><span class="who"><b>' + esc(m.nom) + "</b> " + etat + (c && c.admin ? ' <span class="chip">Admin</span>' : c && c.conservatoire ? ' <span class="chip">Conservatoire</span>' : "") + "</span>" +
+        var h = '<div class="acces-row" data-cherche="' + esc(cleRecherche(m.nom)) + '"><span class="who"><b>' + esc(m.nom) + "</b> " + etat + (c && c.admin ? ' <span class="chip">Admin</span>' : c && c.conservatoire ? ' <span class="chip">Conservatoire</span>' : "") + (c && c.discipline ? ' <span class="chip disc-chip">Discipline</span>' : "") + "</span>" +
           '<input type="tel" class="tel" data-tel="' + esc(m.id) + '" value="' + esc(tel) + '" placeholder="+1 819 555 1234" aria-label="WhatsApp de ' + esc(m.nom) + '">' +
           '<span class="actions"><button type="button" class="btn small ' + (c ? "" : "primary") + '" data-acces="' + esc(m.id) + '">' + (c ? "Nouveau mot de passe" : "Créer l’accès") + "</button>" +
           (c ? '<button type="button" class="btn ghost small" data-acces-plus="' + esc(m.id) + '" aria-label="Plus d’options">⋯</button>' : "") + "</span>";
@@ -2258,7 +2304,10 @@ h3.group.seances-mois { margin-top: 6px; }
           var roleC = c.admin ? "admin" : c.conservatoire ? "conservatoire" : "membre";
           h += '<div class="acces-envoi"><div class="role-choix"><span class="lbl">Rôle</span><span class="seg" role="group" aria-label="Rôle de ' + esc(m.nom) + '">' +
             Object.keys(ROLES_NOMS).map(function (k) { return '<button type="button" data-acces-role="' + esc(m.id) + "|" + k + '" aria-pressed="' + (roleC === k) + '">' + ROLES_NOMS[k] + "</button>"; }).join("") +
-            '</span><p class="muted role-aide">' + esc(ROLES_AIDE[roleC]) + "</p></div>" +
+            '</span><p class="muted role-aide">' + esc(ROLES_AIDE[roleC]) + "</p>" +
+            '<button type="button" class="msg-switch" role="switch" aria-checked="' + !!c.discipline + '" data-acces-discipline="' + esc(m.id) + "|" + (c.discipline ? "0" : "1") + '" style="margin-top:6px">' +
+              '<span class="msg-switch-txt">Commission de discipline</span><span class="msg-switch-piste" aria-hidden="true"><span></span></span><span class="msg-switch-etat">' + (c.discipline ? "Oui" : "Non") + "</span></button>" +
+            '<p class="muted role-aide">En plus de son rôle : note les sanctions (tenue, coiffure) et les retards prévenus dans les séances. Le membre sanctionné est prévenu.</p></div>' +
             (accesOuvert.roleAdmin ? '<div class="confirm"><b>Donner tous les droits à ' + esc(m.nom) + " ?</b><span>" + esc(ROLES_AIDE.admin) + "</span>" +
               '<div class="row"><button type="button" class="btn danger" data-acces-role-ok="' + esc(m.id) + '">Oui, le nommer administrateur</button><button type="button" class="btn" data-acces-plus-retour="' + esc(m.id) + '">Annuler</button></div></div>' : "") +
             '<div class="row">' +
@@ -2284,7 +2333,7 @@ h3.group.seances-mois { margin-top: 6px; }
     var moiM = membres[moiCourant] || {}, nomMoi = moiM.nom || (monCompte && monCompte.nom) || "Mon espace";
     var html = monCompte
       ? '<section class="panel moi-tete"><div class="moi-id"><span class="moi-avatar" aria-hidden="true">' + esc(initiales(nomMoi)) + '</span><span class="moi-qui"><b>' + esc(nomMoi) + "</b><small>" +
-          ROLES_NOMS[monRole] + " · " + esc(tagsKourel(moiM)) + "</small></span></div>" +
+          ROLES_NOMS[monRole] + (estDiscipline ? " · Commission de discipline" : "") + " · " + esc(tagsKourel(moiM)) + "</small></span></div>" +
           '<a class="moi-chartes" href="#chartes"><span aria-hidden="true">📜</span><span>Chartes et sanctions du kourel</span><span aria-hidden="true">›</span></a></section>'
       : '<a class="chartes-lien" href="#chartes"><span aria-hidden="true">📜</span><span><b>Chartes et sanctions du kourel</b><small>Tenue, retards, Tari : les règles de la commission de discipline</small></span><span aria-hidden="true">›</span></a>' +
         '<section class="panel"><h2>Mon espace</h2><p class="muted">Choisissez votre nom une fois : la page s’en souviendra sur cet appareil.</p>' +
@@ -2392,6 +2441,7 @@ h3.group.seances-mois { margin-top: 6px; }
         }
         html += "</section>";
       }
+      html += blocDisciplineMoi(moi);
       var mes = seances.filter(function (s) { return (s.participants || []).indexOf(moi.id) > -1; });
       var mois = today().slice(0, 7), cm = { P: 0, R: 0, A: 0 }, ct = { P: 0, R: 0, A: 0 };
       cm.E = 0;
@@ -2401,7 +2451,7 @@ h3.group.seances-mois { margin-top: 6px; }
         '<p class="muted" style="margin-top:10px">Depuis le début : ' + mes.length + " séance" + (mes.length > 1 ? "s" : "") + ", " + ct.R + " retard" + (ct.R > 1 ? "s" : "") + ", " + ct.A + " absence" + (ct.A > 1 ? "s" : "") + ".</p>" +
         '<div class="list" style="margin-top:10px">' + mes.slice(0, 8).map(function (s) {
           var v = choixDe(s, moi.id);
-          return '<div class="item"><div class="ligne"><span>' + esc(jourLong(s.date)) + ' · <span class="chip">' + esc(TYPES[s.type] || "") + '</span></span><span class="pill ' + v.toLowerCase() + '">' + (v === "E" ? "Absent · a prévenu" : STATUTS[v]) + "</span></div></div>";
+          return '<div class="item"><div class="ligne"><span>' + esc(jourLong(s.date)) + ' · <span class="chip">' + esc(TYPES[s.type] || "") + '</span></span><span class="pill ' + v.toLowerCase() + '">' + (v === "E" ? "Absent · a prévenu" : v === "R" && retardPrevenu(s, moi.id) ? "Retard · a prévenu" : STATUTS[v]) + "</span></div></div>";
         }).join("") + "</div></section>";
     }
     app.innerHTML = html;
@@ -2416,7 +2466,8 @@ h3.group.seances-mois { margin-top: 6px; }
       "<li>Un Tari passe par trois états : attendu, reçu à retravailler, maîtrisé. Seul « maîtrisé » permet de rejoindre le kourel.</li>" +
       "<li>Présent mais partie non maîtrisée : le Conservatoire peut demander un Tari individuel, avec la même règle.</li>" +
       (tarisApi ? "<li>Le Tari s’enregistre sur la plateforme (Mon espace › Mes Taris), autant de fois que nécessaire. Un membre du Conservatoire l’écoute et répond : maîtrisé, ou à retravailler avec un conseil.</li>" : "") +
-      "<li>Tenue non conforme : avertissement ; récidive dans le même mois : pas de participation à la séance. Coiffure non conforme : pas de participation.</li>" +
+      "<li>Tenue non conforme : avertissement ; récidive dans le même mois : pas de participation à la séance. Coiffure non conforme : pas de participation. Ces sanctions sont notées par la commission de discipline (ou le dieuwrigne) ; le membre concerné est prévenu et les retrouve dans Mon espace.</li>" +
+      "<li>Un retard compte toujours comme un retard. Celui qui a prévenu (travail qui finit tard, voyage…) est noté « a prévenu », avec son motif.</li>" +
       "</ul></div></section>";
   }
 
@@ -2692,7 +2743,9 @@ h3.group.seances-mois { margin-top: 6px; }
     if (!db) return;
     if (!charge.m || !charge.s || !charge.r) { app.innerHTML = '<div class="empty">Chargement…</div>'; return; }
     /* Un membre (non administrateur) ne voit ni les séances de tous, ni le bilan, ni les réglages. */
-    if (!peutSuivi && ["seances", "bilan", "reglages"].indexOf(vue) > -1) vue = "moi";
+    if (!peutSuivi && ["bilan", "reglages"].indexOf(vue) > -1) vue = "moi";
+    /* La commission de discipline (même sans le rôle Conservatoire) voit les séances pour noter les sanctions. */
+    if (!peutSuivi && !estDiscipline && vue === "seances") vue = "moi";
     /* Le Conservatoire n'a pas les réglages (accès, membres, khassidas, sauvegardes). */
     if (!peutModifier && vue === "reglages") vue = "seances";
     if (vue === "messages" && !peutSuivi) vue = "moi";
@@ -2835,6 +2888,16 @@ h3.group.seances-mois { margin-top: 6px; }
       }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
       return;
     }
+    if (b.dataset.accesDiscipline && comptesApi) {
+      var pdi = b.dataset.accesDiscipline.split("|"), oui = pdi[1] === "1", nomD = membres[pdi[0]] ? membres[pdi[0]].nom : "Le membre";
+      b.disabled = true;
+      comptesApi.discipline(pdi[0], oui).then(function () {
+        if (comptesEtat && comptesEtat.comptes && comptesEtat.comptes[pdi[0]]) comptesEtat.comptes[pdi[0]].discipline = oui;
+        afficher(); chargerComptes();
+        toast(oui ? nomD + " fait partie de la commission de discipline (à sa prochaine ouverture de la page)." : nomD + " ne fait plus partie de la commission de discipline.");
+      }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
+      return;
+    }
     if (b.dataset.accesPlusRetour) { accesOuvert = { id: b.dataset.accesPlusRetour, plus: true }; afficher(); return; }
     if (b.dataset.accesRevoquer && comptesApi) {
       comptesApi.revoquer(b.dataset.accesRevoquer).then(function () { accesOuvert = null; chargerComptes(); toast("Accès supprimé."); }, function (e) { toast(e && e.message ? e.message : "Suppression impossible."); });
@@ -2970,9 +3033,23 @@ h3.group.seances-mois { margin-top: 6px; }
       }, echec);
       return;
     }
-    if (b.dataset.action === "disc-ouvrir" && peutSuivi) { discOuvert = b.dataset.id; afficher(); return; }
+    if (b.dataset.action === "disc-ouvrir" && (peutSuivi || estDiscipline || peutModifier || seanceOuverte)) { discOuvert = b.dataset.id; afficher(); return; }
+    /* Retard prévenu (Oui / Non) et son motif */
+    if (b.dataset.retardPrev && peutRetards() && seanceOuverte) {
+      var prr = b.dataset.retardPrev.split("|"), sr = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {}, mr = {};
+      if ((prr[1] === "1") === !!retardPrevenu(sr, prr[0])) return;
+      mr[prr[0]] = prr[1] === "1" ? { motif: "", note: "" } : null;
+      db.doc("seances/" + seanceOuverte).update({ retardsPrevenus: mr }).catch(echec);
+      return;
+    }
+    if (b.dataset.retardMotif && peutRetards() && seanceOuverte) {
+      var srm = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {}, curR = retardPrevenu(srm, b.dataset.retardMotif) || {}, mrm = {};
+      mrm[b.dataset.retardMotif] = { motif: curR.motif === b.dataset.m ? "" : b.dataset.m, note: curR.motif === b.dataset.m ? (curR.note || "") : "" };
+      db.doc("seances/" + seanceOuverte).update({ retardsPrevenus: mrm }).catch(echec);
+      return;
+    }
     if (b.dataset.action === "disc-fermer") { discOuvert = null; afficher(); return; }
-    if (b.dataset.disc && peutSuivi && seanceOuverte) {
+    if (b.dataset.disc && seanceOuverte && peutSanctionner(seances.filter(function (x) { return x.id === seanceOuverte; })[0])) {
       var pd = b.dataset.disc.split("|"), sd2 = seances.filter(function (x) { return x.id === seanceOuverte; })[0] || {};
       var cur = marquesDe(sd2, pd[0]), mj = {}; mj[pd[0]] = {}; mj[pd[0]][pd[1]] = !cur[pd[1]];
       db.doc("seances/" + seanceOuverte).update({ discipline: mj }).then(function () {
@@ -2994,6 +3071,7 @@ h3.group.seances-mois { margin-top: 6px; }
       patch[pid] = nv === "E" ? "A" : nv;
       if (nv === "E") { maj.prevenus = {}; maj.prevenus[pid] = { motif: "", note: "" }; }
       else if ((sv.prevenus || {})[pid]) { maj.prevenus = {}; maj.prevenus[pid] = null; }
+      if (nv !== "R" && (sv.retardsPrevenus || {})[pid]) { maj.retardsPrevenus = {}; maj.retardsPrevenus[pid] = null; }
       db.doc("seances/" + seanceOuverte).update(maj).catch(echec);
       return;
     }
@@ -3133,6 +3211,11 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     if (t.dataset && t.dataset.depuis && peutModifier && t.value) {
       db.doc("membres/" + t.dataset.depuis).update({ depuis: t.value }).then(function () { toast("Date de pause modifiée : les séances à partir de cette date ne lui sont plus comptées."); }, echec);
+      return;
+    }
+    if (t.dataset && t.dataset.retardNote && peutRetards() && seanceOuverte) {
+      var rn = {}; rn[t.dataset.retardNote] = { note: t.value.trim() };
+      db.doc("seances/" + seanceOuverte).update({ retardsPrevenus: rn }).catch(echec);
       return;
     }
     if (t.dataset && t.dataset.note && peutSuivi && seanceOuverte) {
@@ -4706,12 +4789,14 @@ h3.group.seances-mois { margin-top: 6px; }
       monCompte = rr[1];
       monRole = peutModifier ? "admin" : monCompte && monCompte.role === "conservatoire" ? "conservatoire" : "membre";
       peutSuivi = peutModifier || monRole === "conservatoire";
+      estDiscipline = !!(monCompte && monCompte.discipline);
       comptesApi = rr[2];
       if (comptesApi) chargerComptes();
       if (monCompte) { moiCourant = monCompte.membre; }
       document.getElementById("role").textContent = peutSuivi ? ROLES_NOMS[monRole] : monCompte ? (monCompte.nom || "Membre") : "Consultation seule";
       document.body.classList.toggle("vue-membre", !peutSuivi);
       document.body.classList.toggle("vue-conservatoire", peutSuivi && !peutModifier);
+      document.body.classList.toggle("vue-discipline", estDiscipline && !peutSuivi);
       charge.r = true;
       afficher();
       /* Première visite : la visite guidée s'ouvre une fois les données affichées. */
