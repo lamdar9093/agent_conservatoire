@@ -611,6 +611,57 @@ async function api(req, res, parts, sess) {
     return json(res, 405, { code: "invalid_argument" });
   }
 
+  /* --- Erreurs signalées dans un beuyite (_signalements) ---
+     Tout membre connecté signale une erreur depuis la page d'un khassida (texte arabe, phonétique, traduction, audio…).
+     Le Conservatoire et l'admin les voient (Mon espace › Boîte à idées › Erreurs signalées), sont prévenus, et les marquent
+     « corrigé » ou « pas une erreur » ; la correction elle-même se fait dans la page du khassida. Chacun suit les siens.
+       GET   signalements          les siens (tous pour le Conservatoire et l'admin)
+       POST  signalements          { dossier, seg, libelle, quoi, texte, extrait }
+       PATCH signalements/<id>     { statut: ouvert | corrige | non, reponse } (Conservatoire, admin)
+       DELETE signalements/<id>    son auteur le retire, tant que le Conservatoire ne l'a pas traité (statut ouvert) */
+  if (parts[0] === "signalements" && !sess.temporaire) {
+    const id = parts[1], lecteur = peut(sess, "suivi");
+    const noms = Object.fromEntries((await stock.lireCollection("membres")).map((d) => [d.id, d.data.nom]));
+    const vue = (d) => ({ id: d.id, ...d.data, nom: noms[d.data.auteur] || d.data.auteur, moi: d.data.auteur === sess.membre });
+    if (!id && req.method === "GET") {
+      const docs = (await stock.lireCollection("_signalements")).filter((d) => lecteur || d.data.auteur === sess.membre);
+      return json(res, 200, { docs: docs.map(vue).sort((x, y) => y.creeLe - x.creeLe), lecteur });
+    }
+    if (!id && req.method === "POST") {
+      const c = await lireCorps(req), texte = String(c.texte || "").trim().slice(0, 2000), dossier = String(c.dossier || "");
+      if (texte.length < 3) return json(res, 400, { code: "court", message: "Décrivez l’erreur avant d’envoyer." });
+      if (!/^[\w-]+$/.test(dossier)) return json(res, 400, { code: "invalid_argument", message: "Khassida inconnu." });
+      const fiche = await fsp.readFile(path.join(PLATEFORME, "khassidas", dossier, "fiche.json"), "utf8").then(JSON.parse, () => null);
+      if (!fiche) return json(res, 400, { code: "invalid_argument", message: "Khassida inconnu." });
+      if (tropDenvois(sess.membre)) return json(res, 429, { code: "trop", message: "Trop d’envois rapprochés : réessayez dans une heure." });
+      const QUOI = ["arabe", "phonetique", "traduction", "audio", "autre"];
+      const doc = { auteur: sess.membre, khassida: fiche.id || dossier, dossier, titre: fiche.titre || dossier,
+        seg: String(c.seg || "").replace(/[^\w-]/g, "").slice(0, 20), libelle: String(c.libelle || "").slice(0, 60),
+        quoi: QUOI.includes(c.quoi) ? c.quoi : "autre", texte, extrait: String(c.extrait || "").slice(0, 400), creeLe: Date.now(), statut: "ouvert" };
+      const nid = Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
+      await stock.ecrireDoc("_signalements", nid, doc); prevenir("_signalements");
+      lecteursTaris(sess.membre).then((l) => notifs.notifier(l, { titre: "📖 Erreur signalée", texte: (noms[sess.membre] || "Un membre") + " · " + doc.titre + (doc.libelle ? ", " + doc.libelle.toLowerCase() : "") + " : " + texte.slice(0, 100), url: "/#messages" })).catch((e) => console.error(e));
+      return json(res, 200, { ok: true, id: nid });
+    }
+    if (id && req.method === "PATCH") {
+      if (!lecteur || !nomValide(id)) return json(res, 403, { code: "invalid_argument", message: "Réservé au Conservatoire." });
+      const c = await lireCorps(req), maj = {};
+      if (["ouvert", "corrige", "non"].includes(c.statut)) { maj.statut = c.statut; maj.traiteLe = Date.now(); maj.traitePar = noms[sess.membre] || sess.membre; }
+      if (typeof c.reponse === "string") maj.reponse = c.reponse.trim().slice(0, 1000);
+      if (!(await stock.fusionnerDoc("_signalements", id, maj))) return json(res, 404, { code: "not_found" });
+      prevenir("_signalements"); return json(res, 200, { ok: true });
+    }
+    if (id && req.method === "DELETE") {
+      const d = nomValide(id) ? await stock.lireDoc("_signalements", id) : null;
+      if (!d) return json(res, 404, { code: "not_found", message: "Ce signalement n’existe plus." });
+      if (d.auteur !== sess.membre) return json(res, 403, { code: "invalid_argument", message: "Seul son auteur peut retirer ce signalement." });
+      if (d.statut !== "ouvert") return json(res, 409, { code: "traite", message: "Le Conservatoire a déjà traité ce signalement : il ne peut plus être retiré." });
+      await stock.supprimerDoc("_signalements", id);
+      prevenir("_signalements"); return json(res, 200, { ok: true });
+    }
+    return json(res, 405, { code: "invalid_argument" });
+  }
+
   /* --- Programme de chant (répétitions et dahiras) ---
      chants/{clé} = { items: [{ id, khassida, titre, ere, statut: "retenu"|"propose", par, parNom, le }] }
      Clé : rep-AAAA-MM-JJ-(k1|k2|rg) pour une répétition, dz-AAAA-MM-JJ-(k1|k2|general) pour un passage au dahira.

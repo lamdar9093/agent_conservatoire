@@ -48,7 +48,7 @@
         var col = JSON.parse(ev.data).collection;
         // Comptes et demandes d'accès : la page administrateur se met à jour d'elle-même.
         if (col === "_comptes") window.dispatchEvent(new Event("conservatoire-comptes"));
-        else if (col === "_idees" || col === "_support") window.dispatchEvent(new Event("conservatoire-messages"));
+        else if (col === "_idees" || col === "_support" || col === "_signalements") window.dispatchEvent(new Event("conservatoire-messages"));
         else rafraichir(col);
       } catch (e) { /* message ignoré */ }
     };
@@ -136,7 +136,8 @@
   var messages = Object.freeze({
     liste: function (type, ids) { return appel("GET", type + (ids && ids.length ? "?ids=" + ids.join(",") : "")); },
     envoyer: function (type, data) { return appel("POST", type, data); },
-    maj: function (type, id, data) { return appel("PATCH", type + "/" + encodeURIComponent(id), data); }
+    maj: function (type, id, data) { return appel("PATCH", type + "/" + encodeURIComponent(id), data); },
+    retirer: function (type, id) { return appel("DELETE", type + "/" + encodeURIComponent(id)); }
   });
 
   /* Programme de chant des répétitions et dahiras (voir serveur.mjs : le dieuwrigne décide, le Conservatoire propose) */

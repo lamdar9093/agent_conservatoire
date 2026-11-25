@@ -360,7 +360,20 @@ button { font: inherit; color: inherit; }
   font-size: 12.5px;
 }
 .mini svg { width: 13px; height: 13px; }
+/* Écouter, Boucle, Manuscrit : des icônes rondes (le nom est dans l'info-bulle et pour les lecteurs d'écran). */
+.head-actions .mini { width: 38px; height: 38px; padding: 0; justify-content: center; }
+.head-actions .mini svg { width: 17px; height: 17px; }
 body.no-calage .play-seg, body.no-calage .boucle-seg { display: none; }
+/* Signaler une erreur dans un beuyite (plateforme du Conservatoire seulement) */
+.signal-lien { display: block; margin: 8px 0 0 auto; padding: 4px 2px; border: 0; background: transparent; color: var(--ink-soft); font: 500 12.5px var(--font-ui); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+body.sans-signal .signal-lien { display: none; }
+.signal-form { display: grid; gap: 8px; margin-top: 10px; padding: 12px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); font-family: var(--font-ui); }
+.signal-form b { font-size: 14px; }
+.signal-quoi { display: flex; flex-wrap: wrap; gap: 6px; }
+.signal-quoi .mini[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.signal-form textarea { width: 100%; min-height: 70px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: 15px var(--font-ui); box-sizing: border-box; resize: vertical; }
+.signal-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.signal-actions .envoyer { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
 /* Boucle d'un beuyite : bouton à côté de « Écouter », allumé tant que le beuyite se répète. */
 .mini.boucle-seg[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .card.en-boucle { border-color: var(--accent); }
@@ -794,6 +807,7 @@ dialog.ms::backdrop { background: var(--scrim); }
     ] }
   };
   var ICON = {
+    ms: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>',
     play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.6v12.8a1 1 0 0 0 1.53.85l10.2-6.4a1 1 0 0 0 0-1.7L9.53 4.75A1 1 0 0 0 8 5.6z"/></svg>',
     pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z"/></svg>',
     loop: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l3 3-3 3"/><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H20"/><path d="M7 21l-3-3 3-3"/><path d="M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H4"/></svg>',
@@ -853,14 +867,15 @@ dialog.ms::backdrop { background: var(--scrim); }
         (vers ? '<span class="letter" lang="ar" aria-hidden="true">' + esc(s.lettre) + "</span>" : "") +
         '<span class="num">' + esc(nom(s)) + "</span>" +
         '<span class="head-actions">' +
-          '<button type="button" class="mini play-seg" data-play="' + s.id + '" aria-label="Écouter : ' + esc(nom(s)) + '">' + ICON.play + "Écouter</button>" +
-          '<button type="button" class="mini boucle-seg" data-boucle="' + s.id + '" aria-pressed="false" aria-label="Écouter en boucle : ' + esc(nom(s)) + '" title="Écouter ce beuyite en boucle">' + ICON.loop + "Boucle</button>" +
-          '<button type="button" class="mini" data-page="' + s.page + '" aria-label="Voir le manuscrit : ' + esc(PAGES[s.page]) + '">Manuscrit</button>' +
+          '<button type="button" class="mini play-seg" data-play="' + s.id + '" aria-label="Écouter : ' + esc(nom(s)) + '" title="Écouter ce beuyite">' + ICON.play + "</button>" +
+          '<button type="button" class="mini boucle-seg" data-boucle="' + s.id + '" aria-pressed="false" aria-label="Écouter en boucle : ' + esc(nom(s)) + '" title="Écouter ce beuyite en boucle">' + ICON.loop + "</button>" +
+          '<button type="button" class="mini" data-page="' + s.page + '" aria-label="Voir le manuscrit : ' + esc(PAGES[s.page]) + '" title="Voir le manuscrit">' + ICON.ms + "</button>" +
         "</span>" +
       "</header>" +
       '<div class="ar" lang="ar" dir="rtl">' + ar + "</div>" +
       '<div class="ph" lang="ar-Latn">' + ph + "</div>" +
       '<p class="fr">' + esc(s.fr) + "</p>" +
+      '<button type="button" class="signal-lien" data-signaler="' + s.id + '">Signaler une erreur</button>' +
       '<div class="progress" aria-hidden="true"><span></span></div>' +
     "</article>";
   }
@@ -1228,7 +1243,39 @@ dialog.ms::backdrop { background: var(--scrim); }
     majBoucle();
     var t = audio.currentTime || 0;
     if (audio.paused || t < b.start || t >= b.end) { audio.currentTime = b.start + 0.01; tick(); jouer(); }
-    toast(nom(byId(id)) + " en boucle. Touchez « Boucle » encore pour arrêter.");
+    toast(nom(byId(id)) + " en boucle. Touchez encore l’icône de boucle pour arrêter.");
+  }
+  /* Signaler une erreur dans un beuyite : envoyée au Conservatoire et à l'admin de la plateforme (/api/signalements). */
+  var surPlateforme = location.protocol !== "file:" && !/claude/.test(location.hostname);
+  if (!surPlateforme) document.body.classList.add("sans-signal");
+  var QUOI = [["arabe", "Texte arabe"], ["phonetique", "Phonétique"], ["traduction", "Traduction"], ["audio", "Audio"], ["autre", "Autre"]];
+  function ouvrirSignal(id) {
+    var card = document.getElementById(id), deja = card && card.querySelector(".signal-form");
+    if (!card) return;
+    if (deja) { deja.remove(); return; }
+    var f = document.createElement("div");
+    f.className = "signal-form"; f.setAttribute("data-seg", id); f.setAttribute("data-quoi", "");
+    f.innerHTML = "<b>Une erreur dans ce beuyite ?</b><span class=\"signal-quoi\" role=\"group\" aria-label=\"Où est l’erreur\">" +
+      QUOI.map(function (q) { return '<button type="button" class="mini" data-signal-quoi="' + q[0] + '" aria-pressed="false">' + q[1] + "</button>"; }).join("") + "</span>" +
+      '<textarea maxlength="2000" placeholder="Qu’est-ce qui ne va pas ? Ex. : il manque une voyelle sur le 3e mot, la traduction devrait dire…" aria-label="Décrivez l’erreur"></textarea>' +
+      '<span class="signal-actions"><button type="button" class="mini envoyer" data-signal-envoyer>Envoyer au Conservatoire</button><button type="button" class="mini" data-signal-annuler>Annuler</button></span>';
+    card.appendChild(f);
+    f.querySelector("textarea").focus();
+  }
+  function envoyerSignal(b) {
+    var f = b.closest(".signal-form"), s = byId(f.getAttribute("data-seg")), quoi = f.getAttribute("data-quoi") || "autre", texte = f.querySelector("textarea").value.trim();
+    if (texte.length < 3) { toast("Décrivez l’erreur avant d’envoyer."); return; }
+    var extrait = quoi === "phonetique" ? s.ph.join(" / ") : quoi === "traduction" ? s.fr : s.ar.join(" / ");
+    var dossier = (/\/khassidas\/([\w-]+)\//.exec(location.pathname) || [])[1] || "";
+    b.disabled = true;
+    fetch("/api/signalements", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dossier: dossier, seg: s.id, libelle: nom(s), quoi: quoi, texte: texte, extrait: extrait }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
+      .then(function (x) {
+        if (x.ok) { f.remove(); toast("Merci ! Le Conservatoire va vérifier ce beuyite. Vous suivrez la réponse dans Mon espace."); return; }
+        b.disabled = false;
+        toast(x.status === 401 ? "Connectez-vous à la plateforme pour signaler une erreur." : (x.j.message || "Envoi impossible. Réessayez."));
+      }, function () { b.disabled = false; toast("Connexion perdue : réessayez."); });
   }
   function tick() {
     var t = audio.currentTime || 0;
@@ -1354,6 +1401,14 @@ dialog.ms::backdrop { background: var(--scrim); }
     }
     if (b.getAttribute("data-play")) { ecouter(b.getAttribute("data-play")); return; }
     if (b.getAttribute("data-boucle")) { basculerBoucle(b.getAttribute("data-boucle")); return; }
+    if (b.getAttribute("data-signaler")) { ouvrirSignal(b.getAttribute("data-signaler")); return; }
+    if (b.getAttribute("data-signal-quoi")) {
+      var fq = b.closest(".signal-form"); fq.setAttribute("data-quoi", b.getAttribute("data-signal-quoi"));
+      fq.querySelectorAll("[data-signal-quoi]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      return;
+    }
+    if (b.hasAttribute("data-signal-annuler")) { var fa = b.closest(".signal-form"); if (fa) fa.remove(); return; }
+    if (b.hasAttribute("data-signal-envoyer")) { envoyerSignal(b); return; }
     if (b.getAttribute("data-page")) { openMs(Number(b.getAttribute("data-page"))); return; }
     var action = b.getAttribute("data-action");
     if (action === "calage") { startCalage(); return; }

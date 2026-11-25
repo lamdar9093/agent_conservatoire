@@ -3559,12 +3559,14 @@ h3.group.seances-mois { margin-top: 6px; }
   }
 
   /* ---------- Boîte à idées et support ---------- */
-  var messagesApi = null, msgIdees = null, msgSupport = null, msgOuvert = null, msgOnglet = "idees";
+  var messagesApi = null, msgIdees = null, msgSupport = null, msgSignal = null, msgOuvert = null, msgOnglet = "idees";
+  var QUOI_SIGNAL = { arabe: "Texte arabe", phonetique: "Phonétique", traduction: "Traduction", audio: "Audio", autre: "Autre" };
   var TYPES_IDEE = { idee: "💡 Idée", suggestion: "🧭 Suggestion", positif: "👍 Point positif", ameliorer: "🛠️ À améliorer" };
   function chargerMessages() {
     if (!messagesApi) return;
-    Promise.all([messagesApi.liste("idees", mesAnonymes()).catch(function () { return null; }), messagesApi.liste("support").catch(function () { return null; })]).then(function (r) {
-      msgIdees = r[0]; msgSupport = r[1]; majPastilleMsg();
+    Promise.all([messagesApi.liste("idees", mesAnonymes()).catch(function () { return null; }), messagesApi.liste("support").catch(function () { return null; }),
+      messagesApi.liste("signalements").catch(function () { return null; })]).then(function (r) {
+      msgIdees = r[0]; msgSupport = r[1]; msgSignal = r[2]; majPastilleMsg();
       if (vue === "moi" || vue === "messages") afficher();
     });
   }
@@ -3576,6 +3578,7 @@ h3.group.seances-mois { margin-top: 6px; }
     var n = 0;
     if (msgIdees && msgIdees.lecteur) n += msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length;
     if (msgSupport && msgSupport.lecteur) n += msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length;
+    if (msgSignal && msgSignal.lecteur) n += msgSignal.docs.filter(function (d) { return d.statut === "ouvert"; }).length;
     return n;
   }
   /* Pastille de Mon espace : messages à lire (Conservatoire, admin) et Taris à enregistrer (chacun). */
@@ -3627,10 +3630,18 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     var miens = [].concat(
       (msgIdees ? msgIdees.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "idees"; return d; }) : []),
-      (msgSupport ? msgSupport.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "support"; return d; }) : [])
+      (msgSupport ? msgSupport.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "support"; return d; }) : []),
+      (msgSignal ? msgSignal.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "erreur"; return d; }) : [])
     ).sort(function (a, b) { return b.creeLe - a.creeLe; }).slice(0, 10);
     if (miens.length) {
       h += '<h3 class="group">Mes envois</h3><div class="msg-liste">' + miens.map(function (d) {
+        if (d._t === "erreur") return '<div class="msg"><div class="msg-tete"><span>📖 Erreur signalée</span><span>· ' + quand(d.creeLe) + "</span>" +
+            (d.statut === "corrige" ? '<span class="pill p">Corrigé, merci !</span>' : d.statut === "non" ? '<span class="pill n">Vérifié : pas d’erreur</span>' : '<span class="pill r">Le Conservatoire vérifie</span>') + "</div>" +
+          '<p class="msg-texte"><b>' + esc(d.titre) + (d.libelle ? " · " + esc(d.libelle) : "") + "</b> : " + esc(d.texte) + "</p>" + (d.reponse ? '<p class="msg-rep"><b>Réponse :</b> ' + esc(d.reponse) + "</p>" : "") +
+          /* Pas encore traité : l'auteur peut le retirer (il s'était trompé), avec une confirmation. */
+          (d.statut === "ouvert" ? '<div class="msg-actions">' + (sigRetirer === d.id
+            ? '<span class="msg-note">Retirer ce signalement ?</span><button type="button" class="btn small danger" data-sig-retirer-ok="' + esc(d.id) + '">Oui, le retirer</button><button type="button" class="btn small ghost" data-sig-retirer="">Non</button>'
+            : '<button type="button" class="btn small ghost" data-sig-retirer="' + esc(d.id) + '">Retirer, c’était une erreur de ma part</button>') + "</div>" : "") + "</div>";
         var etat = d._t === "support" ? (d.statut === "resolu" ? '<span class="pill p">Résolu</span>' : '<span class="pill r">En cours</span>')
           : (d.reponse ? '<span class="pill p">Réponse reçue</span>' : d.statut === "nouveau" ? '<span class="pill n">Envoyé</span>' : '<span class="pill p">Lu par le Conservatoire</span>');
         return '<div class="msg"><div class="msg-tete"><span>' + (d._t === "support" ? "🛟 Souci" : esc(TYPES_IDEE[d.type] || "Idée")) + "</span><span>· " + quand(d.creeLe) + "</span>" +
@@ -3646,23 +3657,32 @@ h3.group.seances-mois { margin-top: 6px; }
     if (!messagesApi || !(msgIdees && msgIdees.lecteur)) return "";
     var ni = msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length;
     var ns = msgSupport && msgSupport.lecteur ? msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
+    var ne = msgSignal && msgSignal.lecteur ? msgSignal.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
+    ns += ne;
     return '<a class="chartes-lien" href="#messages"><span aria-hidden="true">📬</span><span><b>Boîte à idées' + (msgSupport && msgSupport.lecteur ? " et support" : "") + "</b><small>" +
       (ni ? ni + " nouvelle" + (ni > 1 ? "s" : "") + " idée" + (ni > 1 ? "s" : "") : "Aucune nouvelle idée") +
-      (msgSupport && msgSupport.lecteur ? " · " + (ns ? ns + " souci" + (ns > 1 ? "s" : "") + " à traiter" : "aucun souci en cours") : "") +
+      (msgSupport && msgSupport.lecteur ? " · " + (ns - ne ? (ns - ne) + " souci" + (ns - ne > 1 ? "s" : "") + " à traiter" : "aucun souci en cours") : "") +
+      (ne ? " · " + ne + " erreur" + (ne > 1 ? "s" : "") + " signalée" + (ne > 1 ? "s" : "") + " dans un beuyite" : "") +
       '</small></span>' + (ni + ns ? '<span class="pastille">' + (ni + ns) + "</span>" : "") + '<span aria-hidden="true">›</span></a>';
   }
   function vueMessages() {
     if (!msgIdees) { app.innerHTML = '<div class="empty">Chargement…</div>'; chargerMessages(); return; }
-    var support = msgSupport && msgSupport.lecteur;
-    if (!support) msgOnglet = "idees";
+    var support = msgSupport && msgSupport.lecteur, erreurs = msgSignal && msgSignal.lecteur;
+    if ((msgOnglet === "support" && !support) || (msgOnglet === "erreurs" && !erreurs)) msgOnglet = "idees";
     var l = msgOnglet === "support" ? msgSupport.docs : msgIdees.docs;
     var ni = msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length, ns = support ? msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
+    var ne = erreurs ? msgSignal.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
+    var onglets = (support || erreurs) ? '<span class="seg seg-full kh-filtre" role="group" aria-label="Messages" style="margin-top:12px">' +
+      '<button type="button" data-msg-onglet="idees" aria-pressed="' + (msgOnglet === "idees") + '">Idées' + (ni ? " · " + ni : "") + "</button>" +
+      (erreurs ? '<button type="button" data-msg-onglet="erreurs" aria-pressed="' + (msgOnglet === "erreurs") + '">Erreurs' + (ne ? " · " + ne : "") + "</button>" : "") +
+      (support ? '<button type="button" data-msg-onglet="support" aria-pressed="' + (msgOnglet === "support") + '">Support' + (ns ? " · " + ns : "") + "</button>" : "") + "</span>" : "";
+    if (msgOnglet === "erreurs") { app.innerHTML = '<div><a class="btn ghost" href="#moi">← Mon espace</a></div>' + vueErreurs(onglets); return; }
     var html = '<div><a class="btn ghost" href="#moi">← Mon espace</a></div><section class="panel"><h2>' + (msgOnglet === "support" ? "Support" : "Boîte à idées") + "</h2>" +
       '<p class="muted">' + (msgOnglet === "support" ? "Les soucis signalés par les membres. Répondez-leur ici : ils voient votre réponse dans Mon espace."
         : "Les idées et remarques des membres sur le kourel. Pour un message anonyme, le nom de l’auteur n’est enregistré nulle part : personne ne peut le connaître. Votre réponse est visible par l’auteur. " +
           (peutModifier ? "Une idée constructive ? « Rendre visible à tous » : les membres la verront dans Mon espace, avec votre réponse, sans le nom de l’auteur."
             : "Elles restent entre le Conservatoire et l’admin : seul l’admin peut rendre une idée visible à tous les membres.")) + "</p>" +
-      (support ? '<span class="seg seg-full" role="group" aria-label="Messages" style="margin-top:12px"><button type="button" data-msg-onglet="idees" aria-pressed="' + (msgOnglet === "idees") + '">Boîte à idées' + (ni ? " · " + ni : "") + '</button><button type="button" data-msg-onglet="support" aria-pressed="' + (msgOnglet === "support") + '">Support' + (ns ? " · " + ns : "") + "</button></span>" : "") +
+      onglets +
       '<div class="msg-liste">' + (l.length ? l.map(function (d) {
         var neuf = msgOnglet === "support" ? d.statut === "ouvert" : d.statut === "nouveau";
         var qui = d.anonyme ? "Anonyme" : esc(d.nom || "Membre");
@@ -3681,7 +3701,31 @@ h3.group.seances-mois { margin-top: 6px; }
       }).join("") : '<div class="empty">Rien pour l’instant.</div>') + "</div></section>";
     app.innerHTML = html;
   }
-  var msgBrouillon = {};
+  /* Erreurs signalées dans un beuyite : le Conservatoire et l'admin les revoient ; « Copier » donne un texte prêt à transmettre pour la correction. */
+  function texteErreur(d) {
+    return d.titre + (d.libelle ? ", " + d.libelle.toLowerCase() : "") + " (" + (QUOI_SIGNAL[d.quoi] || "Autre").toLowerCase() + ") : " + d.texte +
+      (d.extrait ? "\nTexte actuel : " + d.extrait : "") + "\nSignalé par " + (d.nom || "un membre") + " le " + quand(d.creeLe) + ".";
+  }
+  function vueErreurs(onglets) {
+    var l = msgSignal.docs.slice().sort(function (a, b) { return (a.statut === "ouvert" ? 0 : 1) - (b.statut === "ouvert" ? 0 : 1) || b.creeLe - a.creeLe; });
+    return '<section class="panel"><h2>Erreurs signalées</h2><p class="muted">Les erreurs vues par les membres dans un beuyite (texte arabe, phonétique, traduction, audio). Vérifiez-les ; une fois la page du khassida corrigée, marquez « Corrigé » : le membre le voit dans Mon espace. « Copier » donne un texte prêt à transmettre pour la correction.</p>' +
+      onglets + '<div class="msg-liste">' + (l.length ? l.map(function (d) {
+        var ouvert = d.statut === "ouvert";
+        var etat = ouvert ? '<span class="pill r">À vérifier</span>' : d.statut === "corrige" ? '<span class="pill p">Corrigé</span>' : '<span class="pill n">Pas une erreur</span>';
+        var lien = d.khassida && khassidas[d.khassida] ? "#khassida/" + encodeURIComponent(d.khassida) + (/^v\d+$/.test(d.seg || "") ? "/" + d.seg : "") : "";
+        return '<div class="msg' + (ouvert ? " nouveau" : "") + '"><div class="msg-tete"><span class="qui">' + esc(d.nom || "Membre") + "</span><span>· " + quand(d.creeLe) + "</span>" +
+          '<span class="pill n">' + esc(QUOI_SIGNAL[d.quoi] || "Autre") + "</span>" + etat + "</div>" +
+          '<p class="msg-texte"><b>📖 ' + esc(d.titre) + (d.libelle ? " · " + esc(d.libelle) : "") + "</b>" + (lien ? ' · <a href="' + lien + '">voir le beuyite</a>' : "") + "</p>" +
+          '<p class="msg-texte">' + esc(d.texte) + "</p>" +
+          (d.extrait ? '<p class="msg-note">Texte actuel : ' + esc(d.extrait) + "</p>" : "") +
+          (!ouvert && d.traitePar ? '<p class="msg-note">' + (d.statut === "corrige" ? "Corrigé" : "Vérifié") + " par " + esc(d.traitePar) + (d.traiteLe ? " le " + quand(d.traiteLe) : "") + "</p>" : "") +
+          '<div class="msg-actions">' +
+            (ouvert ? '<button type="button" class="btn small primary" data-sig-statut="' + esc(d.id) + '|corrige">✓ Corrigé</button><button type="button" class="btn small" data-sig-statut="' + esc(d.id) + '|non">Pas une erreur</button>'
+              : '<button type="button" class="btn small ghost" data-sig-statut="' + esc(d.id) + '|ouvert">Rouvrir</button>') +
+            '<button type="button" class="btn small ghost" data-sig-copier="' + esc(d.id) + '">Copier</button></div></div>';
+      }).join("") : '<div class="empty">Aucune erreur signalée. Les membres peuvent en signaler une avec « Signaler » sur chaque beuyite.</div>') + "</div></section>";
+  }
+  var msgBrouillon = {}, sigRetirer = null;
   function clicMessages(b) {
     if (b.dataset.msgOuvrir !== undefined) { msgOuvert = b.dataset.msgOuvrir || null; msgBrouillon = {}; afficher(); var t = document.getElementById("msg-texte"); if (t) t.focus(); return true; }
     if (b.dataset.ideeType) { msgBrouillon.type = b.dataset.ideeType; garderTexte(); afficher(); return true; }
@@ -3699,6 +3743,25 @@ h3.group.seances-mois { margin-top: 6px; }
         toast(type === "idees" ? "Merci ! Votre message est arrivé au Conservatoire." : "Merci ! L’admin a reçu votre message et vous répondra ici.");
         chargerMessages();
       }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Envoi impossible. Réessayez."); });
+      return true;
+    }
+    if (b.dataset.sigRetirer !== undefined) { sigRetirer = b.dataset.sigRetirer || null; afficher(); return true; }
+    if (b.dataset.sigRetirerOk && messagesApi) {
+      b.disabled = true;
+      messagesApi.retirer("signalements", b.dataset.sigRetirerOk).then(function () { sigRetirer = null; toast("Signalement retiré."); chargerMessages(); },
+        function (e) { b.disabled = false; sigRetirer = null; toast(e && e.message ? e.message : "Impossible de le retirer."); chargerMessages(); });
+      return true;
+    }
+    if (b.dataset.sigStatut && messagesApi) {
+      var sp = b.dataset.sigStatut.split("|");
+      b.disabled = true;
+      messagesApi.maj("signalements", sp[0], { statut: sp[1] }).then(function () { toast(sp[1] === "corrige" ? "Marqué corrigé : le membre le verra dans Mon espace." : sp[1] === "non" ? "Marqué « pas une erreur »." : "Signalement rouvert."); chargerMessages(); },
+        function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
+      return true;
+    }
+    if (b.dataset.sigCopier && msgSignal) {
+      var sd = msgSignal.docs.filter(function (x) { return x.id === b.dataset.sigCopier; })[0];
+      if (sd) { var tx = texteErreur(sd); try { navigator.clipboard.writeText(tx).then(function () { toast("Copié : collez-le là où vous demandez la correction."); }, function () { toast(tx); }); } catch (e) { toast(tx); } }
       return true;
     }
     if (b.dataset.msgPublic && messagesApi && peutModifier) {
