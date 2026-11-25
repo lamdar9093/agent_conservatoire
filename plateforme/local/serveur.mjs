@@ -561,6 +561,8 @@ async function api(req, res, parts, sess) {
      Anonymat total (choix de l'utilisateur) : pour une idée anonyme, l'auteur n'est jamais enregistré, personne
      (ni le Conservatoire, ni l'administrateur, ni la base) ne peut savoir qui l'a écrite. L'auteur la retrouve
      grâce à son identifiant aléatoire, gardé sur son appareil (?ids=…).
+     Idée rendue publique (public: true) : seul l'administrateur décide (choix de l'utilisateur, 24 novembre 2026) ;
+     tous les membres voient alors le texte et la réponse, jamais le nom de l'auteur. Le Conservatoire lit et répond, sans publier.
      Support (_support) : un membre signale un souci ; seul l'administrateur le lit et répond.
      Chacun retrouve ses propres envois (avec la réponse) dans Mon espace. */
   if ((parts[0] === "idees" || parts[0] === "support") && !sess.temporaire) {
@@ -568,13 +570,16 @@ async function api(req, res, parts, sess) {
     const noms = Object.fromEntries((await stock.lireCollection("membres")).map((d) => [d.id, d.data.nom]));
     const mesAnonymes = new Set((new URL(req.url, "http://x").searchParams.get("ids") || "").split(",").filter((x) => /^[0-9a-f]{32}$/.test(x)));
     const vue = (d) => {
-      const x = { id: d.id, ...d.data, moi: (!!d.data.auteur && d.data.auteur === sess.membre) || (!!d.data.anonyme && mesAnonymes.has(d.id)) };
+      const moi = (!!d.data.auteur && d.data.auteur === sess.membre) || (!!d.data.anonyme && mesAnonymes.has(d.id));
+      // Idée publique vue par un autre membre : le texte et la réponse seulement, sans auteur.
+      if (!lecteur && !moi) return { id: d.id, type: d.data.type, texte: d.data.texte, creeLe: d.data.creeLe, reponse: d.data.reponse, public: true, publieLe: d.data.publieLe, moi: false };
+      const x = { id: d.id, ...d.data, moi };
       if (x.anonyme) delete x.auteur;
       if (x.auteur) x.nom = noms[x.auteur] || x.auteur;
       return x;
     };
     if (!id && req.method === "GET") {
-      const docs = (await stock.lireCollection(col)).filter((d) => lecteur || d.data.auteur === sess.membre || (d.data.anonyme && mesAnonymes.has(d.id)));
+      const docs = (await stock.lireCollection(col)).filter((d) => lecteur || d.data.auteur === sess.membre || (d.data.anonyme && mesAnonymes.has(d.id)) || (col === "_idees" && d.data.public));
       return json(res, 200, { docs: docs.map(vue).sort((a, b) => b.creeLe - a.creeLe), lecteur });
     }
     if (!id && req.method === "POST") {
@@ -596,6 +601,10 @@ async function api(req, res, parts, sess) {
       const c = await lireCorps(req), maj = {};
       if (["nouveau", "lu", "traite", "ouvert", "resolu"].includes(c.statut)) maj.statut = c.statut;
       if (typeof c.reponse === "string") { maj.reponse = c.reponse.trim().slice(0, 3000); maj.reponduLe = Date.now(); maj.reponduPar = noms[sess.membre] || sess.membre; }
+      if (c.public !== undefined) {
+        if (col !== "_idees" || !sess.admin) return json(res, 403, { code: "invalid_argument", message: "Seul l’administrateur peut rendre une idée visible à tous." });
+        maj.public = !!c.public; maj.publieLe = c.public ? Date.now() : null; maj.publiePar = c.public ? (noms[sess.membre] || sess.membre) : null;
+      }
       if (!(await stock.fusionnerDoc(col, id, maj))) return json(res, 404, { code: "not_found" });
       prevenir(col); return json(res, 200, { ok: true });
     }

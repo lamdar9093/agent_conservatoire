@@ -3616,6 +3616,15 @@ h3.group.seances-mois { margin-top: 6px; }
         '<p class="msg-note">Votre nom, la page où vous êtes et votre appareil sont joints au message, pour que l’admin vous aide plus vite.</p>' +
         '<div class="row"><button type="button" class="btn primary" data-msg-envoyer="support">Envoyer à l’admin</button><button type="button" class="btn ghost" data-msg-ouvrir="">Annuler</button></div></div>';
     }
+    /* Idées rendues visibles à tous par l'admin (sans le nom de l'auteur). */
+    var partagees = msgIdees ? msgIdees.docs.filter(function (d) { return d.public; }).sort(function (a, b) { return (b.publieLe || b.creeLe) - (a.publieLe || a.creeLe); }).slice(0, 5) : [];
+    if (partagees.length) {
+      h += '<h3 class="group">Idées partagées avec tous</h3><div class="msg-liste">' + partagees.map(function (d) {
+        return '<div class="msg"><div class="msg-tete"><span>' + esc(TYPES_IDEE[d.type] || "Idée") + "</span><span>· " + quand(d.creeLe) + "</span>" + (d.moi ? '<span class="pill p">La vôtre</span>' : "") + "</div>" +
+          '<p class="msg-texte">' + esc(d.texte) + "</p>" +
+          (d.reponse ? '<p class="msg-rep"><b>Réponse du Conservatoire :</b> ' + esc(d.reponse) + "</p>" : "") + "</div>";
+      }).join("") + "</div>";
+    }
     var miens = [].concat(
       (msgIdees ? msgIdees.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "idees"; return d; }) : []),
       (msgSupport ? msgSupport.docs.filter(function (d) { return d.moi; }).map(function (d) { d._t = "support"; return d; }) : [])
@@ -3625,7 +3634,7 @@ h3.group.seances-mois { margin-top: 6px; }
         var etat = d._t === "support" ? (d.statut === "resolu" ? '<span class="pill p">Résolu</span>' : '<span class="pill r">En cours</span>')
           : (d.reponse ? '<span class="pill p">Réponse reçue</span>' : d.statut === "nouveau" ? '<span class="pill n">Envoyé</span>' : '<span class="pill p">Lu par le Conservatoire</span>');
         return '<div class="msg"><div class="msg-tete"><span>' + (d._t === "support" ? "🛟 Souci" : esc(TYPES_IDEE[d.type] || "Idée")) + "</span><span>· " + quand(d.creeLe) + "</span>" +
-          (d.anonyme ? '<span class="pill anon">Anonyme</span>' : "") + etat + "</div>" +
+          (d.anonyme ? '<span class="pill anon">Anonyme</span>' : "") + etat + (d.public ? '<span class="pill p">🌍 Partagée avec tous</span>' : "") + "</div>" +
           '<p class="msg-texte">' + esc(d.texte) + "</p>" +
           (d.reponse ? '<p class="msg-rep"><b>Réponse' + (d.reponduPar && d._t === "support" ? " de " + esc(d.reponduPar) : " du Conservatoire") + " :</b> " + esc(d.reponse) + "</p>" : "") + "</div>";
       }).join("") + "</div>";
@@ -3650,13 +3659,15 @@ h3.group.seances-mois { margin-top: 6px; }
     var ni = msgIdees.docs.filter(function (d) { return d.statut === "nouveau"; }).length, ns = support ? msgSupport.docs.filter(function (d) { return d.statut === "ouvert"; }).length : 0;
     var html = '<div><a class="btn ghost" href="#moi">← Mon espace</a></div><section class="panel"><h2>' + (msgOnglet === "support" ? "Support" : "Boîte à idées") + "</h2>" +
       '<p class="muted">' + (msgOnglet === "support" ? "Les soucis signalés par les membres. Répondez-leur ici : ils voient votre réponse dans Mon espace."
-        : "Les idées et remarques des membres sur le kourel. Pour un message anonyme, le nom de l’auteur n’est enregistré nulle part : personne ne peut le connaître. Votre réponse est visible par l’auteur.") + "</p>" +
+        : "Les idées et remarques des membres sur le kourel. Pour un message anonyme, le nom de l’auteur n’est enregistré nulle part : personne ne peut le connaître. Votre réponse est visible par l’auteur. " +
+          (peutModifier ? "Une idée constructive ? « Rendre visible à tous » : les membres la verront dans Mon espace, avec votre réponse, sans le nom de l’auteur."
+            : "Elles restent entre le Conservatoire et l’admin : seul l’admin peut rendre une idée visible à tous les membres.")) + "</p>" +
       (support ? '<span class="seg seg-full" role="group" aria-label="Messages" style="margin-top:12px"><button type="button" data-msg-onglet="idees" aria-pressed="' + (msgOnglet === "idees") + '">Boîte à idées' + (ni ? " · " + ni : "") + '</button><button type="button" data-msg-onglet="support" aria-pressed="' + (msgOnglet === "support") + '">Support' + (ns ? " · " + ns : "") + "</button></span>" : "") +
       '<div class="msg-liste">' + (l.length ? l.map(function (d) {
         var neuf = msgOnglet === "support" ? d.statut === "ouvert" : d.statut === "nouveau";
         var qui = d.anonyme ? "Anonyme" : esc(d.nom || "Membre");
         return '<div class="msg' + (neuf ? " nouveau" : "") + '"><div class="msg-tete"><span class="qui">' + qui + "</span><span>· " + quand(d.creeLe) + "</span>" +
-          (msgOnglet === "support" ? (d.statut === "resolu" ? '<span class="pill p">Résolu</span>' : '<span class="pill r">À traiter</span>') : '<span class="pill n">' + esc(TYPES_IDEE[d.type] || "Idée") + "</span>" + (neuf ? '<span class="pill e">Nouveau</span>' : "")) + "</div>" +
+          (msgOnglet === "support" ? (d.statut === "resolu" ? '<span class="pill p">Résolu</span>' : '<span class="pill r">À traiter</span>') : '<span class="pill n">' + esc(TYPES_IDEE[d.type] || "Idée") + "</span>" + (neuf ? '<span class="pill e">Nouveau</span>' : "") + (d.public ? '<span class="pill p">🌍 Visible par tous</span>' : "")) + "</div>" +
           '<p class="msg-texte">' + esc(d.texte) + "</p>" +
           (d.contexte ? '<p class="msg-note">' + esc(d.contexte) + "</p>" : "") +
           (d.reponse ? '<p class="msg-rep"><b>Réponse de ' + esc(d.reponduPar || "") + " :</b> " + esc(d.reponse) + "</p>" : "") +
@@ -3664,7 +3675,9 @@ h3.group.seances-mois { margin-top: 6px; }
             '<button type="button" class="btn small primary" data-msg-repondre="' + esc(d.id) + '">Envoyer la réponse</button>' +
             (msgOnglet === "support"
               ? '<button type="button" class="btn small" data-msg-statut="' + esc(d.id) + "|" + (d.statut === "resolu" ? "ouvert" : "resolu") + '">' + (d.statut === "resolu" ? "Rouvrir" : "Marquer résolu") + "</button>"
-              : (neuf ? '<button type="button" class="btn small" data-msg-statut="' + esc(d.id) + '|lu">Marquer comme lu</button>' : "")) + "</div></div>";
+              : (neuf ? '<button type="button" class="btn small" data-msg-statut="' + esc(d.id) + '|lu">Marquer comme lu</button>' : "") +
+                /* Rendre une idée visible à tous : l'administrateur seulement. */
+                (peutModifier ? '<button type="button" class="btn small' + (d.public ? " ghost" : "") + '" data-msg-public="' + esc(d.id) + "|" + (d.public ? "0" : "1") + '">' + (d.public ? "Retirer de la vue des membres" : "🌍 Rendre visible à tous") + "</button>" : "")) + "</div></div>";
       }).join("") : '<div class="empty">Rien pour l’instant.</div>') + "</div></section>";
     app.innerHTML = html;
   }
@@ -3686,6 +3699,13 @@ h3.group.seances-mois { margin-top: 6px; }
         toast(type === "idees" ? "Merci ! Votre message est arrivé au Conservatoire." : "Merci ! L’admin a reçu votre message et vous répondra ici.");
         chargerMessages();
       }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Envoi impossible. Réessayez."); });
+      return true;
+    }
+    if (b.dataset.msgPublic && messagesApi && peutModifier) {
+      var pp = b.dataset.msgPublic.split("|"), pub = pp[1] === "1";
+      b.disabled = true;
+      messagesApi.maj("idees", pp[0], { public: pub }).then(function () { toast(pub ? "Idée visible par tous les membres, sans le nom de l’auteur." : "Idée retirée de la vue des membres."); chargerMessages(); },
+        function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
       return true;
     }
     if ((b.dataset.msgRepondre || b.dataset.msgStatut) && messagesApi) {
