@@ -372,7 +372,7 @@ async function envoyerFichier(req, res, cible, type, cache) {
 }
 
 /* Ce qu'un membre (non administrateur) peut voir. */
-function filtrerPourMembre(col, docs, moi, discipline) {
+function filtrerPourMembre(col, docs, moi, discipline, mesSeances) {
   if (col === "membres") return docs.map((d) => ({ id: d.id, data: { nom: d.data.nom, k1: d.data.k1, k2: d.data.k2, statut: d.data.statut, actif: d.data.actif, depuis: d.data.depuis } }));
   if (col === "evaluations") return docs.filter((d) => d.id === moi);
   if (col === "seances") return docs.map((d) => {
@@ -389,7 +389,12 @@ function filtrerPourMembre(col, docs, moi, discipline) {
   // Taris enregistrés : chacun ne voit que les siens. La commission de discipline voit la liste de tous (qui a envoyé,
   // quoi, la réponse « maîtrisé / à retravailler »), sans les audios ni le mot du correcteur : elle n'écoute pas (choix de l'utilisateur).
   if (col === "taris") {
-    if (!discipline) return docs.filter((d) => d.data.membre === moi);
+    // Membre : ses Taris en entier ; ceux des autres membres de ses séances (son kourel) réduits à « a envoyé » et
+    // à la réponse (maîtrisé / à retravailler), pour motiver chacun à envoyer le sien (choix de l'utilisateur, 25 novembre 2026).
+    // Jamais l'audio, le mot ni le vocal du correcteur des autres.
+    if (!discipline) return docs.filter((d) => d.data.membre === moi || (mesSeances && mesSeances.has(d.data.seance)))
+      .map((d) => d.data.membre === moi ? d : { id: d.id, data: { seance: d.data.seance, membre: d.data.membre, date: d.data.date, type: d.data.type,
+        envois: (d.data.envois || []).map((e) => ({ id: e.id, le: e.le, verdict: e.verdict, corrigeLe: e.corrigeLe })) } });
     return docs.map((d) => d.data.membre === moi ? d : { id: d.id, data: { ...d.data, envois: (d.data.envois || []).map((e) => ({
       id: e.id, le: e.le, duree: e.duree, khassida: e.khassida, titre: e.titre, de: e.de, a: e.a, tout: e.tout,
       prise: e.prise, verdict: e.verdict, par: e.par, parNom: e.parNom, corrigeLe: e.corrigeLe })) } });
@@ -442,14 +447,14 @@ async function decideChant(sess, info) {
 }
 
 /* Ce qu'un compte voit d'une collection selon son rôle. */
-function filtrerPour(sess, col, docs) {
+function filtrerPour(sess, col, docs, mesSeances) {
   if (sess.admin) return docs;
   if (peut(sess, "suivi")) {
     // Conservatoire : tout le suivi, mais jamais les numéros WhatsApp des membres.
     if (col === "membres") return docs.map((d) => { const { telephone, ...data } = d.data; return { id: d.id, data }; });
     return docs;
   }
-  return filtrerPourMembre(col, docs, sess.membre, sess.discipline);
+  return filtrerPourMembre(col, docs, sess.membre, sess.discipline, mesSeances);
 }
 
 /* Khassidas visibles par un membre (null = tous : administrateur, Conservatoire et commission de discipline).
@@ -939,7 +944,10 @@ async function api(req, res, parts, sess) {
   if (req.method === "GET") {
     if (!sess.admin && !LECTURE_MEMBRE.has(col)) return json(res, 403, { code: "invalid_argument" });
     let docs = id ? [{ id, data: await stock.lireDoc(col, id) }].filter((d) => d.data) : await stock.lireCollection(col);
-    docs = filtrerPour(sess, col, docs);
+    // Taris : un membre voit aussi qui a envoyé le sien dans les séances où il était (son kourel).
+    const mesSeances = col === "taris" && !peut(sess, "suivi")
+      ? new Set((await stock.lireCollection("seances")).filter((x) => (x.data.participants || []).includes(sess.membre)).map((x) => x.id)) : null;
+    docs = filtrerPour(sess, col, docs, mesSeances);
     if (col === "khassidas") { const vis = await khassidasVisibles(sess); if (vis) docs = docs.filter((d) => vis.has(d.id)); }
     if (id) return docs[0] ? json(res, 200, docs[0]) : json(res, 404, { code: "not_found" });
     return json(res, 200, { docs });

@@ -736,6 +736,12 @@ a.tq-item:hover { border-color: var(--accent); }
 /* Tari d'une séance : quoi, où en est chacun, pour quand */
 .tari-quoi { margin: 8px 0 0 !important; font-size: 15px; }
 .ere-champ { display: grid; gap: 6px; flex: 1 1 100%; }
+/* Mes Taris : où en est le reste du kourel */
+.mt-bloc { display: grid; gap: 0; }
+.mt-kourel { display: grid; gap: 6px; margin: -4px 0 0; padding: 12px 14px 10px; border: 1px solid var(--rule); border-top: 0; border-radius: 0 0 14px 14px; background: var(--paper); font-size: 13.5px; line-height: 1.45; }
+.mt-kourel b { font-size: 13.5px; font-weight: 600; }
+.mk-l { display: block; color: var(--ink); }
+.mk-l .pill { font-size: 11.5px; margin-right: 4px; }
 /* Nouveau khassida : bandeau (Mon espace, Khassidas) et pastille sur la carte */
 .kh-neuf { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--accent); border-radius: 14px; background: var(--accent-soft); }
 .kh-neuf-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -3983,7 +3989,7 @@ h3.group.seances-mois { margin-top: 6px; }
     var h = '<section class="panel" id="mes-taris"><h2>Mes Taris</h2><p class="muted">' +
       (nb ? (nb > 1 ? nb + " Taris" : "Un Tari") + " à enregistrer. Chantez-le ici, sur la plateforme : le Conservatoire l’écoute et vous répond."
         : aFaire.length ? "Envoyé : le Conservatoire va l’écouter et vous répondre ici." : "Aucun Tari à envoyer pour le moment.") + "</p>";
-    if (aFaire.length) h += '<div class="mt-liste">' + aFaire.map(carteMonTari).join("") + "</div>";
+    if (aFaire.length) h += '<div class="mt-liste">' + aFaire.map(function (x) { return '<div class="mt-bloc">' + carteMonTari(x) + ligneKourelTari(x) + "</div>"; }).join("") + "</div>";
     /* Rien de demandé : on explique où et quand le bouton d'enregistrement apparaîtra. */
     else h += '<div class="mt-vide"><span class="mt-ico" aria-hidden="true"><span></span></span><span>Quand le Conservatoire vous demande un Tari (après une absence, ou pour une partie à retravailler), il apparaît ici avec un bouton rouge <b>«&nbsp;Enregistrer mon Tari&nbsp;»</b>. Vous chantez en lisant le texte du khassida, vous vous réécoutez, puis vous l’envoyez.</span></div>';
     if (faits.length) h += '<h3 class="group">Déjà maîtrisés</h3><ul class="taris-faits">' + faits.map(function (x) {
@@ -3991,6 +3997,23 @@ h3.group.seances-mois { margin-top: 6px; }
         (plageTari(x.td) ? " · " + esc(plageTari(x.td)) : "") + ' <span class="muted">· demandé ' + esc(quandDemande(x.s)) + "</span></span></li>";
     }).join("") + "</ul>";
     return h + "</section>";
+  }
+  /* Sous un Tari demandé : où en est le reste du kourel (qui a envoyé, maîtrisé, à retravailler), pour motiver.
+     Ceux qui n'ont pas encore envoyé ne sont jamais nommés : seulement leur nombre. */
+  function ligneKourelTari(x) {
+    var autres = tarisDemandes().filter(function (y) { return y.s.id === x.s.id && y.mid !== x.mid; });
+    if (!autres.length) return "";
+    var noms = function (etats) { return autres.filter(function (y) { return etats.indexOf(y.etat) > -1; }).map(function (y) { return y.m.nom; }).sort(function (a, b) { return a.localeCompare(b, "fr"); }); };
+    var mait = noms(["maitrise"]), retr = noms(["retravailler"]), env = noms(["envoye", "ecoute"]);
+    var moiEnv = x.etat !== "attendu" ? 1 : 0, total = autres.length + 1, nbEnv = mait.length + retr.length + env.length + moiEnv;
+    var lignes = [];
+    if (mait.length) lignes.push('<span class="mk-l"><span class="pill p">✓ Maîtrisé</span> ' + esc(mait.join(", ")) + "</span>");
+    if (env.length) lignes.push('<span class="mk-l"><span class="pill e">Envoyé</span> ' + esc(env.join(", ")) + "</span>");
+    if (retr.length) lignes.push('<span class="mk-l"><span class="pill r">↻ À retravailler</span> ' + esc(retr.join(", ")) + "</span>");
+    var tete = nbEnv - moiEnv === 0
+      ? "Personne d’autre ne l’a encore envoyé" + (moiEnv ? " : vous êtes le premier, bravo !" : " : soyez le premier !")
+      : nbEnv + " sur " + total + " l’ont déjà envoyé" + (moiEnv ? ", vous compris." : (x.etat === "attendu" ? " : à vous !" : "."));
+    return '<div class="mt-kourel"><b>👥 Votre kourel · ' + esc(tete) + "</b>" + lignes.join("") + "</div>";
   }
   function carteMonTari(x) {
     var d = x.d, e = dernierEnvoi(d), att = enAttente(d), p = priseActive(att), td = x.td, kh = khassidas[td.khassida];
