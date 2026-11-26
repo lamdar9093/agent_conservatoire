@@ -78,11 +78,16 @@ const ffmpegDispo = await new Promise((ok) => {
 /* Chaque page de khassida du code porte sa fiche (plateforme/khassidas/<dossier>/fiche.json).
    Au démarrage, une fiche absente de la liste y est ajoutée ; pour une fiche déjà présente, seuls les champs
    manquants sont complétés (ex. le kourel) : ce qui a été modifié sur la plateforme n'est jamais écrasé. */
+const khassidasAuDepart = (await stock.lireCollection("khassidas")).length, khassidasNouveaux = [];
 for (const dossier of await fsp.readdir(path.join(PLATEFORME, "khassidas")).catch(() => [])) {
   try {
     const { id, ...fiche } = JSON.parse(await fsp.readFile(path.join(PLATEFORME, "khassidas", dossier, "fiche.json"), "utf8"));
     const actuel = id ? await stock.lireDoc("khassidas", id) : null;
-    if (id && !actuel) { await stock.ecrireDoc("khassidas", id, fiche); console.log("Khassida ajouté à la liste : " + fiche.titre); }
+    if (id && !actuel) {
+      await stock.ecrireDoc("khassidas", id, { ...fiche, ajouteLe: Date.now() }); console.log("Khassida ajouté à la liste : " + fiche.titre);
+      // Annoncé aux membres (pas lors de la toute première installation, où tout le répertoire arrive d'un coup).
+      if (khassidasAuDepart) khassidasNouveaux.push(id);
+    }
     else if (actuel) {
       const manque = Object.fromEntries(Object.entries(fiche).filter(([k]) => actuel[k] === undefined));
       if (Object.keys(manque).length) await stock.fusionnerDoc("khassidas", id, manque);
@@ -91,6 +96,42 @@ for (const dossier of await fsp.readdir(path.join(PLATEFORME, "khassidas")).catc
 }
 const comptes = creerComptes(stock);
 const notifs = await creerNotifications(stock, { sujet: PUBLIC_URL.startsWith("https://") ? PUBLIC_URL : "https://conservatoire.mthbichri.ca" });
+
+/* Nouveau khassida : chaque membre qui peut le voir (son kourel ; Conservatoire, Discipline et admin : tous) est prévenu,
+   une minute après l'ajout (le temps de corriger une faute de frappe) ; plusieurs ajouts rapprochés partent ensemble. */
+const khassidasAAnnoncer = new Map(); let minuterieKhassidas = null;
+function annoncerKhassida(id, par) {
+  khassidasAAnnoncer.set(id, par || "");
+  clearTimeout(minuterieKhassidas);
+  minuterieKhassidas = setTimeout(() => envoyerAnnoncesKhassidas().catch((e) => console.error(e)), Number(process.env.DELAI_NOTIF_KHASSIDA || 60000));
+}
+async function envoyerAnnoncesKhassidas() {
+  const lot = [...khassidasAAnnoncer]; khassidasAAnnoncer.clear();
+  const membres = new Map((await stock.lireCollection("membres")).map((d) => [d.id, d.data]));
+  const pour = new Map();   // membre -> khassidas qu'il peut voir
+  const khs = [];
+  for (const [id, par] of lot) { const kh = await stock.lireDoc("khassidas", id); if (kh) khs.push({ id, par, kh }); }
+  for (const c of await stock.lireCollection("_comptes")) {
+    const m = membres.get(c.id); if (!m || !actif(m)) continue;
+    const tout = c.data.admin || c.data.conservatoire || c.data.discipline;
+    for (const x of khs) {
+      const ks = KOURELS[x.kh.kourel];
+      if (c.id !== x.par && (tout || !ks || ks.some((k) => m[k]))) (pour.get(c.id) || pour.set(c.id, []).get(c.id)).push(x);
+    }
+  }
+  const groupes = new Map();   // même liste de khassidas -> mêmes destinataires
+  for (const [mid, l] of pour) { const cle = l.map((x) => x.id).join(","); (groupes.get(cle) || groupes.set(cle, { l, membres: [] }).get(cle)).membres.push(mid); }
+  for (const { l, membres: dest } of groupes.values()) {
+    const un = l.length === 1;
+    await notifs.notifier(dest, {
+      titre: un ? "📖 Nouveau khassida" : "📖 " + l.length + " nouveaux khassidas",
+      texte: un ? l[0].kh.titre + (l[0].kh.ere ? " (ère " + l[0].kh.ere + ")" : "") + (l[0].kh.page ? " est sur la plateforme : texte, phonétique, traduction et audio." : " a été ajouté au répertoire.")
+        : l.map((x) => x.kh.titre).join(", ") + " ont été ajoutés au répertoire.",
+      url: un ? "/#khassida/" + encodeURIComponent(l[0].id) : "/#khassidas"
+    });
+  }
+}
+if (khassidasNouveaux.length) for (const id of khassidasNouveaux) annoncerKhassida(id, "");
 
 /* ---------- Notifications : qui prévenir, et le chiffre de la pastille sur l'icône ---------- */
 async function lecteursTaris(sauf) {
@@ -932,7 +973,10 @@ async function api(req, res, parts, sess) {
   }
   const avantSeance = col === "seances" && req.method !== "DELETE" ? await stock.lireDoc("seances", id) : null;
   const apresSeance = async () => { if (col !== "seances") return; planifierTari(id, avantSeance); planifierSanctions(id, avantSeance, await stock.lireDoc("seances", id)); };
-  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); await apresSeance(); return json(res, 200, { ok: true }); }
+  // Nouveau khassida ajouté depuis Réglages : daté, puis annoncé aux membres.
+  const nouveauKh = col === "khassidas" && req.method === "PUT" && id && !(await stock.lireDoc("khassidas", id));
+  if (nouveauKh) corps.ajouteLe = Date.now();
+  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); await apresSeance(); if (nouveauKh) annoncerKhassida(id, sess.membre); return json(res, 200, { ok: true }); }
   if (req.method === "PATCH") {
     if (!(await stock.fusionnerDoc(col, id, corps))) return json(res, 404, { code: "not_found" });
     prevenir(col); await apresMembre(col, id); await apresSeance(); return json(res, 200, { ok: true });

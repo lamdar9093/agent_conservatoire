@@ -736,6 +736,17 @@ a.tq-item:hover { border-color: var(--accent); }
 /* Tari d'une séance : quoi, où en est chacun, pour quand */
 .tari-quoi { margin: 8px 0 0 !important; font-size: 15px; }
 .ere-champ { display: grid; gap: 6px; flex: 1 1 100%; }
+/* Nouveau khassida : bandeau (Mon espace, Khassidas) et pastille sur la carte */
+.kh-neuf { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--accent); border-radius: 14px; background: var(--accent-soft); }
+.kh-neuf-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kh-neuf-tete b { font-size: 15px; }
+.kh-neuf-x { border: 0; background: transparent; color: var(--ink-soft); font-size: 16px; padding: 4px 6px; cursor: pointer; }
+.kh-neuf-ligne { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--paper); color: var(--ink); text-decoration: none; }
+.kh-neuf-ligne > span:nth-child(2), .kh-neuf-ligne > span:first-child:not(.kh-neuf-ar) { flex: 1; min-width: 0; display: grid; }
+.kh-neuf-ligne small { color: var(--ink-soft); font-size: 12.5px; }
+.kh-neuf-ar { font-family: var(--font-ar, serif); font-size: 18px; color: var(--accent); flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kh-neuf-go { flex: none; font-size: 13px; font-weight: 600; color: var(--accent); }
+.khc-neuf { display: inline-block; vertical-align: middle; margin-left: 4px; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 11.5px; font-weight: 600; }
 .ere-lbl small { font-weight: 400; color: var(--ink-soft); }
 .ere-choix { display: flex; flex-wrap: wrap; gap: 6px; }
 .tari-barre { height: 6px; margin-top: 10px; border-radius: 3px; background: var(--rule); overflow: hidden; }
@@ -2412,6 +2423,8 @@ h3.group.seances-mois { margin-top: 6px; }
     var moi = membres[moiCourant];
     /* Mes Taris en premier : c'est l'action à faire (enregistrer), juste sous le nom du membre. */
     if (moi && tarisApi) html += blocMesTaris(moi);
+    /* Nouveau khassida ajouté : on le voit dès la connexion, jusqu'à l'avoir ouvert. */
+    html += banniereNouveauxKh();
     /* Notifications : mises en avant tant qu'elles ne sont pas activées ; ensuite, une ligne dans « Mon compte ». */
     if (!notifsEtat.abonne) html += blocNotifs();
     /* Messages reçus (Conservatoire, admin) : en haut s'il y a du nouveau, sinon avec la boîte à idées en bas. */
@@ -2556,12 +2569,35 @@ h3.group.seances-mois { margin-top: 6px; }
   var GROUPES_KH = [["k1", "Kourel 1"], ["k2", "Kourel 2"], ["tous", "Les deux kourels"]];
   function groupeKh(k) { return k.kourel === "k1" ? "k1" : k.kourel === "k2" ? "k2" : "tous"; }
   var filtreKh = (function () { try { return localStorage.getItem("kh-filtre") || "tout"; } catch (e) { return "tout"; } })();
+  /* Nouveaux khassidas (ajoutés il y a moins de 3 semaines) que ce membre n'a pas encore ouverts : bandeau et pastille « Nouveau ».
+     « Vu » est gardé sur le compte (valable sur tous ses appareils), comme les nouveautés. */
+  function cleKhVu(id) { return ("kh-" + String(id)).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40); }
+  function khNouveau(k) { return !!(k && k.ajouteLe && monCompte && Date.now() - k.ajouteLe < 21 * 86400000 && !nouveauteVue(cleKhVu(k.id))); }
+  function khassidasNouveaux() { return Object.keys(khassidas).map(function (k) { return khassidas[k]; }).filter(khNouveau).sort(function (a, b) { return b.ajouteLe - a.ajouteLe; }); }
+  function marquerKhVu(id) {
+    var cle = cleKhVu(id);
+    if (!monCompte || nouveauteVue(cle)) return;
+    monCompte.vu = (monCompte.vu || []).concat([cle]);
+    if (utilisateur && typeof utilisateur.vu === "function") utilisateur.vu(cle).catch(function () {});
+  }
+  function banniereNouveauxKh() {
+    var l = khassidasNouveaux();
+    if (!l.length) return "";
+    return '<section class="kh-neuf" aria-label="Nouveaux khassidas"><div class="kh-neuf-tete"><b>📖 ' + (l.length > 1 ? l.length + " nouveaux khassidas" : "Nouveau khassida") + "</b>" +
+      '<button type="button" class="kh-neuf-x" data-kh-neuf-fermer aria-label="Fermer">✕</button></div>' +
+      l.slice(0, 4).map(function (k) {
+        var lienK = pageKhassida(k) || "#khassida/" + encodeURIComponent(k.id);
+        return '<a class="kh-neuf-ligne" data-kh-vu="' + esc(k.id) + '" href="' + esc(lienK) + '"' + (k.page || !k.lien ? "" : ' target="_blank" rel="noopener"') + ">" + (k.arabe ? '<span class="kh-neuf-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
+          "<span><b>" + esc(k.titre) + "</b><small>" + esc([k.vers ? k.vers + " beuyites" : "", k.ere ? "ère " + k.ere : "", ({ k1: "Kourel 1", k2: "Kourel 2", k1k2: "Kourels 1 et 2" })[k.kourel] || ""].filter(Boolean).join(" · ")) + "</small></span>" +
+          '<span class="kh-neuf-go" aria-hidden="true">' + (k.page || k.lien ? "Ouvrir ›" : "Page à venir ›") + "</span></a>";
+      }).join("") + "</section>";
+  }
   function carteKh(k) {
     var href = pageKhassida(k), interne = !!k.page;
     return '<div class="khc' + (k.enRepetition ? " en-rep" : "") + '">' +
-      '<a class="khc-lien" href="' + esc(href || "#khassidas") + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ' aria-label="Ouvrir ' + esc(k.titre) + '"></a>' +
+      '<a class="khc-lien"' + (khNouveau(k) ? ' data-kh-vu="' + esc(k.id) + '"' : "") + ' href="' + esc(href || "#khassida/" + encodeURIComponent(k.id)) + '"' + (interne || !href ? "" : ' target="_blank" rel="noopener"') + ' aria-label="Ouvrir ' + esc(k.titre) + '"></a>' +
       (k.arabe ? '<span class="khc-ar" lang="ar" dir="rtl">' + esc(k.arabe) + "</span>" : "") +
-      '<b class="khc-titre">' + esc(k.titre) + "</b>" +
+      '<b class="khc-titre">' + esc(k.titre) + (khNouveau(k) ? ' <span class="khc-neuf">Nouveau</span>' : "") + "</b>" +
       '<span class="khc-meta">' + [k.vers ? k.vers + " beuyites" : "", k.ere ? "ère " + esc(k.ere) : (interne ? "texte et audio" : "")].filter(Boolean).join(" · ") + "</span>" +
       badgesTarisKh(k) +
       '<span class="khc-pied">' +
@@ -2570,6 +2606,11 @@ h3.group.seances-mois { margin-top: 6px; }
           (k.enRepetition ? "Retirer" : "Marquer en répétition") + "</button>" : "") +
       "</span></div>";
   }
+  /* Toucher un nouveau khassida (bandeau ou carte) : il est vu, même s'il n'a pas encore de page ou s'ouvre ailleurs. */
+  app.addEventListener("click", function (e) {
+    var a = e.target.closest("[data-kh-vu]");
+    if (a) { marquerKhVu(a.getAttribute("data-kh-vu")); if (a.getAttribute("href").indexOf("#") !== 0) setTimeout(afficher, 0); }
+  });
   function vueRepertoire() {
     var tous = Object.keys(khassidas).map(function (k) { return khassidas[k]; });
     var parG = {};
@@ -2594,10 +2635,11 @@ h3.group.seances-mois { margin-top: 6px; }
     });
     if (peutSuivi && tous.length) html += '<p class="muted kh-aide">« Marquer en répétition » : le khassida que le kourel travaille en ce moment passe en tête de son kourel, pour tous les membres.</p>';
     if (peutModifier) html += '<p class="muted kh-aide">Pour ajouter un khassida ou changer son kourel, allez dans <a href="#reglages/khassidas">Réglages › Khassidas</a>.</p>';
-    app.innerHTML = entreeTaris() + html + "</section>";
+    app.innerHTML = banniereNouveauxKh() + entreeTaris() + html + "</section>";
   }
   function vueLecture() {
     var kh = lecture && khassidas[lecture.id];
+    if (kh) marquerKhVu(kh.id);
     if (!kh || !kh.page) {
       app.innerHTML = '<div class="wrap" style="padding-block:20px"><div class="empty">Ce khassida n’a pas encore de page d’étude sur la plateforme. <a href="#khassidas">Retour aux khassidas</a></div></div>';
       return;
@@ -2674,7 +2716,7 @@ h3.group.seances-mois { margin-top: 6px; }
         titre: titre, arabe: document.getElementById("k-ar").value.trim(),
         vers: parseInt(document.getElementById("k-vers").value, 10) || null, lien: document.getElementById("k-lien").value.trim(),
         kourel: document.getElementById("k-kourel").value, ere: document.getElementById("k-ere").value.trim()
-      }).then(function () { toast(titre + " ajouté à la liste."); }, echec);
+      }).then(function () { toast(titre + " ajouté : les membres concernés seront prévenus dans une minute."); }, echec);
     });
   }
 
@@ -2943,6 +2985,7 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     if (b.dataset.accesPlus) { accesOuvert = accesOuvert && accesOuvert.id === b.dataset.accesPlus && accesOuvert.plus ? null : { id: b.dataset.accesPlus, plus: true }; afficher(); return; }
     if (b.dataset.accesConfirmer) { accesOuvert = { id: b.dataset.accesConfirmer, plus: true, confirmer: true }; afficher(); return; }
+    if (b.hasAttribute("data-kh-neuf-fermer")) { khassidasNouveaux().forEach(function (k) { marquerKhVu(k.id); }); afficher(); return; }
     /* Ère touchée : elle remplit le champ (toucher la même la retire). */
     if (b.dataset.erePour) {
       var ch = document.getElementById(b.dataset.erePour);
