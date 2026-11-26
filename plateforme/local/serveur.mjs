@@ -277,6 +277,7 @@ function formatAudio(b) {
   if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return "webm";
   if (b.toString("latin1", 4, 8) === "ftyp") return "m4a";
   if (b.toString("latin1", 0, 4) === "OggS") return "ogg";
+  if (b.toString("latin1", 0, 5) === "#!AMR") return "amr";   // vieux enregistreurs Android : converti en m4a, sinon refusé
   if (b.toString("latin1", 0, 4) === "RIFF" && b.toString("latin1", 8, 12) === "WAVE") return "wav";
   if (b.toString("latin1", 0, 3) === "ID3") return "mp3";
   if (b[0] === 0xff && (b[1] & 0xe0) === 0xe0) return (b[1] & 0x06) === 0 ? "aac" : "mp3";
@@ -323,7 +324,7 @@ async function enregistrerAudio(req, prefixe) {
   const fmt = formatAudio(recu.tete);
   if (recu.taille < 1000 || !fmt) {
     await fsp.rm(tmp, { force: true });
-    return { erreur: 415, code: "format", message: recu.taille < 1000 ? "L’enregistrement est vide : recommencez." : "Ce fichier n’est pas un audio reconnu (m4a, mp3, webm, ogg ou wav)." };
+    return { erreur: 415, code: "format", message: recu.taille < 1000 ? "L’enregistrement est vide : recommencez." : "Ce fichier n’est pas un audio reconnu (m4a, mp3, ogg, wav, 3gp ou amr)." };
   }
   const base = prefixe + "--" + crypto.randomBytes(16).toString("hex");
   let fichier = base + "." + fmt, taille = recu.taille;
@@ -333,6 +334,8 @@ async function enregistrerAudio(req, prefixe) {
     await fsp.rm(tmp, { force: true });
   } else {
     if (ffmpegDispo) await fsp.rm(path.join(AUDIOS, base + ".m4a"), { force: true });
+    // AMR : aucun navigateur ne sait le lire ; sans conversion possible, on le refuse.
+    if (fmt === "amr") { await fsp.rm(tmp, { force: true }); return { erreur: 415, code: "format", message: "Ce format d’enregistrement (AMR) n’a pas pu être converti : enregistrez directement sur la plateforme." }; }
     await fsp.rename(tmp, path.join(AUDIOS, fichier));
   }
   return { fichier, taille };

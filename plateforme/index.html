@@ -736,6 +736,11 @@ a.tq-item:hover { border-color: var(--accent); }
 /* Tari d'une séance : quoi, où en est chacun, pour quand */
 .tari-quoi { margin: 8px 0 0 !important; font-size: 15px; }
 .ere-champ { display: grid; gap: 6px; flex: 1 1 100%; }
+/* Aide : envoyer un enregistrement fait avec l'appli du téléphone */
+.dk-aide { margin-top: 8px; font-size: 13px; color: var(--ink-soft); }
+.dk-aide summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+.dk-aide ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; line-height: 1.45; }
+.dk-aide b { color: var(--ink); font-weight: 600; }
 /* Mes Taris : où en est le reste du kourel */
 .mt-bloc { display: grid; gap: 0; }
 .mt-kourel { display: grid; gap: 6px; margin: -4px 0 0; padding: 12px 14px 10px; border: 1px solid var(--rule); border-top: 0; border-radius: 0 0 14px 14px; background: var(--paper); font-size: 13.5px; line-height: 1.45; }
@@ -4103,7 +4108,7 @@ h3.group.seances-mois { margin-top: 6px; }
         '<div class="envoi-barre"><span id="studio-envoi-barre" style="width:' + pc + '%"></span></div>';
     } else if (st && st.etat === "refus") {
       c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">🎙️</span><span><b>' + esc(st.erreur === "NotFoundError" ? "Aucun micro trouvé" : st.erreur === "NonSupporte" ? "Enregistrement impossible ici" : "Le micro est bloqué") + "</b><small>" + aideMicro(st.erreur) + "</small></span></div>" +
-        '<div class="dk-actions"><button type="button" class="btn" data-studio="fichier">Envoyer un fichier audio</button>' + (st.erreur === "NonSupporte" ? "" : '<button type="button" class="btn primary" data-studio="enregistrer">Réessayer</button>') + "</div>";
+        '<div class="dk-actions"><button type="button" class="btn" data-studio="fichier">Envoyer un fichier audio</button>' + (st.erreur === "NonSupporte" ? "" : '<button type="button" class="btn primary" data-studio="enregistrer">Réessayer</button>') + "</div>" + aideFichierHTML();
     } else if (etat === "maitrise") {
       c = '<div class="dk-etat"><span class="dk-etat-ico ok" aria-hidden="true">✓</span><span><b>Tari maîtrisé</b><small>' +
         (e && e.verdict === "maitrise" ? "Validé par " + esc(e.parNom || "le Conservatoire") + ", " + esc(ilYa(e.corrigeLe)) : "Validé par le Conservatoire") + "</small></span></div>" +
@@ -4121,7 +4126,7 @@ h3.group.seances-mois { margin-top: 6px; }
         (depasse ? "Échéance dépassée : à maîtriser au plus vite." : "À maîtriser avant la répétition du " + esc(jourEcheance(ech)) + ".") + "</span></span></div>" +
         '<div class="dk-plus">' + (etat === "attendu" ? '<ol class="dk-etapes">' + (page ? "<li>Écoutez l’audio de référence avec le lecteur de la page.</li>" : "") +
           "<li>Touchez le bouton rouge et chantez " + esc(plageTari(td) || "ce qui est demandé") + ".</li><li>Réécoutez-vous, puis envoyez : le Conservatoire vous répond ici.</li></ol>" : "") +
-        '<div class="dk-liens"><button type="button" class="linkish" data-studio="fichier">Ou envoyer un fichier audio déjà enregistré</button></div></div>';
+        '<div class="dk-liens"><button type="button" class="linkish" data-studio="fichier">Ou envoyer un fichier audio déjà enregistré</button></div>' + aideFichierHTML() + "</div>";
     }
     // Envois déjà corrigés, du plus récent au plus ancien (le dernier « maîtrisé » est déjà affiché au-dessus).
     var hist = envoisDe(d).filter(function (x) { return x.verdict && !(etat === "maitrise" && x === e); }).reverse();
@@ -4450,10 +4455,19 @@ h3.group.seances-mois { margin-top: 6px; }
     });
   }
   /* Fichier déjà enregistré (Dictaphone, note vocale) : on le réécoute avant de l'envoyer. */
+  /* Enregistrement fait avec l'appli du téléphone : où le retrouver (iPhone : le Dictaphone n'apparaît pas dans le choix de fichiers). */
+  function aideFichierHTML() {
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var android = /Android/i.test(navigator.userAgent);
+    var iphone = "<li><b>iPhone (Dictaphone)</b> : ouvrez l’enregistrement, touchez <b>…</b> puis <b>Enregistrer dans Fichiers</b> (« Sur mon iPhone »). Revenez ici, touchez « envoyer un fichier audio », puis <b>Parcourir</b> et choisissez-le.</li>";
+    var andr = "<li><b>Android</b> : touchez « envoyer un fichier audio » ; choisissez <b>Audio</b> ou <b>Enregistrements</b> (Recordings) et touchez votre enregistrement.</li>";
+    return '<details class="dk-aide"><summary>Enregistré avec l’appli de votre téléphone ? Comment l’envoyer</summary><ul>' +
+      (android && !ios ? andr + iphone : ios ? iphone + andr : iphone + andr) + "</ul></details>";
+  }
   function choisirFichier(sid) {
     if (!champFichier) {
       champFichier = document.createElement("input");
-      champFichier.type = "file"; champFichier.accept = "audio/*,.m4a,.mp3,.opus,.ogg,.wav,.webm,.aac"; champFichier.hidden = true;
+      champFichier.type = "file"; champFichier.accept = "audio/*,.m4a,.mp3,.opus,.ogg,.wav,.webm,.aac,.3gp,.amr"; champFichier.hidden = true;
       document.body.appendChild(champFichier);
       champFichier.addEventListener("change", function () {
         var f = champFichier.files && champFichier.files[0], cible = champFichier.dataset.sid;
