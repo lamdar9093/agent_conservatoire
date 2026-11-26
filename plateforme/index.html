@@ -176,7 +176,8 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
 .seg button[aria-pressed="true"]:not([data-v]) { background: var(--ink); color: var(--paper); }
 @media (max-width: 560px) {
   .person { flex-wrap: wrap; padding: 10px; }
-  .person .name { flex: 1 1 100%; }
+  .person .name { flex: 1 1 0; }
+  .detail-head .counts { flex: 1 1 100%; justify-content: flex-start; }
   .person .seg { flex: 1 1 100%; display: flex; }
   .person .seg button { flex: 1; padding: 10px 6px; font-size: 14px; }
   .person .toggle.tari { flex: 1 1 100%; padding: 8px; }
@@ -795,11 +796,34 @@ body.vue-membre.vue-discipline .bottom-nav a[data-view="seances"], body.vue-memb
 .appel-jour.fait { background: var(--surface); color: var(--ink); border: 1px solid var(--accent); box-shadow: none; }
 .appel-ico { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; background: rgba(255, 255, 255, 0.16); }
 .appel-jour.fait .appel-ico { background: var(--accent-soft); }
-.appel-filtres { display: flex; gap: 6px; overflow-x: auto; margin-top: 12px; padding-bottom: 2px; scrollbar-width: none; }
+.appel-filtres { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .acces-filtres { flex-wrap: wrap; overflow: visible; margin-top: 10px; }
 .appel-filtres::-webkit-scrollbar { display: none; }
 .appel-filtres .toggle { flex: none; padding: 7px 12px; font-size: 13.5px; }
 h3.group.seances-mois { margin-top: 6px; }
+/* Répétitions : hiérarchie (l'appel d'abord), prochaines répétitions compactes, historique sous un titre */
+.tari-banniere.doux { background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent); box-shadow: none; }
+.tari-banniere.doux .tb-ico { background: var(--surface); }
+.tari-banniere.doux small { color: var(--ink-soft); opacity: 1; }
+.tari-banniere.doux .tb-go { color: var(--accent); }
+.seances-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; }
+.seances-tete h2 { margin: 0; font-size: 19px; }
+.seances-tete .muted { flex: 1 1 100%; margin: 0; font-size: 13.5px; }
+.seance .when { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.seance .when-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.rap-heure { font-size: 13px; color: var(--ink-soft); }
+.rap-saut { flex: 1 1 100%; height: 0; }
+.rap-when .rap-lieu { flex: 0 1 auto; }
+.rap-prog { font-size: 13px; color: var(--ink-soft); }
+.rap-row > .dz-date { align-self: flex-start; }
+.rap-row.annulee > .dz-date { opacity: 0.5; }
+.rap-when .rap-prog { flex: 1 1 100%; }
+.rap-plus { margin-top: 8px; }
+.horaire-inline { width: 7.5em; padding: 2px 7px; border: 1px dashed var(--rule); border-radius: 6px; background: transparent; color: var(--ink-soft); font: inherit; font-size: 13.5px; vertical-align: middle; }
+.horaire-inline:hover { border-color: var(--ink-soft); }
+.horaire-inline:focus { border-style: solid; border-color: var(--accent); color: var(--ink); outline: none; }
+.horaire-inline[readonly] { border-color: transparent; cursor: default; }
+.non-requis { margin: 10px 2px 0; font-size: 13px; color: var(--ink-soft); }
 /* Mon espace : en-tête compact et « Mon compte » en bas */
 .moi-tete { display: grid; gap: 12px; }
 .moi-id { display: flex; align-items: center; gap: 12px; }
@@ -935,6 +959,7 @@ h3.group.seances-mois { margin-top: 6px; }
   };
   var membres = {}, seances = [], charge = { m: false, s: false, r: false };
   var utilisateur = null, monCompte = null, comptesApi = null, comptesEtat = null, accesOuvert = null;
+  var toutesRep = false;
   var vue = "seances", seanceOuverte = null, confirmerSuppression = false, filtreAppel = "tous", formSeance = false, toutesSeances = false, seanceAttendue = null;
   var lecture = null;
   var dahiraOuvert = null, apercuDahira = false, rappelOuvert = null, programmes = {}, editRep = null, discOuvert = null, supprRep = null;
@@ -1080,6 +1105,7 @@ h3.group.seances-mois { margin-top: 6px; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function asDate(iso) { return new Date(iso + "T12:00:00"); }
+  function jourSansAn(iso) { var s = asDate(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); return s.charAt(0).toUpperCase() + s.slice(1); }
   function jourLong(iso) { var s = asDate(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); return s.charAt(0).toUpperCase() + s.slice(1); }
   function moisLabel(m) { var s = asDate(m + "-15").toLocaleDateString("fr-FR", { month: "long", year: "numeric" }); return s.charAt(0).toUpperCase() + s.slice(1); }
   var HORAIRE = { k1: "18h - 21h", k2: "18h - 21h", rg: "12h - 16h" };
@@ -1108,12 +1134,11 @@ h3.group.seances-mois { margin-top: 6px; }
     (s.participants || []).forEach(function (id) { if (!requis(s, id)) return; var v = (s.statuts || {})[id] || "P"; c[v] = (c[v] || 0) + 1; if (aPrevenu(s, id)) c.E++; if (retardPrevenu(s, id)) c.RP++; });
     return c;
   }
-  function countsHTML(c) {
-    var sans = c.A - (c.E || 0);
+  /* Compteurs d'une séance : absents présentés comme les retards (« 5 absents (1 a prévenu) ») ; court = liste des séances. */
+  function countsHTML(c, court) {
     return '<span class="pill p">' + c.P + " présent" + (c.P > 1 ? "s" : "") + "</span>" +
-      (c.R ? '<span class="pill r">' + c.R + " retard" + (c.R > 1 ? "s" : "") + (c.RP ? " (" + txtPrevenu(c.RP) + ")" : "") + "</span>" : "") +
-      (sans ? '<span class="pill a">' + sans + " absent" + (sans > 1 ? "s" : "") + "</span>" : "") +
-      (c.E ? '<span class="pill e">' + txtPrevenu(c.E) + "</span>" : "");
+      (c.R ? '<span class="pill r">' + c.R + " retard" + (c.R > 1 ? "s" : "") + (c.RP && !court ? " (" + txtPrevenu(c.RP) + ")" : "") + "</span>" : "") +
+      (c.A ? '<span class="pill a">' + c.A + " absent" + (c.A > 1 ? "s" : "") + (c.E && !court ? " (" + txtPrevenu(c.E) + ")" : "") + "</span>" : "");
   }
 
   /* ---------- Séances ---------- */
@@ -1121,7 +1146,9 @@ h3.group.seances-mois { margin-top: 6px; }
     if (rappelOuvert) return vueRappel(rappelOuvert);
     if (dahiraOuvert) return vueDahira(dahiraOuvert);
     if (seanceOuverte) return vueSeance(seances.filter(function (s) { return s.id === seanceOuverte; })[0]);
-    var html = banniereTaris();
+    /* Ordre (choix d'expérience) : l'appel du jour d'abord, puis les Taris à écouter, les prochaines répétitions (admin),
+       et enfin l'historique des séances, où se trouve aussi « + Séance d'une autre date » (rare : rattraper un appel oublié). */
+    var html = "", formHTML = "";
     if (peutSuivi) {
       var d = today();
       /* Jour de répétition (aujourd'hui, ou hier si l'appel n'a pas été fait) : l'appel en un toucher. */
@@ -1135,8 +1162,8 @@ h3.group.seances-mois { margin-top: 6px; }
             : '<button type="button" class="appel-jour" data-appel-jour="' + esc(jour + "|" + r.type + "|" + r.horaire) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><b>Faire l’appel · ' + esc(TYPES[r.type]) + "</b><small>" + esc(quand) + (r.horaire ? " · " + esc(r.horaire) : "") + " · tout le monde présent, touchez seulement les absents et retards</small></span><span aria-hidden=\"true\">›</span></button>";
         });
       });
-      html += !formSeance ? '<div><button type="button" class="btn ghost" data-action="seance-form">+ Nouvelle séance (autre date)</button></div>' :
-        '<section class="panel"><div class="detail-head"><h2>Nouvelle séance</h2><button type="button" class="btn ghost small" data-action="seance-form">Fermer</button></div><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
+      formHTML = !formSeance ? "" :
+        '<section class="panel"><div class="detail-head"><h2>Séance d’une autre date</h2><button type="button" class="btn ghost small" data-action="seance-form">Fermer</button></div><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
         '<form class="row" id="f-seance" style="margin-top:12px">' +
         '<label class="field">Date<input type="date" id="s-date" value="' + d + '" required></label>' +
         '<label class="field">Répétition<select id="s-type">' +
@@ -1145,13 +1172,18 @@ h3.group.seances-mois { margin-top: 6px; }
         '<label class="field">Horaire<input type="text" id="s-heure" value="' + esc(HORAIRE[typeDuJour(d)]) + '" placeholder="18h - 21h" style="width:120px"></label>' +
         '<button class="btn primary" type="submit">Créer la séance</button></form></section>';
     }
-    /* Prochaines répétitions : rappel WhatsApp, avec modification, annulation et ajout exceptionnel */
+    html += banniereTaris(true);
+    /* Prochaines répétitions : rappel WhatsApp, avec modification, annulation et ajout exceptionnel.
+       Seul le prochain rappel à préparer est mis en avant ; au-delà des deux prochaines, la liste est repliée. */
     if (peutModifier) {
       var pr = prochainesRepetitions();
-      html += '<section class="panel"><h2>Prochaines répétitions</h2><p class="muted">Préparez le rappel à envoyer dans le groupe. Une répétition change exceptionnellement ? Touchez « Modifier ».</p><div class="list" style="margin-top:10px">' +
-        pr.map(function (r) {
+      var idPrim = (pr.filter(function (r) { var pg = progDe(r.id); return !pg.annulee && !pg.envoye; })[0] || {}).id;
+      var prVus = toutesRep || (editRep && editRep !== "new" && pr.slice(2).some(function (r) { return r.id === editRep; })) ? pr : pr.slice(0, 2);
+      html += '<section class="panel"><h2>Prochaines répétitions</h2><p class="muted">À venir : préparez le rappel WhatsApp de chaque répétition. Un changement exceptionnel ? Touchez « Modifier ».</p><div class="list" style="margin-top:10px">' +
+        prVus.map(function (r) {
           var prog = progDe(r.id), kh = khassidas[prog.khassida];
-          var when = '<span class="rap-when"><b>' + esc(jourCourt(r.date)) + '</b> <span class="chip">' + esc(TYPES[r.type]) + "</span>" +
+          /* Case date d'agenda (comme dans Programme) : on distingue d'un coup d'œil ce qui est à venir de l'historique en bas. */
+          var when = dateBloc(r.date) + '<span class="rap-when"><span class="chip">' + esc(TYPES[r.type]) + "</span>" +
             (prog.exceptionnelle && !prog.annulee ? ' <span class="pill e">Date exceptionnelle</span>' : "");
           /* Adresse toujours visible ; mise en évidence seulement si le lieu change exceptionnellement. */
           var lieuR = prog.lieu ? (lieuInhabituel(prog) ? '<span class="rap-lieu inhabituel">⚠️ Exceptionnellement : ' + esc(prog.lieu) + "</span>" : '<span class="rap-lieu">📍 ' + esc(prog.lieu) + "</span>") : "";
@@ -1163,8 +1195,10 @@ h3.group.seances-mois { margin-top: 6px; }
                 ? '<button type="button" class="btn small danger" data-action="rep-suppr-ok" data-id="' + esc(r.id) + '">Oui, supprimer</button><button type="button" class="btn small ghost" data-action="rep-suppr-non">Non</button>'
                 : '<button type="button" class="btn small ghost" data-action="rep-suppr" data-id="' + esc(r.id) + '" title="Retirer cette date de la liste">Supprimer</button>') + "</div>";
           }
-          var h = '<div class="rap-row">' + when + '<span class="muted">' + esc(prog.horaire) + (itemsCle("rep-" + r.id, "retenu").length ? " · " + itemsCle("rep-" + r.id, "retenu").length + " khassida" + (itemsCle("rep-" + r.id, "retenu").length > 1 ? "s" : "") + " au programme" : kh ? " · " + esc(kh.titre) : "") + "</span>" + lieuR + "</span>" +
-            '<button type="button" class="btn small' + (prog.envoye ? "" : " primary") + '" data-rappel="' + esc(r.id) + '">' + (prog.envoye ? "Rappel envoyé ✓" : "Préparer le rappel") + "</button>" +
+          var nbP = itemsCle("rep-" + r.id, "retenu").length;
+          var h = '<div class="rap-row">' + when + '<span class="rap-heure">' + esc(prog.horaire) + '</span><span class="rap-saut"></span>' + lieuR +
+            (nbP ? '<span class="rap-prog">🎵 ' + nbP + " khassida" + (nbP > 1 ? "s" : "") + " au programme</span>" : kh ? '<span class="rap-prog">🎵 ' + esc(kh.titre) + "</span>" : "") + "</span>" +
+            '<button type="button" class="btn small' + (r.id === idPrim ? " primary" : "") + '" data-rappel="' + esc(r.id) + '">' + (prog.envoye ? "Rappel envoyé ✓" : "Préparer le rappel") + "</button>" +
             '<button type="button" class="btn small ghost" data-action="rep-edit" data-id="' + esc(r.id) + '">Modifier</button>';
           if (editRep === r.id) {
             h += '<div class="inline-form">' +
@@ -1183,6 +1217,7 @@ h3.group.seances-mois { margin-top: 6px; }
           }
           return h + "</div>";
         }).join("") + "</div>";
+      if (pr.length > 2) html += '<div class="rap-plus"><button type="button" class="linkish" data-action="rep-tout">' + (prVus.length < pr.length ? "Voir les " + (pr.length - prVus.length) + " suivantes" : "Voir moins") + "</button></div>";
       if (editRep === "new") {
         var dn = isoPlus(today(), 1);
         html += '<div class="inline-form" style="margin-top:10px">' +
@@ -1195,8 +1230,10 @@ h3.group.seances-mois { margin-top: 6px; }
       }
       html += "</section>";
     }
+    html += '<div class="seances-tete"><h2>Séances passées</h2>' + (peutSuivi && !formSeance ? '<button type="button" class="btn ghost small" data-action="seance-form">+ Séance d’une autre date</button>' : "") +
+      '<p class="muted">Les présences de chaque répétition, de la plus récente à la plus ancienne.</p></div>' + formHTML;
     if (!seances.length) {
-      html += '<div class="empty">Aucune séance enregistrée pour l’instant.' + (peutSuivi ? " Créez la première ci-dessus." : "") + "</div>";
+      html += '<div class="empty">Aucune séance enregistrée pour l’instant.' + (peutSuivi ? " Le jour de la répétition, touchez « Faire l’appel »." : "") + "</div>";
     } else {
       var parMois = {};
       seances.forEach(function (x) { (parMois[x.date.slice(0, 7)] = parMois[x.date.slice(0, 7)] || []).push(x); });
@@ -1205,9 +1242,9 @@ h3.group.seances-mois { margin-top: 6px; }
         var l = parMois[mo];
         return '<h3 class="group seances-mois">' + esc(moisLabel(mo)) + " · " + l.length + " séance" + (l.length > 1 ? "s" : "") + '</h3><section class="list" aria-label="Séances de ' + esc(moisLabel(mo)) + '">' + l.map(function (s) {
           var tc = tariCompte(s);
-          return '<button type="button" class="seance" data-open="' + esc(s.id) + '"><span class="when"><b>' + esc(jourLong(s.date)) + '</b><span><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
+          return '<button type="button" class="seance" data-open="' + esc(s.id) + '"><span class="when"><b>' + esc(jourSansAn(s.date)) + '</b><span class="when-chips"><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
             (tc.dus ? ' <span class="pill ' + (tc.recus === tc.dus ? "p" : "r") + '">Tari ' + tc.recus + "/" + tc.dus + "</span>" : "") + "</span></span>" +
-            '<span class="counts">' + countsHTML(compter(s)) + "</span></button>";
+            '<span class="counts">' + countsHTML(compter(s), true) + "</span></button>";
         }).join("") + "</section>";
       }).join("");
       if (mois.length > vus.length) {
@@ -1278,7 +1315,7 @@ h3.group.seances-mois { margin-top: 6px; }
     var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
       '<section class="panel"><div class="detail-head"><div><h2>' + esc(jourLong(s.date)) + '</h2><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
       (peutSuivi
-        ? ' <input type="text" class="date-inline" id="s-horaire" value="' + esc(horaireDe(s)) + '" placeholder="Horaire" aria-label="Horaire de la répétition" style="width:110px"' + (peutModifier ? "" : " readonly data-refus-seance") + '>'
+        ? ' <input type="text" class="horaire-inline" id="s-horaire" value="' + esc(horaireDe(s)) + '" placeholder="Horaire" aria-label="Horaire de la répétition" title="Horaire de la répétition"' + (peutModifier ? "" : " readonly data-refus-seance") + '>'
         : (horaireDe(s) ? ' <span class="muted">' + esc(horaireDe(s)) + "</span>" : "")) + "</div>" +
       '<div class="counts">' + countsHTML(c) + "</div></div>";
     var tc = tariCompte(s), tmode = s.tari || "aucun";
@@ -1331,7 +1368,7 @@ h3.group.seances-mois { margin-top: 6px; }
     tb += "</div>";
     html += tb;
     /* Filtres de l'appel : toute la liste pendant l'appel ; ensuite, seulement les absents, les retards ou les Taris. */
-    var compteF = { tous: noms.length, absents: 0, retards: 0, tari: 0 };
+    var compteF = { tous: noms.filter(function (p) { return requis(s, p.id); }).length, absents: 0, retards: 0, tari: 0 };
     noms.forEach(function (p) { if (!requis(s, p.id)) return; var v = choixDe(s, p.id); if (v === "A" || v === "E") compteF.absents++; if (v === "R") compteF.retards++; if (tariConcerne(s, p.id)) compteF.tari++; });
     if (filtreAppel !== "tous" && !compteF[filtreAppel]) filtreAppel = "tous";
     if (compteF.absents || compteF.retards || compteF.tari) {
@@ -1340,7 +1377,7 @@ h3.group.seances-mois { margin-top: 6px; }
       }).join("") + "</div>";
     }
     var nomsVus = noms.filter(function (p) {
-      if (filtreAppel === "tous") return true;
+      if (filtreAppel === "tous") return requis(s, p.id) || ajusterListe;
       if (!requis(s, p.id)) return false;
       var v = choixDe(s, p.id);
       return filtreAppel === "absents" ? (v === "A" || v === "E") : filtreAppel === "retards" ? v === "R" : tariConcerne(s, p.id);
@@ -1404,9 +1441,13 @@ h3.group.seances-mois { margin-top: 6px; }
         var etat = p.m && statutMembre(p.m) !== "actif" ? " · " + (statutMembre(p.m) === "pause" ? "en pause" : "parti") : "";
         return '<div class="person' + (v === "E" ? " prev" : "") + '"><span class="name">' + esc(p.nom) + (p.m ? ' <span class="tags">' + esc(tagsKourel(p.m) + etat) + "</span>" : "") +
           (peutSuivi && ajusterListe ? ' <button type="button" class="linkish" data-action="retirer" data-id="' + esc(p.id) + '">Retirer</button>' : "") +
-          (outilsPersonne(s, p.id) && requis(s, p.id) && v !== "A" && v !== "E" ? ' <button type="button" class="plus-btn" data-action="' + (discOuvert === p.id ? "disc-fermer" : "disc-ouvrir") + '" data-id="' + esc(p.id) + '" aria-label="Tari individuel, tenue, coiffure" aria-expanded="' + (discOuvert === p.id) + '">⋯</button>' : "") +
-          "</span>" + ctrl + motifs + tariHtml + disc + "</div>";
+          "</span>" + (outilsPersonne(s, p.id) && requis(s, p.id) && v !== "A" && v !== "E" ? ' <button type="button" class="plus-btn" data-action="' + (discOuvert === p.id ? "disc-fermer" : "disc-ouvrir") + '" data-id="' + esc(p.id) + '" aria-label="Tari individuel, tenue, coiffure" aria-expanded="' + (discOuvert === p.id) + '">⋯</button>' : "") +
+          ctrl + motifs + tariHtml + disc + "</div>";
       }).join("") + "</div>";
+    /* Membres en pause (ou partis) : pas d'appel pour eux ; une seule ligne à la fin, au lieu d'une carte chacun. */
+    var horsAppel = noms.filter(function (p) { return !requis(s, p.id); });
+    if (horsAppel.length && filtreAppel === "tous" && !ajusterListe) html += '<p class="non-requis">Présence non requise : ' + horsAppel.map(function (p) {
+        return esc(p.nom) + (p.m ? " (" + (statutMembre(p.m) === "pause" ? "en pause" : "parti") + ")" : ""); }).join(", ") + "</p>";
     if (peutSuivi) {
       html += '<div style="margin-top:10px"><button type="button" class="btn ghost small" data-action="ajuster">' + (ajusterListe ? "Terminer l’ajustement" : "Ajuster la liste : ajouter ou retirer quelqu’un") + "</button></div>";
       if (ajusterListe) {
@@ -2928,6 +2969,7 @@ h3.group.seances-mois { margin-top: 6px; }
     if (b.dataset.appelFiltre) { filtreAppel = b.dataset.appelFiltre; afficher(); return; }
     if (b.dataset.action === "seance-form") { formSeance = !formSeance; afficher(); if (formSeance) { var sd = document.getElementById("s-date"); if (sd) sd.focus(); } return; }
     if (b.dataset.action === "seances-tout") { toutesSeances = true; afficher(); return; }
+    if (b.dataset.action === "rep-tout") { toutesRep = !toutesRep; afficher(); return; }
     if (b.dataset.appelJour) { var pj = b.dataset.appelJour.split("|"); creerSeance(pj[0], pj[1], pj[2] || ""); return; }
     if (b.dataset.open) { seanceOuverte = b.dataset.open; confirmerSuppression = false; filtreAppel = "tous"; ajusterListe = false; tariEdition = false; confirmerTari = false; afficher(); window.scrollTo(0, 0); return; }
     if (b.hasAttribute("data-back")) { seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; apercuDahira = false; afficher(); window.scrollTo(0, 0); return; }
@@ -3925,10 +3967,10 @@ h3.group.seances-mois { margin-top: 6px; }
       p.textContent = n; p.setAttribute("aria-label", n + " Tari" + (n > 1 ? "s" : "") + " à écouter");
     });
   }
-  function banniereTaris() {
+  function banniereTaris(doux) {
     var n = nbTarisAEcouter();
     if (!n) return "";
-    return '<a class="tari-banniere" href="#taris"><span class="tb-ico" aria-hidden="true">🎧</span><span><b>' + n + " Tari" + (n > 1 ? "s" : "") + " à écouter</b>" +
+    return '<a class="tari-banniere' + (doux ? " doux" : "") + '" href="#taris"><span class="tb-ico" aria-hidden="true">🎧</span><span><b>' + n + " Tari" + (n > 1 ? "s" : "") + " à écouter</b>" +
       "<small>Enregistré" + (n > 1 ? "s" : "") + " par les membres sur la plateforme</small></span><span class=\"tb-go\" aria-hidden=\"true\">›</span></a>";
   }
   /* Onglet Khassidas (Conservatoire, admin) : toujours une entrée vers les Taris, mise en avant quand il y en a à écouter. */
