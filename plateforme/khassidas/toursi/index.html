@@ -370,6 +370,7 @@ body.no-calage .play-seg, body.no-calage .boucle-seg { display: none; }
 .chips { overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .chips::-webkit-scrollbar { display: none; }
 .chip-word { flex: none; }
+.chip-word .chip { flex: none; min-width: 34px; padding: 0 5px; font-variant-numeric: tabular-nums; }
 /* Signaler une erreur dans un beuyite (plateforme du Conservatoire seulement) */
 .signal-lien { display: block; margin: 8px 0 0 auto; padding: 4px 2px; border: 0; background: transparent; color: var(--ink-soft); font: 500 12.5px var(--font-ui); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 body.sans-signal .signal-lien { display: none; }
@@ -594,11 +595,11 @@ dialog.ms::backdrop { background: var(--scrim); }
   </ul>
   <section class="context" aria-labelledby="ctx-title">
     <h2 class="section-title" id="ctx-title">Contexte</h2>
-    <p>Presque chaque beuyite commence par « Toursî ’an… », « Mon bouclier contre… » : le Cheikh y énumère ce qui le protège (Dieu et Sa permanence, Son Livre, l’éloge et le service du Prophète) contre les doutes, les ennemis, les maladies et les maux des deux demeures. Les derniers beuyites, sur un mètre plus long (« Tarâsî… »), évoquent la mer et se terminent par la prière sur le Prophète.</p>
+    <p>Presque chaque beuyite commence par « Toursî ’an… », « Mon bouclier contre… » : le Cheikh y énumère ce qui le protège (Dieu et Sa permanence, Son Livre, l’éloge et le service du Prophète) contre les doutes, les ennemis, les maladies et les maux des deux demeures. Les derniers beuyites, sur un mètre plus long (« Tarâsî… »), évoquent la mer et se terminent par la prière sur le Prophète.</p>
     <p class="muted-note">Texte transcrit d’après le manuscrit du Conservatoire (27 pages).</p>
   </section>
   <section class="controls" aria-label="Réglages d’affichage">
-    <div class="seg-group" role="group" aria-label="Consignes du Kourel">
+    <div class="seg-group" role="group" aria-label="Consignes du Kourel" hidden>
       <button type="button" id="btn-k1" aria-pressed="true">Kourel 1</button>
       <button type="button" id="btn-k2" aria-pressed="false">Kourel 2</button>
     </div>
@@ -1364,7 +1365,7 @@ dialog.ms::backdrop { background: var(--scrim); }
   var audio = $("#audio");
   var prefs = store.get("toursi-prefs", {});
   var state = {
-    kourel: prefs.kourel === "k2" ? "k2" : "k1",
+    kourel: "k1",
     ar: prefs.ar !== false, ph: prefs.ph !== false, fr: prefs.fr !== false,
     speed: [1, 0.75, 0.5].indexOf(prefs.speed) > -1 ? prefs.speed : 1,
     follow: prefs.follow !== false,
