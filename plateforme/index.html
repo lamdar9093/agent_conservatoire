@@ -802,6 +802,13 @@ body.vue-membre.vue-discipline .bottom-nav a[data-view="seances"], body.vue-memb
 .appel-filtres .toggle { flex: none; padding: 7px 12px; font-size: 13.5px; }
 h3.group.seances-mois { margin-top: 6px; }
 /* Répétitions : hiérarchie (l'appel d'abord), prochaines répétitions compactes, historique sous un titre */
+.aj-titre { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.pill.en-cours { display: inline-flex; align-items: center; gap: 6px; background: var(--good-soft); color: var(--good); font-weight: 600; }
+.pill.en-cours::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: kh-pulse 1.6s ease-in-out infinite; }
+.appel-jour:not(.fait) .pill { background: rgba(255, 255, 255, 0.22); border-color: transparent; color: inherit; }
+.aj-titre .pill, .detail-head > div > .pill { font-size: 12.5px; vertical-align: middle; }
+.seance.en-cours { border-color: var(--good); }
+@media (prefers-reduced-motion: reduce) { .pill.en-cours::before { animation: none; } }
 .tari-banniere.doux { background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent); box-shadow: none; }
 .tari-banniere.doux .tb-ico { background: var(--surface); }
 .tari-banniere.doux small { color: var(--ink-soft); opacity: 1; }
@@ -1110,6 +1117,31 @@ h3.group.seances-mois { margin-top: 6px; }
   function moisLabel(m) { var s = asDate(m + "-15").toLocaleDateString("fr-FR", { month: "long", year: "numeric" }); return s.charAt(0).toUpperCase() + s.slice(1); }
   var HORAIRE = { k1: "18h - 21h", k2: "18h - 21h", rg: "12h - 16h" };
   function horaireDe(s) { return s.horaire != null ? s.horaire : (HORAIRE[s.type] || ""); }
+  /* Moment d'une séance d'après son horaire (« 18h - 21h », « 18h30-21h », « 12:00 - 16:00 ») : « avenir » avant le début,
+     « encours » pendant, « passee » seulement une fois l'heure de fin vraiment passée (demande de l'utilisateur, 26 novembre 2026). */
+  function bornesHoraire(s) {
+    var lire = function (t) {
+      var re = /(\d{1,2})\s*[hH:](\d{2})?/g, m, l = [];
+      while ((m = re.exec(String(t || ""))) && l.length < 2) l.push(Number(m[1]) * 60 + Number(m[2] || 0));
+      return l.length ? { debut: l[0], fin: l.length > 1 && l[1] > l[0] ? l[1] : l[0] + 180 } : null;
+    };
+    return lire(horaireDe(s)) || lire(HORAIRE[s.type]);
+  }
+  function momentSeance(s) {
+    var t = today();
+    if (s.date !== t) return s.date < t ? "passee" : "avenir";
+    var b = bornesHoraire(s), n = new Date(), min = n.getHours() * 60 + n.getMinutes();
+    if (!b) return "encours";
+    return min < b.debut ? "avenir" : min < b.fin ? "encours" : "passee";
+  }
+  function heureTxt(min) { var h = Math.floor(min / 60), m = min % 60; return h + "h" + (m ? String(m).padStart(2, "0") : ""); }
+  function pillMoment(s) {
+    var mo = momentSeance(s);
+    if (mo === "encours") return ' <span class="pill en-cours">En cours</span>';
+    if (mo !== "avenir") return "";
+    var t = today(), b = bornesHoraire(s);
+    return ' <span class="pill n">' + (s.date === t ? (b ? "Commence à " + heureTxt(b.debut) : "Aujourd’hui") : s.date === isoPlus(t, 1) ? "Demain" : "À venir") + "</span>";
+  }
   function typeDuJour(iso) { var j = asDate(iso).getDay(); return j === 4 ? "k1" : j === 5 ? "k2" : j === 0 ? "rg" : "k1"; }
   function slug(s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "membre"; }
   function tagsKourel(m) { var t = []; if (m.k1) t.push("K1"); if (m.k2) t.push("K2"); return t.join(" · ") || "Aucun Kourel"; }
@@ -1141,6 +1173,31 @@ h3.group.seances-mois { margin-top: 6px; }
       (c.A ? '<span class="pill a">' + c.A + " absent" + (c.A > 1 ? "s" : "") + (c.E && !court ? " (" + txtPrevenu(c.E) + ")" : "") + "</span>" : "");
   }
 
+  /* Carte d'une séance dans la liste : pastille « En cours » / « À venir », Tari, compteurs (avant le jour : les membres attendus). */
+  function carteSeance(s) {
+    var tc = tariCompte(s), mo = momentSeance(s);
+    var requisL = (s.participants || []).filter(function (id) { return requis(s, id); }), attendus = requisL.length;
+    /* Pas encore commencée et personne de noté absent ou en retard : « tous présents » ne voudrait rien dire. */
+    var appelCommence = requisL.some(function (id) { return ((s.statuts || {})[id] || "P") !== "P"; });
+    var bas = mo === "avenir" && !appelCommence
+      ? '<span class="pill n">' + attendus + " membre" + (attendus > 1 ? "s" : "") + " attendu" + (attendus > 1 ? "s" : "") + "</span>" : countsHTML(compter(s), true);
+    return '<button type="button" class="seance' + (mo === "encours" ? " en-cours" : "") + '" data-open="' + esc(s.id) + '"><span class="when"><b>' + esc(jourSansAn(s.date)) + '</b><span class="when-chips"><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" + pillMoment(s) +
+      (tc.dus ? ' <span class="pill ' + (tc.recus === tc.dus ? "p" : "r") + '">Tari ' + tc.recus + "/" + tc.dus + "</span>" : "") + "</span></span>" +
+      '<span class="counts">' + bas + "</span></button>";
+  }
+  /* L'heure passe : « En cours » s'allume au début de la répétition et la séance rejoint « Séances passées » à l'heure de fin, sans recharger. */
+  var derniereSigMoments = "";
+  function sigMoments() {
+    var t = today();
+    return t + "|" + seances.filter(function (x) { return x.date >= isoPlus(t, -1) && x.date <= isoPlus(t, 1); }).map(function (x) { return x.id + ":" + momentSeance(x); }).join(",");
+  }
+  setInterval(function () {
+    if (vue !== "seances" || !db || !charge.s || sigMoments() === derniereSigMoments) return;
+    var a = document.activeElement;
+    if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;
+    afficher();
+  }, 30000);
+
   /* ---------- Séances ---------- */
   function vueSeances() {
     if (rappelOuvert) return vueRappel(rappelOuvert);
@@ -1148,7 +1205,8 @@ h3.group.seances-mois { margin-top: 6px; }
     if (seanceOuverte) return vueSeance(seances.filter(function (s) { return s.id === seanceOuverte; })[0]);
     /* Ordre (choix d'expérience) : l'appel du jour d'abord, puis les Taris à écouter, les prochaines répétitions (admin),
        et enfin l'historique des séances, où se trouve aussi « + Séance d'une autre date » (rare : rattraper un appel oublié). */
-    var html = "", formHTML = "";
+    derniereSigMoments = sigMoments();
+    var html = "", formHTML = "", enHaut = {};
     if (peutSuivi) {
       var d = today();
       /* Jour de répétition (aujourd'hui, ou hier si l'appel n'a pas été fait) : l'appel en un toucher. */
@@ -1156,16 +1214,17 @@ h3.group.seances-mois { margin-top: 6px; }
         repetitionsDu(jour).forEach(function (r) {
           var sid = jour + "-" + r.type, sx = seances.filter(function (x) { return x.id === sid; })[0];
           if (k === 1 && sx) return;
+          if (sx) enHaut[sid] = true;
           var quand = k === 0 ? "aujourd’hui" : "hier, " + jourCourt(jour).toLowerCase();
           html += sx
-            ? '<button type="button" class="appel-jour fait" data-open="' + esc(sid) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><b>Reprendre l’appel · ' + esc(TYPES[r.type]) + "</b><small>" + esc(quand) + " · " + compter(sx).P + " présents, " + compter(sx).A + " absent" + (compter(sx).A > 1 ? "s" : "") + '</small></span><span aria-hidden="true">›</span></button>'
-            : '<button type="button" class="appel-jour" data-appel-jour="' + esc(jour + "|" + r.type + "|" + r.horaire) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><b>Faire l’appel · ' + esc(TYPES[r.type]) + "</b><small>" + esc(quand) + (r.horaire ? " · " + esc(r.horaire) : "") + " · tout le monde présent, touchez seulement les absents et retards</small></span><span aria-hidden=\"true\">›</span></button>";
+            ? '<button type="button" class="appel-jour fait" data-open="' + esc(sid) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><span class="aj-titre"><b>Reprendre l’appel · ' + esc(TYPES[r.type]) + "</b>" + pillMoment(sx) + "</span><small>" + esc(quand) + " · " + compter(sx).P + " présents, " + compter(sx).A + " absent" + (compter(sx).A > 1 ? "s" : "") + '</small></span><span aria-hidden="true">›</span></button>'
+            : '<button type="button" class="appel-jour" data-appel-jour="' + esc(jour + "|" + r.type + "|" + r.horaire) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><span class="aj-titre"><b>Faire l’appel · ' + esc(TYPES[r.type]) + "</b>" + (k === 0 ? pillMoment({ date: jour, type: r.type, horaire: r.horaire }) : "") + "</span><small>" + esc(quand) + (r.horaire ? " · " + esc(r.horaire) : "") + " · tout le monde présent, touchez seulement les absents et retards</small></span><span aria-hidden=\"true\">›</span></button>";
         });
       });
       formHTML = !formSeance ? "" :
         '<section class="panel"><div class="detail-head"><h2>Séance d’une autre date</h2><button type="button" class="btn ghost small" data-action="seance-form">Fermer</button></div><p class="muted">Tout le monde est marqué présent ; vous ne changez que les retards et les absences.</p>' +
         '<form class="row" id="f-seance" style="margin-top:12px">' +
-        '<label class="field">Date<input type="date" id="s-date" value="' + d + '" required></label>' +
+        '<label class="field">Date<input type="date" id="s-date" value="' + d + '" max="' + d + '" required></label>' +
         '<label class="field">Répétition<select id="s-type">' +
         Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (k === typeDuJour(d) ? " selected" : "") + ">" + TYPES[k] + "</option>"; }).join("") +
         "</select></label>" +
@@ -1230,22 +1289,27 @@ h3.group.seances-mois { margin-top: 6px; }
       }
       html += "</section>";
     }
+    /* Séances pas encore passées : « En cours » pendant l'horaire, « À venir » avant (la séance du jour déjà en haut n'est pas répétée). */
+    var actives = seances.filter(function (x) { return momentSeance(x) !== "passee" && !enHaut[x.id]; }).sort(function (a, b) {
+      var ra = momentSeance(a) === "encours" ? 0 : 1, rb = momentSeance(b) === "encours" ? 0 : 1;
+      return (ra - rb) || (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    });
+    var passees = seances.filter(function (x) { return momentSeance(x) === "passee"; });
+    if (actives.length) {
+      var nEnCours = actives.filter(function (x) { return momentSeance(x) === "encours"; }).length;
+      html += '<h3 class="group">' + (nEnCours === actives.length ? "En cours" : nEnCours ? "En cours et à venir" : "À venir") + '</h3><section class="list" aria-label="Séances en cours et à venir">' + actives.map(carteSeance).join("") + "</section>";
+    }
     html += '<div class="seances-tete"><h2>Séances passées</h2>' + (peutSuivi && !formSeance ? '<button type="button" class="btn ghost small" data-action="seance-form">+ Séance d’une autre date</button>' : "") +
       '<p class="muted">Les présences de chaque répétition, de la plus récente à la plus ancienne.</p></div>' + formHTML;
-    if (!seances.length) {
-      html += '<div class="empty">Aucune séance enregistrée pour l’instant.' + (peutSuivi ? " Le jour de la répétition, touchez « Faire l’appel »." : "") + "</div>";
+    if (!passees.length) {
+      html += '<div class="empty">' + (seances.length ? "Aucune séance passée pour l’instant." : "Aucune séance enregistrée pour l’instant." + (peutSuivi ? " Le jour de la répétition, touchez « Faire l’appel »." : "")) + "</div>";
     } else {
       var parMois = {};
-      seances.forEach(function (x) { (parMois[x.date.slice(0, 7)] = parMois[x.date.slice(0, 7)] || []).push(x); });
+      passees.forEach(function (x) { (parMois[x.date.slice(0, 7)] = parMois[x.date.slice(0, 7)] || []).push(x); });
       var mois = Object.keys(parMois).sort().reverse(), vus = toutesSeances ? mois : mois.slice(0, 2);
       html += vus.map(function (mo) {
         var l = parMois[mo];
-        return '<h3 class="group seances-mois">' + esc(moisLabel(mo)) + " · " + l.length + " séance" + (l.length > 1 ? "s" : "") + '</h3><section class="list" aria-label="Séances de ' + esc(moisLabel(mo)) + '">' + l.map(function (s) {
-          var tc = tariCompte(s);
-          return '<button type="button" class="seance" data-open="' + esc(s.id) + '"><span class="when"><b>' + esc(jourSansAn(s.date)) + '</b><span class="when-chips"><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
-            (tc.dus ? ' <span class="pill ' + (tc.recus === tc.dus ? "p" : "r") + '">Tari ' + tc.recus + "/" + tc.dus + "</span>" : "") + "</span></span>" +
-            '<span class="counts">' + countsHTML(compter(s), true) + "</span></button>";
-        }).join("") + "</section>";
+        return '<h3 class="group seances-mois">' + esc(moisLabel(mo)) + " · " + l.length + " séance" + (l.length > 1 ? "s" : "") + '</h3><section class="list" aria-label="Séances de ' + esc(moisLabel(mo)) + '">' + l.map(carteSeance).join("") + "</section>";
       }).join("");
       if (mois.length > vus.length) {
         var reste = mois.slice(vus.length).reduce(function (n, mo) { return n + parMois[mo].length; }, 0);
@@ -1267,6 +1331,7 @@ h3.group.seances-mois { margin-top: 6px; }
 
   function creerSeance(date, type, horaire) {
     if (!date) return;
+    if (date > today()) { toast("L’appel se fait le jour de la répétition : cette date n’est pas encore arrivée."); return; }
     var id = date + "-" + type;
     if (seances.some(function (s) { return s.id === id; })) { seanceOuverte = id; afficher(); toast("Cette séance existe déjà : la voici."); return; }
     var participants = Object.keys(membres).map(function (k) { return membres[k]; })
@@ -1313,7 +1378,7 @@ h3.group.seances-mois { margin-top: 6px; }
     var c = compter(s);
     var noms = (s.participants || []).map(function (id) { return { id: id, nom: membres[id] ? membres[id].nom : "Membre supprimé", m: membres[id] }; }).sort(triNom);
     var html = '<div><button type="button" class="btn ghost" data-back>← Toutes les séances</button></div>' +
-      '<section class="panel"><div class="detail-head"><div><h2>' + esc(jourLong(s.date)) + '</h2><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" +
+      '<section class="panel"><div class="detail-head"><div><h2>' + esc(jourLong(s.date)) + '</h2><span class="chip">' + esc(TYPES[s.type] || s.type) + "</span>" + pillMoment(s) +
       (peutSuivi
         ? ' <input type="text" class="horaire-inline" id="s-horaire" value="' + esc(horaireDe(s)) + '" placeholder="Horaire" aria-label="Horaire de la répétition" title="Horaire de la répétition"' + (peutModifier ? "" : " readonly data-refus-seance") + '>'
         : (horaireDe(s) ? ' <span class="muted">' + esc(horaireDe(s)) + "</span>" : "")) + "</div>" +
