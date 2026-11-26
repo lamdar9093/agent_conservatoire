@@ -8,6 +8,7 @@
    - use("messages"), use("programme") : boîte à idées et support, programme de chant
    - use("taris") : Taris enregistrés (envoyer l'audio avec sa progression, prendre, laisser, répondre)
    - use("notifs") : notifications sur le téléphone (clé, abonnement de l'appareil, essai)
+   - use("audiosSeances") : audios des répétitions rangés dans chaque séance (ajouter, renommer, épingler, retirer, place sur le disque)
    Chargé automatiquement par plateforme/local/serveur.mjs ; index.html n'est pas modifié. */
 (function () {
   "use strict";
@@ -155,17 +156,19 @@
     er.code = j.code || (x.status ? "erreur" : "reseau");
     return er;
   }
-  /* Envoi d'un audio tel quel, avec la progression (fraction de 0 à 1). */
-  function envoiAudio(url, fichier, opts) {
+  /* Envoi d'un audio tel quel, avec la progression (fraction de 0 à 1). extra : autres paramètres de l'adresse ; col : collection à rafraîchir. */
+  function envoiAudio(url, fichier, opts, extra, col) {
     opts = opts || {};
+    var qs = "?duree=" + encodeURIComponent(opts.duree || "");
+    Object.keys(extra || {}).forEach(function (k) { qs += "&" + k + "=" + encodeURIComponent(extra[k] == null ? "" : extra[k]); });
     return new Promise(function (ok, ko) {
       var x = new XMLHttpRequest();
-      x.open("POST", url + "?duree=" + encodeURIComponent(opts.duree || ""));
+      x.open("POST", url + qs);
       x.setRequestHeader("Content-Type", fichier.type || "application/octet-stream");
       if (x.upload && opts.progres) x.upload.onprogress = function (e) { if (e.lengthComputable) opts.progres(e.loaded / e.total); };
       x.onload = function () {
         if (x.status === 401) { location.href = "/connexion.html"; return; }
-        if (x.status >= 200 && x.status < 300) { var j = {}; try { j = JSON.parse(x.responseText); } catch (e) { /* vide */ } rafraichir("taris"); ok(j); }
+        if (x.status >= 200 && x.status < 300) { var j = {}; try { j = JSON.parse(x.responseText); } catch (e) { /* vide */ } rafraichir(col || "taris"); ok(j); }
         else ko(erreurEnvoi(x));
       };
       x.onerror = function () { ko(erreurEnvoi(x)); };
@@ -191,7 +194,21 @@
     essai: function () { return appel("POST", "notifs/essai", {}); }
   });
 
-  var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme, taris: taris, notifs: notifs };
+  /* Audios des répétitions (voir serveur.mjs : audiosSeances, gardés 1 an sauf les épinglés) */
+  var audiosSeances = Object.freeze({
+    envoyer: function (seance, fichier, opts) {
+      opts = opts || {};
+      return envoiAudio("/api/audios-seances/" + encodeURIComponent(seance), fichier, opts,
+        { khassida: opts.khassida || "", nom: opts.nom || "", ere: opts.ere || "", titre: opts.titre || "" }, "audiosSeances");
+    },
+    maj: function (id, data) { return appel("PATCH", "audios-seances/" + encodeURIComponent(id), data).then(function (r) { rafraichir("audiosSeances"); return r; }); },
+    retirer: function (id) { return appel("DELETE", "audios-seances/" + encodeURIComponent(id)).then(function (r) { rafraichir("audiosSeances"); return r; }); },
+    url: function (id, telecharger) { return "/api/audios-seances/fichier/" + encodeURIComponent(id) + (telecharger ? "?dl=1" : ""); },
+    zip: function (seance) { return "/api/audios-seances/zip?" + (seance ? "seance=" + encodeURIComponent(seance) : "bientot=1"); },
+    espace: function () { return appel("GET", "audios-seances/espace"); }
+  });
+
+  var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme, taris: taris, notifs: notifs, audiosSeances: audiosSeances };
   window.claude = Object.freeze({
     use: function (nom) {
       if (nom === "comptes") return admin().then(function (a) { return a ? comptes : null; });

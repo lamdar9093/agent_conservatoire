@@ -803,6 +803,47 @@ body.vue-membre.vue-discipline .bottom-nav a[data-view="seances"], body.vue-memb
 h3.group.seances-mois { margin-top: 6px; }
 /* Répétitions : hiérarchie (l'appel d'abord), prochaines répétitions compactes, historique sous un titre */
 .aj-titre { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+/* Audios des répétitions : dans la séance, et la page « Audios des répétitions » */
+.aud-box { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); display: grid; gap: 10px; }
+.aud-box-tete { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+.aud-ajout { display: flex; flex-wrap: wrap; gap: 8px; }
+.aud-rond { display: inline-block; width: 10px; height: 10px; margin-right: 7px; border-radius: 50%; background: var(--bad); vertical-align: -1px; }
+.aud-aide, .aud-etat { margin: 0; font-size: 13px; }
+.aud-enreg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.aud-pastille { width: 12px; height: 12px; border-radius: 50%; background: var(--bad); animation: kh-pulse 1.2s ease-in-out infinite; }
+.aud-temps { margin-right: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+.aud-revue { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--accent); border-radius: 12px; background: var(--surface); }
+.aud-revue-tete { font-size: 13.5px; color: var(--ink-soft); }
+.aud-envoi { display: grid; gap: 6px; font-size: 13.5px; }
+.aud-barre { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+.aud-barre span { display: block; height: 100%; background: var(--accent); }
+.aud-liste { display: grid; gap: 8px; }
+.aud { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); min-width: 0; }
+.aud.epingle { border-color: var(--good); }
+.aud-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.aud-tete b { font-weight: 600; overflow-wrap: anywhere; }
+.aud-tete .pill { font-size: 11.5px; }
+.aud-sous { color: var(--ink-soft); font-size: 12.5px; }
+.aud-pin { font-size: 13px; }
+.aud-zip { justify-self: end; font-size: 13px; }
+.aud-ligne { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.aud-ligne .lect { flex: 1 1 auto; }
+.aud-ico { flex: none; display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid var(--rule); border-radius: 50%; background: var(--paper); color: var(--ink-soft); font: 700 16px/1 var(--font-ui, inherit); cursor: pointer; text-decoration: none; }
+.aud-ico svg { width: 17px; height: 17px; }
+.aud-ico:hover, .aud-ico[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
+.aud-ico.charge { opacity: 0.5; cursor: progress; }
+.aud-menu { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--rule); }
+.aud-menu .aud-aide { flex: 1 1 100%; }
+.aud-edit { display: grid; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--rule); }
+.aud-ere-fixe { margin: 0; font-size: 14px; }
+h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.chartes-lien.aud-neuf { border-color: var(--accent); background: var(--accent-soft); }
+.chartes-lien.aud-neuf .pill { font-size: 11.5px; vertical-align: 1px; }
+.jauge { height: 10px; margin-top: 12px; border-radius: 5px; background: var(--rule); overflow: hidden; }
+.jauge span { display: block; height: 100%; background: var(--accent); }
+.jauge.alerte span { background: var(--bad); }
+.jauge-txt { margin: 6px 0 0; font-size: 13.5px; }
+@media (prefers-reduced-motion: reduce) { .aud-pastille { animation: none; } }
 .pill.en-cours { display: inline-flex; align-items: center; gap: 6px; background: var(--good-soft); color: var(--good); font-weight: 600; }
 .pill.en-cours::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: kh-pulse 1.6s ease-in-out infinite; }
 .appel-jour:not(.fait) .pill { background: rgba(255, 255, 255, 0.22); border-color: transparent; color: inherit; }
@@ -1206,6 +1247,7 @@ h3.group.seances-mois { margin-top: 6px; }
     /* Ordre (choix d'expérience) : l'appel du jour d'abord, puis les Taris à écouter, les prochaines répétitions (admin),
        et enfin l'historique des séances, où se trouve aussi « + Séance d'une autre date » (rare : rattraper un appel oublié). */
     derniereSigMoments = sigMoments();
+    if (enrA && enrA.etat === "enreg" && seanceOuverte !== enrA.sid) arreterAudioSeance("quitte", true);
     var html = "", formHTML = "", enHaut = {};
     if (peutSuivi) {
       var d = today();
@@ -1431,7 +1473,7 @@ h3.group.seances-mois { margin-top: 6px; }
             (tarisApi && peutSuivi ? '<p class="tari-aide">Les membres l’enregistrent dans Mon espace ; vous l’écoutez dans <a href="#taris">Taris</a>.</p>' : ""));
     }
     tb += "</div>";
-    html += tb;
+    html += tb + blocAudiosSeance(s);
     /* Filtres de l'appel : toute la liste pendant l'appel ; ensuite, seulement les absents, les retards ou les Taris. */
     var compteF = { tous: noms.filter(function (p) { return requis(s, p.id); }).length, absents: 0, retards: 0, tari: 0 };
     noms.forEach(function (p) { if (!requis(s, p.id)) return; var v = choixDe(s, p.id); if (v === "A" || v === "E") compteF.absents++; if (v === "R") compteF.retards++; if (tariConcerne(s, p.id)) compteF.tari++; });
@@ -1527,7 +1569,7 @@ h3.group.seances-mois { margin-top: 6px; }
     }
     if (peutSuivi) {
       html += confirmerSuppression
-        ? '<div class="confirm"><b>Supprimer cette séance et ses présences ?</b><div class="row"><button type="button" class="btn danger" data-del>Oui, supprimer</button><button type="button" class="btn" data-nodel>Annuler</button></div></div>'
+        ? '<div class="confirm"><b>Supprimer cette séance et ses présences' + (audiosDeSeance(s.id).length ? ", ainsi que ses " + audiosDeSeance(s.id).length + " audio" + (audiosDeSeance(s.id).length > 1 ? "s" : "") : "") + ' ?</b><div class="row"><button type="button" class="btn danger" data-del>Oui, supprimer</button><button type="button" class="btn" data-nodel>Annuler</button></div></div>'
         : '<div style="margin-top:14px"><button type="button" class="btn ghost" data-askdel>Supprimer la séance</button></div>';
     }
     html += "</section>";
@@ -2752,7 +2794,7 @@ h3.group.seances-mois { margin-top: 6px; }
     });
     if (peutSuivi && tous.length) html += '<p class="muted kh-aide">« Marquer en répétition » : le khassida que le kourel travaille en ce moment passe en tête de son kourel, pour tous les membres.</p>';
     if (peutModifier) html += '<p class="muted kh-aide">Pour ajouter un khassida ou changer son kourel, allez dans <a href="#reglages/khassidas">Réglages › Khassidas</a>.</p>';
-    app.innerHTML = banniereNouveauxKh() + entreeTaris() + html + "</section>";
+    app.innerHTML = banniereNouveauxKh() + entreeTaris() + entreeAudios() + html + "</section>";
   }
   function vueLecture() {
     var kh = lecture && khassidas[lecture.id];
@@ -2761,7 +2803,7 @@ h3.group.seances-mois { margin-top: 6px; }
       app.innerHTML = '<div class="wrap" style="padding-block:20px"><div class="empty">Ce khassida n’a pas encore de page d’étude sur la plateforme. <a href="#khassidas">Retour aux khassidas</a></div></div>';
       return;
     }
-    montrerLecture(kh, lecture.vers, { href: "#khassidas", txt: "← Khassidas" }, kh.titre, boutonTariLecture(kh), "");
+    montrerLecture(kh, lecture.vers, { href: "#khassidas", txt: "← Khassidas" }, kh.titre, boutonTariLecture(kh) + boutonAudiosLecture(kh), "");
   }
   /* Page d'un khassida en plein écran : barre fine en haut, et (pour un Tari) le volet d'enregistrement ou d'écoute en bas.
      La page du khassida n'est rechargée que si elle change : la barre et le volet se mettent à jour seuls. */
@@ -2881,6 +2923,8 @@ h3.group.seances-mois { margin-top: 6px; }
         : { txt: "Dieuwrignes : " + ["k1", "k2"].map(function (k) { return dieuwrigneDe(k).nom.split(" ")[0] + " (" + ABR[k] + ")"; }).join(" · ") };
     }
     if (id === "khassidas") { var nk = Object.keys(khassidas).length; return { txt: nk + " khassida" + (nk > 1 ? "s" : "") + " dans le répertoire" }; }
+    chargerEspace();
+    if (pctDisque() >= 80) return { txt: "Disque du serveur presque plein (" + pctDisque() + " %) : voir les audios", alerte: true };
     var der = lireDerniereSauvegarde();
     return !der || der < isoPlus(today(), -30) ? { txt: der ? "Dernière sauvegarde le " + court(der) + " : à refaire" : "Aucune sauvegarde depuis cet appareil", alerte: true } : { txt: "Dernière sauvegarde le " + court(der) };
   }
@@ -2962,12 +3006,21 @@ h3.group.seances-mois { margin-top: 6px; }
       '<div class="sv-choix">' +
       '<button type="button" class="sv-btn primary" data-action="sv-complete"><b>Sauvegarde complète</b><span>Tout : membres, séances, Taris, khassidas, rappels, évaluations. Fichier .json</span></button>' +
       '<button type="button" class="sv-btn" data-action="sv-csv"><b>Tableau des présences</b><span>Une ligne par membre et par séance, à ouvrir dans Excel. Fichier .csv</span></button></div>' +
-      '<textarea class="copy" id="sv-texte" readonly hidden aria-label="Données à copier"></textarea></section>';
+      '<textarea class="copy" id="sv-texte" readonly hidden aria-label="Données à copier"></textarea></section>' + blocEspaceAudios();
     app.insertAdjacentHTML("beforeend", html);
   }
 
   /* ---------- Navigation et événements ---------- */
   function afficher() {
+    var act = document.activeElement, fid = act && app.contains(act) && act.id && /^(INPUT|TEXTAREA|SELECT)$/.test(act.tagName) ? act.id : null;
+    var sel = fid && typeof act.selectionStart === "number" ? [act.selectionStart, act.selectionEnd] : null;
+    afficherVue();
+    if (fid) {
+      var n = document.getElementById(fid);
+      if (n && n !== act) try { n.focus({ preventScroll: true }); if (sel && n.setSelectionRange) n.setSelectionRange(sel[0], sel[1]); } catch (e) { /* champ sans sélection */ }
+    }
+  }
+  function afficherVue() {
     if (!db) return;
     if (!charge.m || !charge.s || !charge.r) { app.innerHTML = '<div class="empty">Chargement…</div>'; return; }
     /* Un membre (non administrateur) ne voit ni les séances de tous, ni le bilan, ni les réglages. */
@@ -2980,9 +3033,10 @@ h3.group.seances-mois { margin-top: 6px; }
     if (vue === "messages" && !peutSuivi) vue = "moi";
     /* Taris : la liste est au Conservatoire ; chacun n'ouvre que son propre Tari (le Conservatoire, ceux de tous). */
     if (vue === "taris" && !((peutSuivi || estDiscipline) && tarisApi)) vue = "moi";
+    if (vue === "audios" && !audiosApi) vue = "khassidas";
     if (vue === "tari" && (!tarisApi || !tariVue || (tariVue.mid && tariVue.mid !== moiCourant && !peutSuivi))) vue = "moi";
     majPastilleTaris(); majPastilleMsg(); majBadgeIcone();
-    var actif = vue === "khassida" || vue === "taris" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi"
+    var actif = vue === "khassida" || vue === "taris" || vue === "audios" ? "khassidas" : (vue === "chartes" || vue === "messages") ? "moi"
       : vue === "tari" ? (tariVue.mid && tariVue.mid !== moiCourant ? "khassidas" : "moi") : vue;
     document.querySelectorAll(".tabs a, .bottom-nav a, .gear").forEach(function (a) { if (a.dataset.view === actif) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
     document.body.classList.toggle("lecture", vue === "khassida" || (vue === "tari" && tariAvecPage()));
@@ -2991,6 +3045,7 @@ h3.group.seances-mois { margin-top: 6px; }
     if (vue === "khassida") return vueLecture();
     if (vue === "tari") return vueTari();
     if (vue === "taris") return vueTarisListe();
+    if (vue === "audios") return vueAudios();
     if (vue === "bilan") vueBilan(); else if (vue === "reglages") vueReglages(); else if (vue === "moi") vueMoi();
     else if (vue === "khassidas") vueRepertoire(); else if (vue === "dahira") vueDahiras(); else if (vue === "chartes") vueChartes(); else if (vue === "messages") vueMessages(); else vueSeances();
     if (vue === "moi") app.insertAdjacentHTML("beforeend", (nbNouveaux() ? "" : lienMessages()) + blocMessagesMembre() + blocCompte());
@@ -3007,13 +3062,17 @@ h3.group.seances-mois { margin-top: 6px; }
     /* Taris : #tari/séance (le sien), #tari/séance/membre (écoute du Conservatoire), #taris ou #taris/khassida (liste) */
     var mt = /^tari\/([^\/]+)(?:\/([^\/]+))?$/.exec(h);
     if (mt) { vue = "tari"; tariVue = { sid: decodeURIComponent(mt[1]), mid: mt[2] ? decodeURIComponent(mt[2]) : null }; return; }
+    var ma = /^audios(?:\/([^\/]+))?$/.exec(h);
+    if (ma) { vue = "audios"; audiosFiltreKh = ma[1] ? decodeURIComponent(ma[1]) : null; return; }
     var mq = /^taris(?:\/([^\/]+))?$/.exec(h);
     if (mq) { vue = "taris"; tarisFiltreKh = mq[1] ? decodeURIComponent(mq[1]) : null; return; }
     vue = ["seances", "bilan", "reglages", "moi", "khassidas", "dahira", "chartes", "messages"].indexOf(h) > -1 ? h : "seances";
   }
   window.addEventListener("hashchange", function () {
     var avant = tariVue && vue === "tari" ? tariVue.sid + "|" + tariVue.mid : "";
-    lireHash(); window.scrollTo(0, 0); seanceOuverte = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null;
+    lireHash(); window.scrollTo(0, 0); seanceOuverte = vue === "seances" && seanceAOuvrir ? seanceAOuvrir : null; seanceAOuvrir = null; dahiraOuvert = null; rappelOuvert = null; evalOuvert = null; promoOuvert = null;
+    if (enrA && enrA.etat === "enreg" && !(vue === "seances" && seanceOuverte === enrA.sid)) arreterAudioSeance("quitte", true);
+    audMenu = null; audEdit = null;
     /* Taris : on quitte un Tari → on coupe l'audio ; un enregistrement en cours s'arrête (il reste à réécouter). */
     if (vue !== "tari" || avant !== tariVue.sid + "|" + tariVue.mid) {
       arreterLecture(); histOuvert = false; correction = { mot: "", fait: null, changer: null };
@@ -3030,6 +3089,7 @@ h3.group.seances-mois { margin-top: 6px; }
     if (clicMessages(b)) return;
     if (clicProgramme(b)) return;
     if (clicTaris(b)) return;
+    if (clicAudios(b)) return;
     if (clicNotifs(b)) return;
     if (b.dataset.appelFiltre) { filtreAppel = b.dataset.appelFiltre; afficher(); return; }
     if (b.dataset.action === "seance-form") { formSeance = !formSeance; afficher(); if (formSeance) { var sd = document.getElementById("s-date"); if (sd) sd.focus(); } return; }
@@ -3554,6 +3614,7 @@ h3.group.seances-mois { margin-top: 6px; }
     var ajout = function (e) { e = String(e || "").trim(); if (e && !eres.some(function (x) { return cleRecherche(x) === cleRecherche(e); })) eres.push(e); };
     Object.keys(khassidas).forEach(function (k) { ajout(khassidas[k].ere); });
     Object.keys(chants || {}).forEach(function (c) { ((chants[c] || {}).items || []).forEach(function (x) { ajout(x.ere); }); });
+    listeAudios().forEach(function (a) { ajout(a.ere); });
     return eres;
   }
   function datalistEres() {
@@ -3948,6 +4009,365 @@ h3.group.seances-mois { margin-top: 6px; }
     return false;
   }
   function garderTexte() { var t = document.getElementById("msg-texte"); if (t) msgBrouillon.texte = t.value; }
+
+  /* ---------- Audios des répétitions ----------
+     audiosSeances/{id} (voir serveur.mjs) : enregistrés pendant une séance par le Conservatoire ou l'admin (micro du téléphone,
+     ou fichier : Dictaphone, audio reçu sur WhatsApp). Chaque audio porte le nom de son khassida et son ère (obligatoires, demande
+     de l'utilisateur), plus une précision facultative ; il reste rangé avec sa séance, prêt à partager sur WhatsApp. Tous ceux qui
+     peuvent l'écouter sont prévenus par notification. Les membres écoutent ceux de leur kourel (Khassidas › Audios des répétitions).
+     Gardés 1 an, sauf les épinglés. Disposition volontairement légère (demande de l'utilisateur) : une ligne par audio, le reste dans « ⋯ ». */
+  var audiosApi = null, audiosSeances = {}, enrA = null, audMenu = null, audEdit = null, champAudioSeance = null, fichiersPartage = {};
+  var audiosFiltreKh = null, espaceAudios = null, espaceEnCours = false, seanceAOuvrir = null;
+  var DUREE_MAX_AUDIO = 30 * 60;
+  var ICO_PARTAGE = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7.5 7.5L12 3l4.5 4.5"/><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"/></svg>';
+  var ICO_TELECHARGER = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="M7.5 11.5L12 16l4.5-4.5"/><path d="M5 20h14"/></svg>';
+  function listeAudios() { return Object.keys(audiosSeances).map(function (k) { return audiosSeances[k]; }); }
+  function audiosDeSeance(sid) { return listeAudios().filter(function (a) { return a.seance === sid; }).sort(function (a, b) { return (a.le || 0) - (b.le || 0); }); }
+  function audiosDuKh(kid) { return listeAudios().filter(function (a) { return a.khassida === kid; }); }
+  function urlAudioSeance(a, dl) { return audiosApi ? audiosApi.url(a.id, dl) : "/api/audios-seances/fichier/" + encodeURIComponent(a.id) + (dl ? "?dl=1" : ""); }
+  function nomKhAudio(a) { var kh = a.khassida && khassidas[a.khassida]; return (kh && kh.titre) || a.khTitre || a.titre || "Audio"; }
+  /* « Zallat, beuyites 1 à 4 (ère Serigne Cissé) » : nom du fichier partagé et texte qui l'accompagne sur WhatsApp. */
+  function libelleAudio(a) { return nomKhAudio(a) + (a.titre && (a.khTitre || a.khassida) ? ", " + a.titre : "") + (a.ere ? " (ère " + a.ere + ")" : ""); }
+  function nomFichierAudio(a) {
+    return ((a.date || "") + " " + (TYPES[a.type] || "") + " - " + libelleAudio(a)).replace(/[\/\\:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim() + "." + String(a.fichier || "a.m4a").split(".").pop();
+  }
+  function tailleTxt(o) { o = Number(o) || 0; return o >= 1e9 ? (o / 1e9).toFixed(1).replace(".", ",") + " Go" : o >= 1e6 ? Math.round(o / 1e6) + " Mo" : Math.max(1, Math.round(o / 1e3)) + " Ko"; }
+  function effaceLe(date) { var d = asDate(date); d.setFullYear(d.getFullYear() + 1); d.setDate(d.getDate() + 1); return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }); }
+  function optionsKhAudio(sel) {
+    var kl = Object.keys(khassidas).map(function (k) { return khassidas[k]; }).sort(function (a, b) { return (a.titre || "").localeCompare(b.titre || "", "fr"); });
+    return '<option value="">Choisir le khassida…</option>' + kl.map(function (k) { return '<option value="' + esc(k.id) + '"' + (k.id === sel ? " selected" : "") + ">" + esc(k.titre) + "</option>"; }).join("") +
+      '<option value="__autre"' + (sel === "__autre" ? " selected" : "") + ">Autre khassida (pas encore dans la liste)…</option>";
+  }
+  /* Khassida proposé pour un nouvel audio : celui du Tari de la séance, sinon le premier du programme de cette répétition. */
+  function khParDefaut(sid) {
+    var s = seances.filter(function (x) { return x.id === sid; })[0] || {};
+    if (s.tariDetail && s.tariDetail.khassida && khassidas[s.tariDetail.khassida]) return s.tariDetail.khassida;
+    var it = (((chants["rep-" + sid] || {}).items) || []).filter(function (x) { return x.statut === "retenu" && x.khassida && khassidas[x.khassida]; })[0];
+    return it ? it.khassida : "";
+  }
+  function valeursAudio(khId) { var kh = khId && khassidas[khId]; return { khassida: khId || "", nom: "", ere: kh && kh.ere ? kh.ere : "", ereLibre: false, titre: "" }; }
+  /* Khassida (liste, ou nom s'il n'y est pas), ère, précision facultative. L'ère est pré-remplie avec l'ère habituelle du khassida
+     mais reste toujours modifiable : on ne chante pas toujours la même ère sur un même khassida (demande de l'utilisateur). */
+  function formAudioHTML(v, pre) {
+    var autre = v.khassida === "__autre";
+    return '<label class="field">Khassida<select id="' + pre + '-kh">' + optionsKhAudio(v.khassida) + "</select></label>" +
+      (autre ? '<label class="field">Nom du khassida<input type="text" id="' + pre + '-nom" value="' + esc(v.nom || "") + '" maxlength="120" placeholder="Ex. : Mawahibu Nafih"></label>' : "") +
+      champEre(pre + "-ere", "", v.ere) +
+      '<label class="field">Précision (facultatif)<input type="text" id="' + pre + '-titre" value="' + esc(v.titre || "") + '" maxlength="120" placeholder="Ex. : beuyites 1 à 4"></label>';
+  }
+  function erreurValeursAudio(v) {
+    if (!v.khassida || (v.khassida !== "__autre" && !khassidas[v.khassida])) return "Choisissez le khassida de l’audio.";
+    if (v.khassida === "__autre" && !(v.nom || "").trim()) return "Écrivez le nom du khassida.";
+    if (!(v.ere || "").trim()) return "Indiquez l’ère du khassida.";
+    return "";
+  }
+  function donneesAudio(v) { var autre = v.khassida === "__autre"; return { khassida: autre ? "" : v.khassida, nom: autre ? (v.nom || "").trim() : "", ere: (v.ere || "").trim(), titre: (v.titre || "").trim() }; }
+  /* Un audio, sur une ligne : nom du khassida et ère, lecteur, Partager, et « ⋯ » (télécharger ; pour le Conservatoire : modifier, épingler, supprimer). */
+  function ligneAudio(a) {
+    var mode = audMenu && audMenu.id === a.id ? audMenu.mode : "";
+    var sous = [a.ere ? "ère " + a.ere : "", a.titre && (a.khTitre || a.khassida) ? a.titre : "", a.parNom ? "par " + prenomDe(a.parNom) : ""].filter(Boolean).join(" · ");
+    var h = '<div class="aud' + (a.epingle ? " epingle" : "") + (mode ? " ouvert" : "") + '">' +
+      '<div class="aud-tete"><b>' + esc(nomKhAudio(a)) + "</b>" + (a.epingle ? '<span class="aud-pin" title="Épinglé : gardé pour toujours">📌</span>' : "") + "</div>" +
+      (sous ? '<small class="aud-sous">' + esc(sous) + "</small>" : "") +
+      '<div class="aud-ligne">' + lecteurHTML(urlAudioSeance(a), a.duree, true) +
+        '<button type="button" class="aud-ico" data-aud-partager="' + esc(a.id) + '" aria-label="Partager sur WhatsApp" title="Partager">' + ICO_PARTAGE + "</button>" +
+        (peutSuivi ? '<button type="button" class="aud-ico" data-aud-menu="' + esc(a.id) + '" aria-expanded="' + !!mode + '" aria-label="Plus : télécharger, modifier, épingler, supprimer" title="Plus">⋯</button>'
+          : '<a class="aud-ico" href="' + esc(urlAudioSeance(a, true)) + '" download="' + esc(nomFichierAudio(a)) + '" aria-label="Télécharger" title="Télécharger">' + ICO_TELECHARGER + "</a>") + "</div>";
+    if (mode === "menu") h += '<div class="aud-menu"><a class="btn small ghost" href="' + esc(urlAudioSeance(a, true)) + '" download="' + esc(nomFichierAudio(a)) + '">Télécharger</a>' +
+      '<button type="button" class="btn small ghost" data-aud-modifier="' + esc(a.id) + '">Modifier</button>' +
+      '<button type="button" class="btn small ghost" data-aud-epingle="' + esc(a.id) + '">' + (a.epingle ? "Désépingler" : "📌 Garder toujours") + "</button>" +
+      '<button type="button" class="btn small ghost danger-doux" data-aud-suppr="' + esc(a.id) + '">Supprimer</button>' +
+      '<p class="muted aud-aide">' + (a.epingle ? "Épinglé : il ne sera jamais effacé." : "Effacé automatiquement le " + esc(effaceLe(a.date)) + ", un an après la répétition, sauf s’il est épinglé.") + "</p></div>";
+    if (mode === "suppr") h += '<div class="aud-menu"><span class="aud-aide">Supprimer cet audio pour tout le monde ?</span><button type="button" class="btn danger small" data-aud-suppr-ok="' + esc(a.id) + '">Oui, supprimer</button><button type="button" class="btn small ghost" data-aud-fermer>Annuler</button></div>';
+    if (mode === "edit" && audEdit && audEdit.id === a.id) h += '<div class="aud-edit">' + formAudioHTML(audEdit, "aud-e") +
+      '<div class="row"><button type="button" class="btn primary small" data-aud-enregistrer="' + esc(a.id) + '">Enregistrer</button><button type="button" class="btn ghost small" data-aud-fermer>Annuler</button></div></div>';
+    return h + "</div>";
+  }
+  /* Dans une séance : les audios de la répétition ; le Conservatoire et l'admin en ajoutent (enregistrer, ou envoyer un fichier). */
+  function blocAudiosSeance(s) {
+    if (!audiosApi) return "";
+    var l = audiosDeSeance(s.id);
+    if (!l.length && !peutSuivi) return "";
+    var h = '<div class="aud-box" id="audios-seance"><div class="aud-box-tete"><b>🎧 Audios de la séance' + (l.length ? " · " + l.length : "") + "</b></div>";
+    if (peutSuivi) h += studioAudioHTML(s, l.length);
+    if (l.length) h += '<div class="aud-liste">' + l.map(ligneAudio).join("") + "</div>" +
+      (l.length > 1 ? '<a class="linkish aud-zip" href="' + esc(audiosApi.zip(s.id)) + '" download>Tout télécharger (.zip)</a>' : "");
+    return h + "</div>";
+  }
+  function studioAudioHTML(s, nb) {
+    var st = enrA && enrA.sid === s.id ? enrA : null;
+    if (!st) return '<div class="aud-ajout"><button type="button" class="btn small" data-aud-enreg="' + esc(s.id) + '"><span class="aud-rond" aria-hidden="true"></span>Enregistrer</button>' +
+      '<button type="button" class="btn small ghost" data-aud-fichier="' + esc(s.id) + '">Envoyer un fichier</button></div>' +
+      (nb ? "" : '<p class="muted aud-aide">Rangés avec la séance, à réécouter et partager sur WhatsApp. Tout le kourel est prévenu.</p>');
+    if (st.etat === "autorisation") return '<p class="aud-etat">Autorisez le micro pour enregistrer…</p>';
+    if (st.etat === "enreg" || st.etat === "fin") return '<div class="aud-enreg"><span class="aud-pastille" aria-hidden="true"></span><b>Enregistrement</b><span class="aud-temps" id="aud-temps">' + fmtDuree(st.debut ? (Date.now() - st.debut) / 1000 : 0) + "</span>" +
+      '<button type="button" class="btn small primary" data-aud-stop>■ Arrêter</button><button type="button" class="btn small ghost" data-aud-annuler>Annuler</button></div>' +
+      '<p class="muted aud-aide">Gardez la plateforme ouverte et l’écran allumé (30 minutes au plus).</p>';
+    if (st.etat === "refus") return '<p class="aud-etat">' + (st.erreur === "NonSupporte" ? "Ce navigateur ne sait pas enregistrer : envoyez plutôt un fichier audio." : "Le micro n’est pas autorisé : autorisez-le dans les réglages du navigateur, ou envoyez un fichier audio.") + "</p>" +
+      '<div class="aud-ajout"><button type="button" class="btn small" data-aud-fichier="' + esc(s.id) + '">Envoyer un fichier</button><button type="button" class="btn small ghost" data-aud-annuler>Fermer</button></div>';
+    if (st.etat === "envoi") return '<div class="aud-envoi"><span id="aud-envoi-txt">Envoi… ' + Math.round((st.progres || 0) * 100) + ' %</span><span class="aud-barre"><span id="aud-envoi-barre" style="width:' + Math.round((st.progres || 0) * 100) + '%"></span></span></div>';
+    return '<div class="aud-revue"><span class="aud-aide">Réécoutez, puis indiquez le khassida et son ère.</span>' + lecteurHTML(st.url, st.duree, true) + formAudioHTML(st, "aud") +
+      '<div class="row"><button type="button" class="btn primary small" data-aud-envoyer>Ajouter à la séance</button>' +
+      (st.fichier ? '<button type="button" class="btn small ghost" data-aud-fichier="' + esc(s.id) + '">Autre fichier</button>' : '<button type="button" class="btn small ghost" data-aud-enreg="' + esc(s.id) + '">↺ Recommencer</button>') +
+      '<button type="button" class="btn small ghost" data-aud-annuler>Annuler</button></div></div>';
+  }
+  /* Enregistrement avec le micro du téléphone (même principe que le Tari, plus long : 30 minutes). */
+  function demarrerAudioSeance(sid) {
+    if (!enregistrementPossible()) { enrA = { sid: sid, etat: "refus", erreur: "NonSupporte" }; afficher(); return; }
+    arreterLecture();
+    if (enrA && enrA.url) URL.revokeObjectURL(enrA.url);
+    var st = enrA = { sid: sid, etat: "autorisation" };
+    afficher();
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } }).then(function (flux) {
+      if (enrA !== st) { flux.getTracks().forEach(function (x) { x.stop(); }); return; }
+      var mime = mimeEnregistrement(), rec;
+      try { rec = new MediaRecorder(flux, mime ? { mimeType: mime, audioBitsPerSecond: 96000 } : undefined); }
+      catch (e) {
+        try { rec = new MediaRecorder(flux); }
+        catch (e2) { flux.getTracks().forEach(function (x) { x.stop(); }); enrA = { sid: sid, etat: "refus", erreur: "NonSupporte" }; afficher(); return; }
+      }
+      st.flux = flux; st.rec = rec; st.morceaux = []; st.mime = rec.mimeType || mime || "audio/webm";
+      rec.ondataavailable = function (ev) { if (ev.data && ev.data.size) st.morceaux.push(ev.data); };
+      rec.onstop = function () { finAudioSeance(st); };
+      flux.getAudioTracks().forEach(function (x) { x.onended = function () { if (enrA === st) arreterAudioSeance("micro"); }; });
+      try { if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { st.eveil = w; }, function () {}); } catch (e) { /* l'écran peut s'éteindre */ }
+      rec.start(1000);
+      st.debut = Date.now(); st.etat = "enreg";
+      st.minuteur = setInterval(function () {
+        if (enrA !== st || st.etat !== "enreg") return;
+        var sec = (Date.now() - st.debut) / 1000, el = document.getElementById("aud-temps");
+        if (el) el.textContent = fmtDuree(sec);
+        if (sec >= DUREE_MAX_AUDIO) arreterAudioSeance("max");
+      }, 250);
+      afficher();
+    }, function (err) {
+      if (enrA !== st) return;
+      enrA = { sid: sid, etat: "refus", erreur: (err && err.name) || "NotAllowedError" };
+      afficher();
+    });
+  }
+  function arreterAudioSeance(raison, sansAfficher) {
+    var st = enrA;
+    if (!st || st.etat !== "enreg") return;
+    st.duree = (Date.now() - st.debut) / 1000; st.raison = raison || ""; st.etat = "fin";
+    if (!sansAfficher) afficher();
+    try { if (st.rec.state !== "inactive") st.rec.stop(); else finAudioSeance(st); } catch (e) { finAudioSeance(st); }
+  }
+  function libererMicroAudio(st) {
+    clearInterval(st.minuteur);
+    if (st.flux) st.flux.getTracks().forEach(function (x) { x.onended = null; x.stop(); });
+    if (st.eveil && st.eveil.release) st.eveil.release().catch(function () {});
+    st.flux = st.eveil = null;
+  }
+  function finAudioSeance(st) {
+    if (st.fini) return;
+    st.fini = true;
+    libererMicroAudio(st);
+    if (enrA !== st) return;
+    var blob = new Blob(st.morceaux || [], { type: (st.mime || "audio/webm").split(";")[0] });
+    if (st.duree < 2 || blob.size < 1000) { enrA = null; afficher(); toast("Enregistrement trop court : touchez « Enregistrer », puis « Arrêter » à la fin."); return; }
+    enrA = Object.assign({ sid: st.sid, etat: "revue", blob: blob, url: URL.createObjectURL(blob), duree: st.duree }, valeursAudio(khParDefaut(st.sid)));
+    afficher();
+    if (st.raison === "max") toast("30 minutes au plus : l’enregistrement s’est arrêté. Réécoutez-le, puis ajoutez-le à la séance.");
+    else if (st.raison === "quitte" || st.raison === "cache") toast("L’enregistrement s’est arrêté quand vous avez quitté la séance : il vous attend dans la séance, à ajouter.");
+    else if (st.raison === "micro") toast("Le micro s’est coupé. Réécoutez l’enregistrement avant de l’ajouter.");
+  }
+  /* Fichier déjà enregistré (Dictaphone, audio reçu sur WhatsApp) : on le réécoute, puis on l'ajoute. */
+  function choisirFichierAudio(sid) {
+    if (!champAudioSeance) {
+      champAudioSeance = document.createElement("input");
+      champAudioSeance.type = "file"; champAudioSeance.accept = "audio/*,.m4a,.mp3,.opus,.ogg,.wav,.webm,.aac,.3gp,.amr"; champAudioSeance.hidden = true;
+      document.body.appendChild(champAudioSeance);
+      champAudioSeance.addEventListener("change", function () {
+        var f = champAudioSeance.files && champAudioSeance.files[0], cible = champAudioSeance.dataset.sid;
+        champAudioSeance.value = "";
+        if (!f) return;
+        if (f.size > 100 * 1024 * 1024) { toast("Fichier trop lourd : 100 Mo au plus."); return; }
+        var url = URL.createObjectURL(f), a = new Audio(), fait = false;
+        var pret = function (duree) {
+          if (fait) return;
+          fait = true;
+          if (duree > DUREE_MAX_AUDIO + 5) { URL.revokeObjectURL(url); toast("Cet audio dure " + Math.round(duree / 60) + " minutes : 30 minutes au plus. Raccourcissez-le (Dictaphone › Modifier › Rogner) ou envoyez-le en deux parties."); return; }
+          arreterLecture();
+          if (enrA && enrA.url) URL.revokeObjectURL(enrA.url);
+          enrA = Object.assign({ sid: cible, etat: "revue", blob: f, url: url, duree: duree || 0, fichier: f.name }, valeursAudio(khParDefaut(cible)));
+          afficher();
+        };
+        a.preload = "metadata";
+        a.onloadedmetadata = function () { pret(isFinite(a.duration) ? a.duration : 0); };
+        a.onerror = function () { pret(0); };
+        a.src = url;
+        setTimeout(function () { pret(0); }, 4000);
+      });
+    }
+    champAudioSeance.dataset.sid = sid;
+    champAudioSeance.click();
+  }
+  function envoyerAudioSeance() {
+    var st = enrA;
+    if (!st || st.etat !== "revue" || !audiosApi) return;
+    var err = erreurValeursAudio(st);
+    if (err) { toast(err); var c = document.getElementById(!st.khassida || !khassidas[st.khassida] && st.khassida !== "__autre" ? "aud-kh" : st.khassida === "__autre" && !(st.nom || "").trim() ? "aud-nom" : "aud-ere"); if (c) c.focus(); return; }
+    arreterLecture();
+    st.etat = "envoi"; st.progres = 0;
+    afficher();
+    audiosApi.envoyer(st.sid, st.blob, Object.assign({ duree: st.duree, progres: function (f) {
+      st.progres = f;
+      var b = document.getElementById("aud-envoi-barre"), tx = document.getElementById("aud-envoi-txt");
+      if (b) b.style.width = Math.round(f * 100) + "%";
+      if (tx) tx.textContent = f >= 1 ? "Compression de l’audio…" : "Envoi… " + Math.round(f * 100) + " %";
+    } }, donneesAudio(st))).then(function () {
+      if (enrA === st) { if (st.url) URL.revokeObjectURL(st.url); enrA = null; }
+      afficher();
+      toast("Audio ajouté : tout le kourel est prévenu par notification. Touchez « Partager » pour l’envoyer aussi sur WhatsApp.");
+    }, function (e) {
+      if (enrA === st) { st.etat = "revue"; afficher(); }
+      toast(e && e.message ? e.message : "L’envoi n’a pas abouti. Réessayez.");
+    });
+  }
+  /* Partager : sur téléphone, le fichier part directement dans WhatsApp (feuille de partage), avec son nom et son ère ; ailleurs, il est téléchargé. */
+  function telechargerAudio(a) {
+    var l = document.createElement("a");
+    l.href = urlAudioSeance(a, true); l.download = nomFichierAudio(a);
+    document.body.appendChild(l); l.click();
+    setTimeout(function () { l.remove(); }, 1000);
+  }
+  function partagerAudio(id, b) {
+    var a = audiosSeances[id];
+    if (!a) return;
+    var texte = (TYPES[a.type] || "Répétition") + " du " + jourCourt(a.date).toLowerCase() + " : " + libelleAudio(a);
+    var envoyer = function (f) {
+      var ok = false;
+      try { ok = !!(navigator.canShare && navigator.share && navigator.canShare({ files: [f] })); } catch (e) { ok = false; }
+      if (!ok) { telechargerAudio(a); toast("Sur cet appareil, l’audio est téléchargé : joignez-le ensuite dans WhatsApp."); return; }
+      navigator.share({ files: [f], title: libelleAudio(a), text: texte }).catch(function (e) {
+        if (e && e.name === "NotAllowedError") toast("Audio prêt : touchez encore « Partager ».");
+      });
+    };
+    if (fichiersPartage[id]) { envoyer(fichiersPartage[id]); return; }
+    b.disabled = true; b.classList.add("charge");
+    fetch(urlAudioSeance(a), { credentials: "same-origin" }).then(function (r) { if (!r.ok) throw new Error("audio"); return r.blob(); }).then(function (bl) {
+      fichiersPartage[id] = new File([bl], nomFichierAudio(a), { type: bl.type || "audio/mp4" });
+      b.disabled = false; b.classList.remove("charge");
+      envoyer(fichiersPartage[id]);
+    }, function () { b.disabled = false; b.classList.remove("charge"); toast("L’audio n’a pas pu être préparé. Réessayez."); });
+  }
+  /* Nouveaux audios depuis la dernière visite de la page des audios (sur cet appareil) ; au premier passage, rien n'est « nouveau ». */
+  function audiosVusLe() { try { var v = localStorage.getItem("audios-vus-le"); if (!v) { v = String(Date.now()); localStorage.setItem("audios-vus-le", v); } return Number(v) || 0; } catch (e) { return Date.now(); } }
+  function marquerAudiosVus() { try { localStorage.setItem("audios-vus-le", String(Date.now())); } catch (e) { /* stockage indisponible */ } }
+  function nbAudiosNouveaux() { var t = audiosVusLe(); return listeAudios().filter(function (a) { return (a.le || 0) > t && a.par !== moiCourant; }).length; }
+  /* Onglet Khassidas › « Audios des répétitions » (#audios, ou #audios/<khassida>) : tous ceux qu'on peut écouter, par séance. */
+  function entreeAudios() {
+    if (!audiosApi) return "";
+    var n = listeAudios().length, nv = nbAudiosNouveaux();
+    if (!n) return "";
+    return '<a class="chartes-lien' + (nv ? " aud-neuf" : "") + '" href="#audios"><span aria-hidden="true">🎧</span><span><b>Audios des répétitions' + (nv ? ' <span class="pill p">' + nv + " nouveau" + (nv > 1 ? "x" : "") + "</span>" : "") + "</b><small>" + n + " audio" + (n > 1 ? "s" : "") + " rangés par séance : à réécouter et partager</small></span><span aria-hidden=\"true\">›</span></a>";
+  }
+  function boutonAudiosLecture(kh) {
+    var n = audiosApi ? audiosDuKh(kh.id).length : 0;
+    return n ? '<a class="btn small lb-tari" href="#audios/' + encodeURIComponent(kh.id) + '" aria-label="' + n + " audio" + (n > 1 ? "s" : "") + ' des répétitions">🎧 ' + n + "</a>" : "";
+  }
+  function vueAudios() {
+    var l = listeAudios().filter(function (a) { return !audiosFiltreKh || a.khassida === audiosFiltreKh; });
+    var parS = {};
+    l.forEach(function (a) { (parS[a.seance] = parS[a.seance] || []).push(a); });
+    var ids = Object.keys(parS).sort(function (x, y) { var a = parS[x][0].date, b = parS[y][0].date; return a < b ? 1 : a > b ? -1 : 0; });
+    var kh = audiosFiltreKh && khassidas[audiosFiltreKh];
+    var html = '<div><a class="btn ghost" href="#khassidas">← Khassidas</a></div><section class="panel"><h2>Audios des répétitions</h2><p class="muted">' +
+      (peutSuivi ? "Rangés par séance. Pour en ajouter, ouvrez la séance dans Répétitions." : "Les audios des répétitions de votre kourel, rangés par séance.") + " Gardés un an, sauf les épinglés 📌.</p>" +
+      (audiosFiltreKh ? '<a class="chip-filtre" href="#audios" aria-label="Voir tous les audios">' + esc(kh ? kh.titre : "Khassida") + ' <span aria-hidden="true">✕</span></a>' : "");
+    if (!ids.length) html += '<div class="empty" style="margin-top:14px">' + (audiosFiltreKh ? "Aucun audio pour ce khassida pour l’instant." : "Aucun audio pour l’instant.") + "</div>";
+    ids.forEach(function (sid) {
+      var a0 = parS[sid][0];
+      html += '<h3 class="group aud-groupe">' + esc(jourLong(a0.date)) + " · " + esc(TYPES[a0.type] || "") +
+        (peutSuivi || estDiscipline ? ' <button type="button" class="linkish" data-open-seance="' + esc(sid) + '">Ouvrir la séance</button>' : "") + "</h3>" +
+        '<div class="aud-liste">' + parS[sid].sort(function (a, b) { return (a.le || 0) - (b.le || 0); }).map(ligneAudio).join("") + "</div>";
+    });
+    app.innerHTML = html + "</section>";
+    marquerAudiosVus();
+  }
+  /* Réglages › Sauvegarde : place prise par les audios et place libre sur le disque du serveur (alerte à 80 %). */
+  function chargerEspace() {
+    if (!audiosApi || !peutModifier || espaceEnCours || espaceAudios) return;
+    espaceEnCours = true;
+    audiosApi.espace().then(function (r) { espaceAudios = r || {}; espaceEnCours = false; if (vue === "reglages") afficher(); }, function () { espaceEnCours = false; });
+  }
+  function pctDisque() { var d = espaceAudios && espaceAudios.disque; return d && d.total ? Math.round(100 * (d.total - d.libre) / d.total) : 0; }
+  function blocEspaceAudios() {
+    if (!audiosApi) return "";
+    if (!espaceAudios) { chargerEspace(); return '<section class="panel"><h2>Audios et espace disque</h2><p class="muted">Calcul de la place utilisée…</p></section>'; }
+    var e = espaceAudios, d = e.disque, pct = pctDisque(), se = e.seances || {}, ta = e.taris || {};
+    return '<section class="panel"><h2>Audios et espace disque</h2><p class="muted">Les audios des répétitions sont gardés un an après la répétition, puis effacés automatiquement, sauf ceux épinglés 📌.</p>' +
+      (d ? '<div class="jauge' + (pct >= 80 ? " alerte" : "") + '" role="img" aria-label="Disque utilisé à ' + pct + ' %"><span style="width:' + pct + '%"></span></div>' +
+        '<p class="jauge-txt">Disque du serveur : <b>' + tailleTxt(d.libre) + " libres</b> sur " + tailleTxt(d.total) + " (" + pct + "\u00a0% utilisés)</p>" : "") +
+      '<div class="stats"><span class="pill n">Audios des répétitions : ' + tailleTxt(se.octets) + " · " + (se.fichiers || 0) + '</span><span class="pill n">Taris : ' + tailleTxt(ta.octets) + " · " + (ta.fichiers || 0) + "</span>" +
+      (e.epingles ? '<span class="pill p">📌 ' + e.epingles + " épinglé" + (e.epingles > 1 ? "s" : "") + "</span>" : "") + "</div>" +
+      (pct >= 80 ? '<div class="me-banner wait" style="margin-top:12px">⚠️ <span>Le disque du serveur est presque plein : téléchargez puis supprimez des audios, ou agrandissez le serveur.</span></div>' : "") +
+      (e.bientot ? '<p style="margin-top:12px">' + e.bientot + " audio" + (e.bientot > 1 ? "s seront effacés" : " sera effacé") + ' dans les 30 prochains jours.</p><div class="row"><a class="btn" href="' + esc(audiosApi.zip("")) + '" download>Les télécharger avant (.zip)</a></div>'
+        : '<p class="muted" style="margin-top:12px">Aucun audio à effacer dans les 30 prochains jours.</p>') + "</section>";
+  }
+  function clicAudios(b) {
+    var d = b.dataset;
+    if (d.audEnreg) { demarrerAudioSeance(d.audEnreg); return true; }
+    if (d.audFichier) { choisirFichierAudio(d.audFichier); return true; }
+    if (d.audStop !== undefined) { arreterAudioSeance(""); return true; }
+    if (d.audAnnuler !== undefined) {
+      var st = enrA; enrA = null;
+      if (st) { if (st.etat === "enreg" || st.etat === "fin") { try { if (st.rec && st.rec.state !== "inactive") st.rec.stop(); } catch (e) { /* déjà arrêté */ } libererMicroAudio(st); } if (st.url) URL.revokeObjectURL(st.url); }
+      arreterLecture(); afficher(); return true;
+    }
+    if (d.audEnvoyer !== undefined) { envoyerAudioSeance(); return true; }
+    if (d.audPartager) { partagerAudio(d.audPartager, b); return true; }
+    if (d.audEreLibre) {
+      var vl = d.audEreLibre === "aud-e" ? audEdit : enrA;
+      if (vl) { vl.ereLibre = true; afficher(); var ie = document.getElementById(d.audEreLibre + "-ere"); if (ie) ie.focus(); }
+      return true;
+    }
+    if (d.audMenu) { audMenu = audMenu && audMenu.id === d.audMenu ? null : { id: d.audMenu, mode: "menu" }; audEdit = null; afficher(); return true; }
+    if (d.audFermer !== undefined) { audMenu = null; audEdit = null; afficher(); return true; }
+    if (d.audModifier) {
+      var am = audiosSeances[d.audModifier];
+      if (am) { audMenu = { id: am.id, mode: "edit" }; audEdit = { id: am.id, khassida: am.khassida || (am.khTitre ? "__autre" : ""), nom: am.khassida ? "" : am.khTitre || "", ere: am.ere || "", ereLibre: false, titre: am.titre || "" }; afficher(); }
+      return true;
+    }
+    if (d.audSuppr) { audMenu = { id: d.audSuppr, mode: "suppr" }; afficher(); return true; }
+    if (d.openSeance) { seanceAOuvrir = d.openSeance; location.hash = "#seances"; return true; }
+    if (!audiosApi) return false;
+    if (d.audEpingle) {
+      var ae = audiosSeances[d.audEpingle];
+      if (ae) { b.disabled = true; audiosApi.maj(ae.id, { epingle: !ae.epingle }).then(function () { audMenu = null; toast(!ae.epingle ? "Épinglé : cet audio sera gardé pour toujours." : "Désépinglé : il sera effacé un an après la répétition."); }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); }); }
+      return true;
+    }
+    if (d.audEnregistrer) {
+      var v = audEdit, err = v ? erreurValeursAudio(v) : "Modification impossible.";
+      if (err) { toast(err); return true; }
+      b.disabled = true;
+      audiosApi.maj(d.audEnregistrer, donneesAudio(v)).then(function () { audMenu = null; audEdit = null; fichiersPartage = {}; toast("Audio modifié."); }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Modification impossible."); });
+      return true;
+    }
+    if (d.audSupprOk) {
+      b.disabled = true;
+      audiosApi.retirer(d.audSupprOk).then(function () { audMenu = null; audEdit = null; toast("Audio supprimé."); }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Suppression impossible."); });
+      return true;
+    }
+    return false;
+  }
+  /* Saisie gardée pendant les rafraîchissements : « aud-… » = nouvel audio, « aud-e-… » = modification. */
+  function valeursChamp(id) { return id.indexOf("aud-e-") === 0 ? audEdit : id.indexOf("aud-") === 0 ? enrA : null; }
+  app.addEventListener("input", function (e) {
+    var id = e.target.id || "", v = valeursChamp(id), champ = id.replace(/^aud-(e-)?/, "");
+    if (v && (champ === "nom" || champ === "ere" || champ === "titre")) v[champ] = e.target.value;
+  });
+  app.addEventListener("change", function (e) {
+    var id = e.target.id || "", v = valeursChamp(id);
+    if (!v || !/-kh$/.test(id)) return;
+    v.khassida = e.target.value;
+    var kh = khassidas[v.khassida];
+    if (kh && kh.ere) v.ere = kh.ere;
+    afficher();
+    var suite = document.getElementById(id.replace(/-kh$/, v.khassida === "__autre" ? "-nom" : kh && kh.ere ? "-titre" : "-ere"));
+    if (suite) suite.focus();
+  });
 
   /* ---------- Taris enregistrés sur la plateforme ----------
      taris/{séance~membre} (voir serveur.mjs) : les envois audio d'un membre pour le Tari d'une séance, et la réponse du Conservatoire.
@@ -4601,10 +5021,12 @@ h3.group.seances-mois { margin-top: 6px; }
   }
   document.addEventListener("visibilitychange", function () {
     if (document.hidden && studio && studio.etat === "enreg") arreterEnregistrement("cache");
+    if (document.hidden && enrA && enrA.etat === "enreg") arreterAudioSeance("cache");
     if (document.hidden && vocal && vocal.etat === "enreg") pauseVocal(false);
   });
   window.addEventListener("beforeunload", function (e) {
-    if ((studio && (studio.etat === "enreg" || studio.etat === "revue" || studio.etat === "envoi")) || (vocal && ["enreg", "pause", "revue", "envoi"].indexOf(vocal.etat) > -1)) { e.preventDefault(); e.returnValue = ""; }
+    if ((studio && (studio.etat === "enreg" || studio.etat === "revue" || studio.etat === "envoi")) || (vocal && ["enreg", "pause", "revue", "envoi"].indexOf(vocal.etat) > -1) ||
+      (enrA && ["enreg", "revue", "envoi"].indexOf(enrA.etat) > -1)) { e.preventDefault(); e.returnValue = ""; }
   });
 
   /* ----- Lecteur des envois (un seul audio à la fois) ----- */
@@ -5022,6 +5444,11 @@ h3.group.seances-mois { margin-top: 6px; }
       if (peutSuivi || !programmeApi) return null;
       return { vue: "dahira", titre: "Proposez un khassida", texte: "Dans l’onglet Programme, touchez « + Proposer un khassida » sous une répétition ou un dahira de votre kourel. Le dieuwrigne décide de le retenir ; votre nom accompagne la proposition." };
     } },
+    { cle: "audios-seances", contenu: function () {
+      if (!audiosApi) return null;
+      if (peutSuivi) return { vue: "seances", titre: "Les audios des répétitions", texte: "Dans chaque séance, touchez « Enregistrer » (ou envoyez un fichier) : l’audio reste rangé avec la séance et son khassida, prêt à partager sur WhatsApp. Gardé un an, ou pour toujours s’il est épinglé." };
+      return listeAudios().length ? { vue: "khassidas", titre: "Les audios des répétitions", texte: "Les audios enregistrés pendant les répétitions de votre kourel sont rangés ici, par séance : réécoutez-les quand vous voulez." } : null;
+    } },
     { cle: "notifications", contenu: function () {
       if (!notifsApi || notifsEtat.abonne) return null;
       return { vue: "moi", titre: "Soyez prévenu", texte: "Plus besoin d’ouvrir la plateforme pour vérifier : dans Mon espace, touchez « Activer les notifications ». Vous serez prévenu, et un chiffre s’affichera sur l’icône." + (estIOS && !estAppli ? " Sur iPhone, ajoutez d’abord la plateforme à l’écran d’accueil." : "") };
@@ -5154,12 +5581,14 @@ h3.group.seances-mois { margin-top: 6px; }
       claudeApi.use("messages").catch(function () { return null; }),
       claudeApi.use("programme").catch(function () { return null; }),
       claudeApi.use("taris").catch(function () { return null; }),
-      claudeApi.use("notifs").catch(function () { return null; })
+      claudeApi.use("notifs").catch(function () { return null; }),
+      claudeApi.use("audiosSeances").catch(function () { return null; })
     ]).then(function (rr) {
       messagesApi = rr[1] ? rr[3] : null;
       programmeApi = rr[1] ? rr[4] : null;
       tarisApi = rr[1] ? rr[5] : null;
       notifsApi = rr[1] ? rr[6] : null;
+      audiosApi = rr[1] ? rr[7] : null;
       initNotifs();
       initTirerPourActualiser();
       if (messagesApi) chargerMessages();
@@ -5211,6 +5640,12 @@ h3.group.seances-mois { margin-top: 6px; }
       snap.docs.forEach(function (d) { tarisDocs[d.id] = d.data(); });
       afficher();
     }, function () { /* pas de Tari enregistré (prototype claude.ai) */ });
+    db.collection("audiosSeances").onSnapshot(function (snap) {
+      audiosSeances = {};
+      snap.docs.forEach(function (d) { audiosSeances[d.id] = Object.assign({ id: d.id }, d.data()); });
+      espaceAudios = null;
+      afficher();
+    }, function () { /* pas d'audio de répétition (prototype claude.ai) */ });
     db.collection("dahiras").onSnapshot(function (snap) {
       dahirasCfg = {};
       snap.docs.forEach(function (d) { dahirasCfg[d.id] = d.data(); });

@@ -14,7 +14,7 @@ Même principe que gobering :
 
 Les données sont dans Neon : le conteneur ne garde rien. Il refuse de démarrer sans `DATABASE_URL`.
 
-**Exception : les audios des Taris** enregistrés par les membres (fichiers trop lourds pour la base). Ils sont sur le disque du VPS, dans le volume Docker `conservatoire-audios` (monté sur `/app/audios`), créé tout seul au premier déploiement et gardé à chaque mise à jour. ffmpeg, inclus dans l'image, convertit chaque envoi en m4a (lisible sur tous les téléphones). Ne lancez jamais `docker compose down -v` : l'option `-v` effacerait ce volume.
+**Exception : les audios des Taris** enregistrés par les membres (fichiers trop lourds pour la base). Ils sont sur le disque du VPS, dans le volume Docker `conservatoire-audios` (monté sur `/app/audios`), créé tout seul au premier déploiement et gardé à chaque mise à jour. ffmpeg, inclus dans l'image, convertit chaque envoi en m4a (lisible sur tous les téléphones). **Les audios des répétitions** (ajoutés dans chaque séance) sont dans le même volume, sous-dossier `seances/` : compressés en mono 48 kb/s (environ 22 Mo par heure d'audio), effacés automatiquement un an après la répétition sauf ceux épinglés. La place libre du disque se voit dans Réglages › Sauvegarde (alerte à 80 %). Ne lancez jamais `docker compose down -v` : l'option `-v` effacerait ce volume.
 
 ## Première mise en place (une seule fois)
 

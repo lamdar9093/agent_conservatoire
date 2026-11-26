@@ -13,6 +13,7 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { ouvrirStockage, nomValide } from "./stockage.mjs";
 import { creerComptes, COOKIE, DUREE_SESSION } from "./comptes.mjs";
@@ -42,7 +43,7 @@ const PERMISSION_COLLECTION = { seances: "suivi", evaluations: "suivi" };
 const roleDe = (sess) => (sess.admin ? "admin" : sess.conservatoire ? "conservatoire" : "membre");
 const peut = (sess, perm) => { const r = ROLES[roleDe(sess)]; return r === null || (!!perm && r.has(perm)); };
 // Collections lisibles par un membre (les autres sont réservées à l'administrateur).
-const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages", "taris"]);
+const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages", "taris", "audiosSeances"]);
 // Fichiers accessibles sans connexion (le logo et les icônes de /marque/ aussi : page de connexion, onglet, écran d'accueil).
 const PUBLICS = new Set(["/connexion.html", "/local/connexion.js", "/favicon.ico", "/sw.js"]);
 const estPublic = (rel) => PUBLICS.has(rel) || /^\/marque\/[\w.-]+$/.test(rel);
@@ -64,6 +65,12 @@ try {
   // Réceptions interrompues lors d'un arrêt précédent.
   for (const f of await fsp.readdir(AUDIOS)) if (f.startsWith(".recu-")) await fsp.rm(path.join(AUDIOS, f), { force: true });
 } catch (e) { console.error("Dossier des audios des Taris inaccessible (" + AUDIOS + ") : " + e.message); }
+/* Audios des répétitions (enregistrés par le Conservatoire pendant une séance) : sous-dossier seances/ du même volume. */
+const AUDIOS_SEANCES = path.join(AUDIOS, "seances");
+try {
+  await fsp.mkdir(AUDIOS_SEANCES, { recursive: true });
+  for (const f of await fsp.readdir(AUDIOS_SEANCES)) if (f.startsWith(".recu-")) await fsp.rm(path.join(AUDIOS_SEANCES, f), { force: true });
+} catch (e) { console.error("Dossier des audios des répétitions inaccessible (" + AUDIOS_SEANCES + ") : " + e.message); }
 /* ffmpeg (présent dans l'image Docker) convertit chaque envoi en m4a (AAC) : lisible sur tous les téléphones,
    y compris un iPhone qui écoute un enregistrement fait sur Android. Sans ffmpeg, le fichier est gardé tel quel. */
 const FFMPEG = process.env.FFMPEG || "ffmpeg";
@@ -305,10 +312,14 @@ function recevoirFichier(req, cible, max) {
     req.pipe(out);
   });
 }
-function convertirEnM4a(source, cible) {
+/* debit : 96k pour les Taris, 48k pour les audios des répétitions ; maxSecondes : durée gardée au plus (0 = tout). */
+function convertirEnM4a(source, cible, debit = "96k", maxSecondes = 0) {
   return new Promise((ok) => {
-    const p = spawn(FFMPEG, ["-hide_banner", "-loglevel", "error", "-y", "-i", source, "-vn", "-ac", "1", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", cible], { stdio: "ignore" });
-    const minuteur = setTimeout(() => p.kill("SIGKILL"), 120000);
+    const args = ["-hide_banner", "-loglevel", "error", "-y", "-i", source, "-vn", "-ac", "1", "-c:a", "aac", "-b:a", debit];
+    if (maxSecondes) args.push("-t", String(maxSecondes));
+    args.push("-movflags", "+faststart", cible);
+    const p = spawn(FFMPEG, args, { stdio: "ignore" });
+    const minuteur = setTimeout(() => p.kill("SIGKILL"), maxSecondes ? 600000 : 120000);
     p.on("error", () => { clearTimeout(minuteur); ok(false); });
     p.on("exit", (c) => { clearTimeout(minuteur); ok(c === 0); });
   });
@@ -341,6 +352,159 @@ async function enregistrerAudio(req, prefixe) {
   return { fichier, taille };
 }
 const dureeDe = (req) => Math.max(0, Math.min(3600, Math.round(10 * (Number(new URL(req.url, "http://x").searchParams.get("duree")) || 0)) / 10));
+
+/* ----- Audios des répétitions (collection audiosSeances, fichiers dans AUDIOS/seances/<id>.m4a) -----
+   Le Conservatoire et l'admin en ajoutent dans une séance (enregistrés sur place ou envoyés : Dictaphone, audio WhatsApp).
+   Compressés en mono 48 kb/s (assez pour la voix et le chant : environ 22 Mo par heure), 30 minutes au plus par audio.
+   Gardés 1 an après la répétition puis effacés automatiquement, sauf ceux épinglés (choix de l'utilisateur, 26 novembre 2026). */
+const MAX_AUDIO_SEANCE = 100 * 1024 * 1024;
+const DUREE_MAX_SEANCE = 30 * 60;
+const ID_AUDIO_SEANCE = /^[0-9a-f]{32}$/;
+const NOMS_SEANCES = { k1: "Kourel 1", k2: "Kourel 2", rg: "Répétition générale" };
+async function enregistrerAudioSeance(req, id) {
+  const tropGros = { erreur: 413, code: "trop_gros", message: "Fichier trop lourd : 100 Mo au plus." };
+  if (Number(req.headers["content-length"] || 0) > MAX_AUDIO_SEANCE) return tropGros;
+  const tmp = path.join(AUDIOS_SEANCES, ".recu-" + id), cible = path.join(AUDIOS_SEANCES, id + ".m4a");
+  let recu;
+  try { recu = await recevoirFichier(req, tmp, MAX_AUDIO_SEANCE); }
+  catch (e) { return e.code === "trop_gros" ? { ...tropGros, coupe: true } : { erreur: 400, code: e.code, message: "L’envoi a été interrompu. Réessayez.", coupe: true }; }
+  const fmt = formatAudio(recu.tete);
+  if (recu.taille < 1000 || !fmt) {
+    await fsp.rm(tmp, { force: true });
+    return { erreur: 415, code: "format", message: recu.taille < 1000 ? "L’enregistrement est vide : recommencez." : "Ce fichier n’est pas un audio reconnu (m4a, mp3, ogg, wav, 3gp ou amr)." };
+  }
+  if (ffmpegDispo && await convertirEnM4a(tmp, cible, "48k", DUREE_MAX_SEANCE)) {
+    await fsp.rm(tmp, { force: true });
+    return { fichier: id + ".m4a", taille: (await fsp.stat(cible)).size };
+  }
+  if (ffmpegDispo) await fsp.rm(cible, { force: true });
+  if (fmt === "amr") { await fsp.rm(tmp, { force: true }); return { erreur: 415, code: "format", message: "Ce format d’enregistrement (AMR) n’a pas pu être converti : enregistrez directement sur la plateforme." }; }
+  await fsp.rename(tmp, path.join(AUDIOS_SEANCES, id + "." + fmt));
+  return { fichier: id + "." + fmt, taille: recu.taille };
+}
+/* Qui écoute les audios d'une séance : le Conservatoire, l'admin et la Discipline ; un membre, ceux des répétitions
+   de son kourel (répétition générale : les deux kourels) ou d'une séance où il était. */
+async function audiosSeancesVisibles(sess, docs) {
+  if (peut(sess, "suivi") || sess.discipline) return docs;
+  const m = (await stock.lireDoc("membres", sess.membre)) || {};
+  const seances = new Map((await stock.lireCollection("seances")).map((x) => [x.id, x.data]));
+  return docs.filter((d) => {
+    const s = seances.get(d.data.seance);
+    if (s && (s.participants || []).includes(sess.membre)) return true;
+    return d.data.type === "rg" ? !!(m.k1 || m.k2) : !!m[d.data.type];
+  });
+}
+const dateIso = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+/* Date avant laquelle un audio a plus d'un an (decalage en jours : 30 = ceux qui seront effacés dans les 30 jours). */
+function limiteConservation(decalage = 0) { const d = new Date(); d.setDate(d.getDate() + decalage); d.setFullYear(d.getFullYear() - 1); return dateIso(d); }
+async function supprimerAudioSeance(id, data) {
+  if (data && /^[0-9a-f]{32}\.\w+$/.test(data.fichier || "")) await fsp.rm(path.join(AUDIOS_SEANCES, data.fichier), { force: true });
+  await stock.supprimerDoc("audiosSeances", id);
+}
+async function nettoyerAudiosSeances() {
+  const limite = limiteConservation(0);
+  let n = 0;
+  for (const d of await stock.lireCollection("audiosSeances")) {
+    if (d.data.epingle || !d.data.date || d.data.date >= limite) continue;
+    await supprimerAudioSeance(d.id, d.data); n++;
+  }
+  if (n) { prevenir("audiosSeances"); console.log(n + " audio(s) de répétition de plus d’un an effacé(s)."); }
+}
+setTimeout(() => nettoyerAudiosSeances().catch((e) => console.error(e)), 30000);
+setInterval(() => nettoyerAudiosSeances().catch((e) => console.error(e)), 6 * 3600000);
+/* Chaque audio porte le nom de son khassida et son ère (demande de l'utilisateur), plus une précision facultative (titre). */
+const libelleAudio = (d) => (d.khTitre || d.titre || "Audio") + (d.khTitre && d.titre ? ", " + d.titre : "") + (d.ere ? " (ère " + d.ere + ")" : "");
+/* Nom lisible d'un audio (téléchargement, zip, WhatsApp) : « 2026-11-20 Kourel 2 - Zallat, beuyites 1 à 4 (ère Serigne Cissé) ». */
+const nomAudioSeance = (d) => (d.date + " " + (NOMS_SEANCES[d.type] || "") + " - " + libelleAudio(d)).replace(/[\/\\:*?"<>|\r\n]+/g, "-").replace(/\s+/g, " ").trim();
+/* Nouvel audio : tous ceux qui peuvent l'écouter sont prévenus (demande de l'utilisateur), sauf celui qui l'a ajouté.
+   Plusieurs audios ajoutés à la suite dans une même séance partent en une seule notification, 90 secondes après le dernier. */
+const audiosAAnnoncer = new Map();
+function annoncerAudioSeance(sid, id) {
+  const e = audiosAAnnoncer.get(sid) || { ids: new Set(), minuteur: null };
+  e.ids.add(id);
+  clearTimeout(e.minuteur);
+  e.minuteur = setTimeout(() => { audiosAAnnoncer.delete(sid); envoyerAnnonceAudios(sid, [...e.ids]).catch((er) => console.error(er)); }, Number(process.env.DELAI_NOTIF_AUDIO || 90000));
+  audiosAAnnoncer.set(sid, e);
+}
+async function envoyerAnnonceAudios(sid, ids) {
+  const docs = (await Promise.all(ids.map((id) => stock.lireDoc("audiosSeances", id)))).filter(Boolean);
+  if (!docs.length) return;
+  const s = (await stock.lireDoc("seances", sid)) || {}, t = docs[0].type;
+  const membres = new Map((await stock.lireCollection("membres")).map((d) => [d.id, d.data]));
+  const auteurs = new Set(docs.map((d) => d.par)), dest = [];
+  for (const c of await stock.lireCollection("_comptes")) {
+    const m = membres.get(c.id);
+    if (!m || !actif(m) || (auteurs.size === 1 && auteurs.has(c.id))) continue;
+    if (c.data.admin || c.data.conservatoire || c.data.discipline || (s.participants || []).includes(c.id) || (t === "rg" ? (m.k1 || m.k2) : m[t])) dest.push(c.id);
+  }
+  const jour = new Date(docs[0].date + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  await notifs.notifier(dest, {
+    titre: docs.length === 1 ? "🎧 Nouvel audio de la répétition" : "🎧 " + docs.length + " nouveaux audios de la répétition",
+    texte: ((NOMS_SEANCES[t] || "Répétition") + " du " + jour + " : " + docs.map(libelleAudio).join(" · ")).slice(0, 180),
+    url: "/#audios"
+  });
+}
+const dispo = (nom) => "attachment; filename=\"" + nom.replace(/[^\x20-\x7e]/g, "_").replace(/"/g, "") + "\"; filename*=UTF-8''" + encodeURIComponent(nom);
+/* Place prise par un dossier (fichiers seulement, sans les envois en cours). */
+async function tailleDossier(dir) {
+  let octets = 0, fichiers = 0;
+  for (const f of await fsp.readdir(dir, { withFileTypes: true }).catch(() => [])) {
+    if (!f.isFile() || f.name.startsWith(".")) continue;
+    try { octets += (await fsp.stat(path.join(dir, f.name))).size; fichiers++; } catch { /* effacé entre-temps */ }
+  }
+  return { octets, fichiers };
+}
+/* Zip sans compression (les m4a le sont déjà), écrit au fil de l'eau : ni fichier temporaire, ni mémoire. */
+const TABLE_CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(buf, crc = 0) {
+  if (typeof zlib.crc32 === "function") return zlib.crc32(buf, crc);
+  let c = (crc ^ 0xffffffff) >>> 0;
+  for (let i = 0; i < buf.length; i++) c = TABLE_CRC[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+async function envoyerZip(res, nomZip, fichiers) {
+  res.writeHead(200, { "Content-Type": "application/zip", "Content-Disposition": dispo(nomZip), "Cache-Control": "no-store" });
+  const maintenant = new Date();
+  const heure = (maintenant.getHours() << 11) | (maintenant.getMinutes() << 5) | Math.floor(maintenant.getSeconds() / 2);
+  const jour = ((maintenant.getFullYear() - 1980) << 9) | ((maintenant.getMonth() + 1) << 5) | maintenant.getDate();
+  let position = 0;
+  const ecrire = (b) => new Promise((ok, ko) => {
+    if (res.destroyed) return ko(new Error("ferme"));
+    position += b.length;
+    if (res.write(b)) return ok();
+    const suite = () => { res.off("drain", suite); res.off("close", suite); res.destroyed ? ko(new Error("ferme")) : ok(); };
+    res.on("drain", suite); res.on("close", suite);
+  });
+  const central = [];
+  try {
+    for (const f of fichiers) {
+      const nom = Buffer.from(f.nom, "utf8"), debut = position;
+      const entete = Buffer.alloc(30);
+      entete.writeUInt32LE(0x04034b50, 0); entete.writeUInt16LE(20, 4); entete.writeUInt16LE(0x0808, 6);   // descripteur après les données + noms en UTF-8
+      entete.writeUInt16LE(0, 8); entete.writeUInt16LE(heure, 10); entete.writeUInt16LE(jour, 12); entete.writeUInt16LE(nom.length, 26);
+      await ecrire(entete); await ecrire(nom);
+      let crc = 0, taille = 0;
+      for await (const morceau of fs.createReadStream(f.chemin)) { crc = crc32(morceau, crc); taille += morceau.length; await ecrire(morceau); }
+      const desc = Buffer.alloc(16);
+      desc.writeUInt32LE(0x08074b50, 0); desc.writeUInt32LE(crc >>> 0, 4); desc.writeUInt32LE(taille, 8); desc.writeUInt32LE(taille, 12);
+      await ecrire(desc);
+      central.push({ nom, crc, taille, debut });
+    }
+    const debutCentral = position;
+    for (const c of central) {
+      const e = Buffer.alloc(46);
+      e.writeUInt32LE(0x02014b50, 0); e.writeUInt16LE(20, 4); e.writeUInt16LE(20, 6); e.writeUInt16LE(0x0808, 8); e.writeUInt16LE(0, 10);
+      e.writeUInt16LE(heure, 12); e.writeUInt16LE(jour, 14); e.writeUInt32LE(c.crc >>> 0, 16); e.writeUInt32LE(c.taille, 20); e.writeUInt32LE(c.taille, 24);
+      e.writeUInt16LE(c.nom.length, 28); e.writeUInt32LE(c.debut, 42);
+      await ecrire(e); await ecrire(c.nom);
+    }
+    const fin = Buffer.alloc(22);
+    fin.writeUInt32LE(0x06054b50, 0); fin.writeUInt16LE(central.length, 8); fin.writeUInt16LE(central.length, 10);
+    fin.writeUInt32LE(position - debutCentral, 12); fin.writeUInt32LE(debutCentral, 16);
+    await ecrire(fin);
+    res.end();
+  } catch { if (!res.destroyed) res.destroy(); }
+}
 /* Un seul traitement à la fois par dossier de Tari (deux membres du Conservatoire qui le prennent en même temps). */
 const verrous = new Map();
 function sousVerrou(cle, fn) {
@@ -779,6 +943,101 @@ async function api(req, res, parts, sess) {
     return json(res, 200, { ok: true, decideur, message });
   }
 
+  /* --- Audios des répétitions (voir plus haut : audiosSeances) ---
+     POST   audios-seances/<séance>?duree=&titre=&khassida=   ajouter un audio (corps = le fichier) : Conservatoire, admin
+     PATCH  audios-seances/<id>   { titre, khassida, epingle }   ·   DELETE audios-seances/<id>   (Conservatoire, admin)
+     GET    audios-seances/fichier/<id>[?dl=1]   écouter ou télécharger (droits : audiosSeancesVisibles)
+     GET    audios-seances/zip?seance=<id> | ?bientot=1 (admin : ceux effacés dans les 30 jours)
+     GET    audios-seances/espace   place prise sur le disque du serveur (admin) */
+  if (parts[0] === "audios-seances") {
+    const [, a, b] = parts, q = new URL(req.url, "http://x").searchParams;
+    if (a === "fichier" && req.method === "GET" && parts.length === 3) {
+      const d = ID_AUDIO_SEANCE.test(b || "") ? await stock.lireDoc("audiosSeances", b) : null;
+      if (!d) return json(res, 404, { code: "not_found", message: "Cet audio n’existe plus." });
+      if (!(await audiosSeancesVisibles(sess, [{ id: b, data: d }])).length) return json(res, 403, { code: "invalid_argument", message: "Cet audio est réservé au kourel de la répétition." });
+      const ext = String(d.fichier || "").split(".").pop();
+      if (q.get("dl")) res.setHeader("Content-Disposition", dispo(nomAudioSeance(d) + "." + ext));
+      return envoyerFichier(req, res, path.join(AUDIOS_SEANCES, d.fichier), TYPES_AUDIO[ext] || "application/octet-stream", "private, max-age=31536000, immutable");
+    }
+    if (a === "zip" && req.method === "GET" && parts.length === 2) {
+      let docs = await stock.lireCollection("audiosSeances"), nomZip = "";
+      if (q.get("seance")) {
+        docs = docs.filter((d) => d.data.seance === q.get("seance"));
+        nomZip = docs.length ? "Audios " + docs[0].data.date + " " + (NOMS_SEANCES[docs[0].data.type] || "") + ".zip" : "Audios.zip";
+      } else if (q.get("bientot") && sess.admin) {
+        const lim = limiteConservation(30);
+        docs = docs.filter((d) => !d.data.epingle && d.data.date && d.data.date < lim);
+        nomZip = "Audios des répétitions effacés bientôt (" + dateIso(new Date()) + ").zip";
+      } else return json(res, 400, { code: "invalid_argument" });
+      docs = (await audiosSeancesVisibles(sess, docs)).sort((x, y) => (x.data.date < y.data.date ? -1 : x.data.date > y.data.date ? 1 : (x.data.le || 0) - (y.data.le || 0)));
+      if (!docs.length) return json(res, 404, { code: "vide", message: "Aucun audio à télécharger." });
+      if (docs.reduce((n, d) => n + (d.data.taille || 0), 0) > 3.5e9) return json(res, 413, { code: "trop_gros", message: "Trop d’audios pour un seul fichier : téléchargez-les séance par séance." });
+      const vus = new Set();
+      const fichiers = docs.map((d) => {
+        const base = nomAudioSeance(d.data), ext = String(d.data.fichier || "").split(".").pop();
+        let nom = base, k = 2;
+        while (vus.has(nom)) nom = base + " (" + k++ + ")";
+        vus.add(nom);
+        return { nom: nom + "." + ext, chemin: path.join(AUDIOS_SEANCES, d.data.fichier) };
+      });
+      return envoyerZip(res, nomZip, fichiers);
+    }
+    if (a === "espace" && req.method === "GET" && parts.length === 2) {
+      if (!sess.admin) return json(res, 403, { code: "invalid_argument" });
+      const [seancesT, tarisT] = await Promise.all([tailleDossier(AUDIOS_SEANCES), tailleDossier(AUDIOS)]);
+      let disque = null;
+      try { const st = await fsp.statfs(AUDIOS); disque = { total: st.blocks * st.bsize, libre: st.bavail * st.bsize }; } catch { /* inconnu */ }
+      const lim = limiteConservation(30);
+      const tous = await stock.lireCollection("audiosSeances");
+      return json(res, 200, { seances: seancesT, taris: tarisT, disque, epingles: tous.filter((d) => d.data.epingle).length,
+        bientot: tous.filter((d) => !d.data.epingle && d.data.date && d.data.date < lim).length, conservationJours: 365 });
+    }
+    if (!peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Seuls le Conservatoire et l’admin ajoutent les audios des répétitions." });
+    const moiNom = ((await stock.lireDoc("membres", sess.membre)) || {}).nom || sess.membre;
+    if (req.method === "POST" && parts.length === 2) {
+      const s = nomValide(a || "") ? await stock.lireDoc("seances", a) : null;
+      if (!s) return json(res, 404, { code: "not_found", message: "Cette séance n’existe plus." });
+      // Le khassida (de la liste, ou son nom s'il n'y est pas encore) et son ère : obligatoires, vérifiés avant de recevoir le fichier.
+      const khId = String(q.get("khassida") || ""), kh = khId && nomValide(khId) ? await stock.lireDoc("khassidas", khId) : null;
+      const nomKh = kh ? kh.titre : String(q.get("nom") || "").trim().slice(0, 120), ere = String(q.get("ere") || "").trim().slice(0, 80) || (kh && kh.ere) || "";
+      if (!nomKh) return json(res, 400, { code: "khassida", message: "Choisissez le khassida de l’audio (ou écrivez son nom)." });
+      if (!ere) return json(res, 400, { code: "ere", message: "Indiquez l’ère du khassida." });
+      if (tropDAudios(sess.membre)) return json(res, 429, { code: "rate_limited", message: "Beaucoup d’envois rapprochés : réessayez dans une heure." });
+      const id = crypto.randomBytes(16).toString("hex");
+      const au = await enregistrerAudioSeance(req, id);
+      if (au.erreur) { if (au.coupe && (res.destroyed || req.destroyed)) return; return json(res, au.erreur, { code: au.code, message: au.message }); }
+      const doc = { seance: a, date: s.date, type: s.type, khassida: kh ? khId : "", khTitre: nomKh, ere, titre: String(q.get("titre") || "").trim().slice(0, 120),
+        duree: Math.min(DUREE_MAX_SEANCE, dureeDe(req)), taille: au.taille, fichier: au.fichier, par: sess.membre, parNom: moiNom, le: Date.now(), epingle: false };
+      await stock.ecrireDoc("audiosSeances", id, doc);
+      prevenir("audiosSeances");
+      annoncerAudioSeance(a, id);
+      return json(res, 200, { ok: true, id, audio: doc });
+    }
+    if (parts.length !== 2 || !ID_AUDIO_SEANCE.test(a || "")) return json(res, 400, { code: "invalid_argument" });
+    const d = await stock.lireDoc("audiosSeances", a);
+    if (!d) return json(res, 404, { code: "not_found", message: "Cet audio n’existe plus." });
+    if (req.method === "PATCH") {
+      const c = await lireCorps(req), maj = {};
+      if (typeof c.khassida === "string" || typeof c.nom === "string") {
+        const kh = c.khassida && nomValide(c.khassida) ? await stock.lireDoc("khassidas", c.khassida) : null;
+        const nomKh = kh ? kh.titre : String(c.nom || "").trim().slice(0, 120);
+        if (!nomKh) return json(res, 400, { code: "khassida", message: "Choisissez le khassida de l’audio (ou écrivez son nom)." });
+        maj.khassida = kh ? c.khassida : ""; maj.khTitre = nomKh;
+      }
+      if (typeof c.ere === "string") {
+        if (!c.ere.trim()) return json(res, 400, { code: "ere", message: "Indiquez l’ère du khassida." });
+        maj.ere = c.ere.trim().slice(0, 80);
+      }
+      if (typeof c.titre === "string") maj.titre = c.titre.trim().slice(0, 120);
+      if (typeof c.epingle === "boolean") { maj.epingle = c.epingle; maj.epinglePar = c.epingle ? moiNom : null; }
+      await stock.fusionnerDoc("audiosSeances", a, maj);
+      prevenir("audiosSeances");
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === "DELETE") { await supprimerAudioSeance(a, d); prevenir("audiosSeances"); return json(res, 200, { ok: true }); }
+    return json(res, 405, { code: "invalid_argument" });
+  }
+
   /* --- Taris enregistrés (voir plus haut : taris/{séance~membre}) ---
      GET  taris/audio/<fichier>      écouter : le membre lui-même, le Conservatoire, l'admin
      POST taris/<séance>/envoi       le membre envoie son audio (corps = le fichier), ?duree=secondes
@@ -952,11 +1211,13 @@ async function api(req, res, parts, sess) {
       ? new Set((await stock.lireCollection("seances")).filter((x) => (x.data.participants || []).includes(sess.membre)).map((x) => x.id)) : null;
     docs = filtrerPour(sess, col, docs, mesSeances);
     if (col === "khassidas") { const vis = await khassidasVisibles(sess); if (vis) docs = docs.filter((d) => vis.has(d.id)); }
+    if (col === "audiosSeances") docs = await audiosSeancesVisibles(sess, docs);
     if (id) return docs[0] ? json(res, 200, docs[0]) : json(res, 404, { code: "not_found" });
     return json(res, 200, { docs });
   }
   // Les Taris enregistrés ne s'écrivent que par leurs routes (envoi, prise, verdict).
   if (col === "taris") return json(res, 403, { code: "invalid_argument", message: "Les Taris s’envoient depuis Mon espace." });
+  if (col === "audiosSeances") return json(res, 403, { code: "invalid_argument", message: "Les audios s’ajoutent depuis la séance." });
   const corps = req.method === "PUT" || req.method === "PATCH" ? await lireCorps(req) : null;
   // Conservatoire : il peut marquer un khassida « en répétition » (et seulement cela).
   const marqueRepetition = col === "khassidas" && req.method === "PATCH" && corps && Object.keys(corps).length > 0
@@ -992,7 +1253,16 @@ async function api(req, res, parts, sess) {
     if (!(await stock.fusionnerDoc(col, id, corps))) return json(res, 404, { code: "not_found" });
     prevenir(col); await apresMembre(col, id); await apresSeance(); return json(res, 200, { ok: true });
   }
-  if (req.method === "DELETE") { await stock.supprimerDoc(col, id); prevenir(col); return json(res, 200, { ok: true }); }
+  if (req.method === "DELETE") {
+    await stock.supprimerDoc(col, id); prevenir(col);
+    // Séance supprimée (admin) : ses audios partent avec elle.
+    if (col === "seances") {
+      let n = 0;
+      for (const d of await stock.lireCollection("audiosSeances")) if (d.data.seance === id) { await supprimerAudioSeance(d.id, d.data); n++; }
+      if (n) prevenir("audiosSeances");
+    }
+    return json(res, 200, { ok: true });
+  }
   return json(res, 405, { code: "invalid_argument" });
 }
 
@@ -1061,6 +1331,7 @@ http.createServer(async (req, res) => {
   console.log("Plateforme du Conservatoire : http://localhost:" + PORT);
   console.log("Données : " + stock.nom);
   console.log("Audios des Taris : " + AUDIOS + (ffmpegDispo ? " (convertis en m4a avec ffmpeg)" : " (sans ffmpeg : gardés tels quels)"));
+  console.log("Audios des répétitions : " + AUDIOS_SEANCES + " (gardés 1 an, sauf les épinglés)");
   if (await comptes.aucunCompte()) {
     console.log("\nAucun compte pour l’instant. Créez le premier administrateur :");
     console.log('  npm run admin -- "Prénom Nom"\n');
