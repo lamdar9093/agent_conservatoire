@@ -615,11 +615,13 @@ a.dk-reduire { text-decoration: none; }
 .lect { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--paper); border: 1px solid var(--rule); min-width: 0; }
 .lect-btn { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; }
 .lect-btn svg { width: 18px; height: 18px; }
-.lect-piste { position: relative; flex: 1; min-width: 60px; height: 26px; cursor: pointer; }
+.lect-piste { position: relative; flex: 1; min-width: 60px; height: 26px; cursor: pointer; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.lect-piste::after { content: ""; position: absolute; left: -6px; right: -6px; top: -10px; bottom: -10px; }
 .lect-piste::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 6px; border-radius: 3px; background: var(--rule); }
 .lect-prog { position: absolute; left: 0; top: 10px; height: 6px; width: 0; border-radius: 3px; background: var(--accent); }
 .lect-prog::after { content: ""; position: absolute; right: -6px; top: -4px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--surface); opacity: 0; }
 .lect.joue .lect-prog::after, .lect.entame .lect-prog::after { opacity: 1; }
+.lect.glisse .lect-prog::after { transform: scale(1.35); }
 .lect-temps { flex: none; font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .lect.petit .lect-btn { width: 32px; height: 32px; }
 .lect.petit .lect-btn svg { width: 15px; height: 15px; }
@@ -5151,6 +5153,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
   function majLecteurs() {
     var a = lecteur;
     document.querySelectorAll(".lect").forEach(function (el) {
+      if (glisse && glisse.el === el) return;
       var actif = !!a && !!lecteurSrc && el.dataset.lect === lecteurSrc, joue = actif && !a.paused && !a.ended;
       var d = actif && isFinite(a.duration) && a.duration > 0 ? a.duration : Number(el.dataset.duree) || 0, t = actif ? a.currentTime || 0 : 0;
       el.classList.toggle("joue", joue); el.classList.toggle("entame", actif && t > 0);
@@ -5369,13 +5372,45 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     }
     return false;
   }
-  /* Toucher la barre d'un lecteur : aller à ce moment de l'audio. */
-  app.addEventListener("click", function (e) {
+  /* Toucher ou glisser le doigt sur la barre d'un lecteur : aller à ce moment de l'audio (avancer ou reculer).
+     Pendant le glissement, la barre et le temps suivent le doigt ; l'audio se place quand on lâche. */
+  var glisse = null;
+  function fractionPiste(e, piste) {
+    var r = piste.getBoundingClientRect();
+    return r.width ? Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) : 0;
+  }
+  function apercuGlisse() {
+    if (!glisse) return;
+    var el = glisse.el, a = lecteur, actif = a && lecteurSrc === el.dataset.lect;
+    var d = actif && isFinite(a.duration) && a.duration > 0 ? a.duration : Number(el.dataset.duree) || 0;
+    var p = el.querySelector(".lect-prog"), t = el.querySelector(".lect-temps");
+    if (p) p.style.width = glisse.frac * 100 + "%";
+    if (t && d) t.textContent = fmtDuree(glisse.frac * d) + " / " + fmtDuree(d);
+  }
+  app.addEventListener("pointerdown", function (e) {
     var piste = e.target.closest("[data-lect-piste]");
-    if (!piste) return;
-    var el = piste.closest(".lect"), r = piste.getBoundingClientRect();
-    if (el && r.width) jouer(el, Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)));
+    if (!piste || (e.pointerType === "mouse" && e.button !== 0)) return;
+    var el = piste.closest(".lect");
+    if (!el) return;
+    glisse = { el: el, piste: piste, id: e.pointerId, frac: fractionPiste(e, piste) };
+    try { piste.setPointerCapture(e.pointerId); } catch (x) { /* pas grave */ }
+    el.classList.add("glisse", "entame");
+    apercuGlisse();
   });
+  app.addEventListener("pointermove", function (e) {
+    if (!glisse || e.pointerId !== glisse.id) return;
+    glisse.frac = fractionPiste(e, glisse.piste);
+    apercuGlisse();
+  });
+  function finGlisse(e, placer) {
+    if (!glisse || e.pointerId !== glisse.id) return;
+    var g = glisse;
+    glisse = null;
+    g.el.classList.remove("glisse");
+    if (placer) jouer(g.el, g.frac); else majLecteurs();
+  }
+  app.addEventListener("pointerup", function (e) { finGlisse(e, true); });
+  app.addEventListener("pointercancel", function (e) { finGlisse(e, false); });
   app.addEventListener("input", function (e) { if (e.target.id === "tari-mot") correction.mot = e.target.value; });
 
   /* ---------- Notifications sur le téléphone et chiffre sur l'icône ----------
