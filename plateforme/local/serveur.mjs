@@ -663,13 +663,34 @@ async function khassidasVisibles(sess) {
 
 /* Départ définitif : l'accès du membre est supprimé (déconnecté partout, demande en cours effacée).
    S'il revient, il refait une demande avec le lien du groupe. */
-async function apresMembre(col, id) {
+async function apresMembre(col, id, avant) {
   if (col !== "membres" || !id) return;
   const m = await stock.lireDoc("membres", id);
+  if (m && avant) await retirerDesSeancesAVenir(id, avant, m);
   if (!m || m.statut !== "parti") return;
   await comptes.revoquer(id); // refusé s'il s'agit du dernier administrateur
   await comptes.refuser(id);
   prevenir("_comptes");
+}
+
+/* Un membre retiré d'un kourel (ou parti) quitte aussi les séances de ce kourel pas encore passées (celle du jour comprise),
+   si rien n'a été noté pour lui : l'historique des séances passées ne change pas (remarque de l'utilisateur, 26 novembre 2026). */
+const jourLocal = () => new Date().toLocaleDateString("en-CA", { timeZone: process.env.FUSEAU || "America/Toronto" });
+async function retirerDesSeancesAVenir(id, avant, m) {
+  const dans = (x, t) => (t === "rg" ? !!(x.k1 || x.k2) : !!x[t]) && (x.statut || "actif") !== "parti";
+  const t0 = jourLocal();
+  for (const d of await stock.lireCollection("seances")) {
+    const s = d.data;
+    if (!s.date || s.date < t0 || !(s.participants || []).includes(id)) continue;
+    if (!dans(avant, s.type) || dans(m, s.type)) continue;   // il n'a pas quitté ce kourel
+    const note = ((s.statuts || {})[id] || "P") !== "P" || (s.prevenus || {})[id] || (s.retardsPrevenus || {})[id] || (s.discipline || {})[id]
+      || (s.tariEtat || {})[id] || (s.tariRecu || {})[id] || (s.tariIndividuel || {})[id] || (s.tariChoisis || {})[id];
+    if (note) continue;
+    const statuts = { ...(s.statuts || {}) };
+    delete statuts[id];
+    await stock.ecrireDoc("seances", d.id, { ...s, participants: s.participants.filter((x) => x !== id), statuts });
+    prevenir("seances");
+  }
 }
 
 async function api(req, res, parts, sess) {
@@ -1277,14 +1298,15 @@ async function api(req, res, parts, sess) {
     if (refuse) return json(res, 403, { code: "admin_seance", message: "Seul l’administrateur peut modifier ou supprimer une séance. Contactez-le si c’est une erreur." });
   }
   const avantSeance = col === "seances" && req.method !== "DELETE" ? await stock.lireDoc("seances", id) : null;
+  const avantMembre = col === "membres" && id && req.method !== "DELETE" ? await stock.lireDoc("membres", id) : null;
   const apresSeance = async () => { if (col !== "seances") return; planifierTari(id, avantSeance); planifierSanctions(id, avantSeance, await stock.lireDoc("seances", id)); };
   // Nouveau khassida ajouté depuis Réglages : daté, puis annoncé aux membres.
   const nouveauKh = col === "khassidas" && req.method === "PUT" && id && !(await stock.lireDoc("khassidas", id));
   if (nouveauKh) corps.ajouteLe = Date.now();
-  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id); await apresSeance(); if (nouveauKh) annoncerKhassida(id, sess.membre); return json(res, 200, { ok: true }); }
+  if (req.method === "PUT") { await stock.ecrireDoc(col, id, corps); prevenir(col); await apresMembre(col, id, avantMembre); await apresSeance(); if (nouveauKh) annoncerKhassida(id, sess.membre); return json(res, 200, { ok: true }); }
   if (req.method === "PATCH") {
     if (!(await stock.fusionnerDoc(col, id, corps))) return json(res, 404, { code: "not_found" });
-    prevenir(col); await apresMembre(col, id); await apresSeance(); return json(res, 200, { ok: true });
+    prevenir(col); await apresMembre(col, id, avantMembre); await apresSeance(); return json(res, 200, { ok: true });
   }
   if (req.method === "DELETE") {
     await stock.supprimerDoc(col, id); prevenir(col);
