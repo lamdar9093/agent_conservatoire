@@ -1259,7 +1259,8 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
           if (sx) enHaut[sid] = true;
           var quand = k === 0 ? "aujourd’hui" : "hier, " + jourCourt(jour).toLowerCase();
           html += sx
-            ? '<button type="button" class="appel-jour fait" data-open="' + esc(sid) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><span class="aj-titre"><b>Reprendre l’appel · ' + esc(TYPES[r.type]) + "</b>" + pillMoment(sx) + "</span><small>" + esc(quand) + " · " + compter(sx).P + " présents, " + compter(sx).A + " absent" + (compter(sx).A > 1 ? "s" : "") + '</small></span><span aria-hidden="true">›</span></button>'
+            ? '<button type="button" class="appel-jour fait" data-open="' + esc(sid) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><span class="aj-titre"><b>' + (k === 0 ? "Répétition du jour" : "Répétition d’hier") + " · " + esc(TYPES[r.type]) + "</b>" + (momentSeance(sx) === "passee" ? ' <span class="pill n">Terminée</span>' : pillMoment(sx)) + "</span><small>" +
+              compter(sx).P + " présent" + (compter(sx).P > 1 ? "s" : "") + ", " + compter(sx).A + " absent" + (compter(sx).A > 1 ? "s" : "") + " · retards, Tari et audios de la séance" + '</small></span><span aria-hidden="true">›</span></button>'
             : '<button type="button" class="appel-jour" data-appel-jour="' + esc(jour + "|" + r.type + "|" + r.horaire) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><span class="aj-titre"><b>Faire l’appel · ' + esc(TYPES[r.type]) + "</b>" + (k === 0 ? pillMoment({ date: jour, type: r.type, horaire: r.horaire }) : "") + "</span><small>" + esc(quand) + (r.horaire ? " · " + esc(r.horaire) : "") + " · tout le monde présent, touchez seulement les absents et retards</small></span><span aria-hidden=\"true\">›</span></button>";
         });
       });
