@@ -205,7 +205,9 @@
     retirer: function (id) { return appel("DELETE", "audios-seances/" + encodeURIComponent(id)).then(function (r) { rafraichir("audiosSeances"); return r; }); },
     url: function (id, telecharger) { return "/api/audios-seances/fichier/" + encodeURIComponent(id) + (telecharger ? "?dl=1" : ""); },
     zip: function (seance) { return "/api/audios-seances/zip?" + (seance ? "seance=" + encodeURIComponent(seance) : "bientot=1"); },
-    espace: function () { return appel("GET", "audios-seances/espace"); }
+    espace: function () { return appel("GET", "audios-seances/espace"); },
+    commenter: function (seance, audio, texte) { return appel("POST", "audios-seances/commentaires", { seance: seance, audio: audio || "", texte: texte }).then(function (r) { rafraichir("commentairesAudios"); return r; }); },
+    retirerCommentaire: function (id) { return appel("DELETE", "audios-seances/commentaires/" + encodeURIComponent(id)).then(function (r) { rafraichir("commentairesAudios"); return r; }); }
   });
 
   var caps = { db: db, user: user, downloads: downloads, messages: messages, programme: programme, taris: taris, notifs: notifs, audiosSeances: audiosSeances };

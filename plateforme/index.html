@@ -835,6 +835,19 @@ h3.group.seances-mois { margin-top: 6px; }
 .aud-sous { color: var(--ink-soft); font-size: 12.5px; }
 .aud-pin { font-size: 13px; }
 .aud-zip { justify-self: end; font-size: 13px; }
+.com { display: grid; gap: 8px; }
+.com-btn { justify-self: start; border: 0; background: transparent; padding: 2px 0; color: var(--ink-soft); font: inherit; font-size: 13px; cursor: pointer; }
+.com-btn:hover, .com-btn[aria-expanded="true"] { color: var(--accent); }
+.com-g { padding-top: 4px; }
+.com-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.com-liste li { display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); }
+.com-tete { font-size: 12.5px; color: var(--ink-soft); }
+.com-tete b { color: var(--ink); font-weight: 600; }
+.com-x { font-size: 12px; margin-left: 4px; }
+.com-texte { font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.com-form { display: grid; gap: 6px; }
+.com-form textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); color: var(--ink); font: inherit; font-size: 15px; resize: vertical; }
+.com-form .btn { justify-self: end; }
 .aud-ligne { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .aud-ligne .lect { flex: 1 1 auto; }
 .aud-ico { flex: none; display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid var(--rule); border-radius: 50%; background: var(--paper); color: var(--ink-soft); font: 700 16px/1 var(--font-ui, inherit); cursor: pointer; text-decoration: none; }
@@ -4070,6 +4083,30 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
      Gardés 1 an, sauf les épinglés. Disposition volontairement légère (demande de l'utilisateur) : une ligne par audio, le reste dans « ⋯ ». */
   var audiosApi = null, audiosSeances = {}, enrA = null, audMenu = null, audEdit = null, champAudioSeance = null, fichiersPartage = {};
   var audiosFiltreKh = null, espaceAudios = null, espaceEnCours = false, seanceAOuvrir = null;
+  /* Commentaires sur les audios (demande de l'utilisateur) : sur un audio, ou sur l'ensemble des audios d'une séance ;
+     lus et écrits par tous ceux qui écoutent ces audios (le kourel, le Conservatoire, la Discipline, l'admin). */
+  var commentairesAudios = {}, comOuvert = null, comBrouillon = {};
+  function comsDe(sid, audio) {
+    return Object.keys(commentairesAudios).map(function (k) { return commentairesAudios[k]; })
+      .filter(function (c) { return c.seance === sid && (c.audio || "") === (audio || ""); }).sort(function (a, b) { return a.le - b.le; });
+  }
+  function blocCommentaires(sid, audio) {
+    if (!audiosApi) return "";
+    var key = audio || "g-" + sid, l = comsDe(sid, audio), ouvert = comOuvert === key;
+    var lib = audio ? (l.length ? "💬 " + l.length + " commentaire" + (l.length > 1 ? "s" : "") : "💬 Commenter")
+      : (l.length ? "💬 Commentaires sur l’ensemble · " + l.length : "💬 Un commentaire sur l’ensemble des audios");
+    var h = '<div class="com' + (audio ? "" : " com-g") + '"><button type="button" class="com-btn" data-com-ouvrir="' + esc(key) + '" aria-expanded="' + ouvert + '">' + lib + "</button>";
+    if (ouvert) {
+      h += (l.length ? '<ul class="com-liste">' + l.map(function (c) {
+        return '<li><span class="com-tete"><b>' + esc(c.nom || "Membre") + "</b> · " + esc(ilYa(c.le)) +
+          (c.membre === moiCourant || peutSuivi ? ' <button type="button" class="linkish com-x" data-com-suppr="' + esc(c.id) + '">retirer</button>' : "") + "</span>" +
+          '<span class="com-texte">' + esc(c.texte) + "</span></li>";
+      }).join("") + "</ul>" : "") +
+        '<div class="com-form"><textarea id="com-' + esc(key) + '" maxlength="1000" rows="2" placeholder="' + (audio ? "Votre retour sur cet audio : ce qui manque, ce qui est bien…" : "Un retour sur l’ensemble des audios de la séance…") + '">' + esc(comBrouillon[key] || "") + "</textarea>" +
+        '<button type="button" class="btn small primary" data-com-envoyer="' + esc(sid + "|" + (audio || "")) + '">Envoyer</button></div>';
+    }
+    return h + "</div>";
+  }
   var DUREE_MAX_AUDIO = 30 * 60;
   var ICO_PARTAGE = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7.5 7.5L12 3l4.5 4.5"/><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"/></svg>';
   var ICO_TELECHARGER = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="M7.5 11.5L12 16l4.5-4.5"/><path d="M5 20h14"/></svg>';
@@ -4124,7 +4161,8 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
       '<div class="aud-ligne">' + lecteurHTML(urlAudioSeance(a), a.duree, true) +
         '<button type="button" class="aud-ico" data-aud-partager="' + esc(a.id) + '" aria-label="Partager sur WhatsApp" title="Partager">' + ICO_PARTAGE + "</button>" +
         (peutSuivi ? '<button type="button" class="aud-ico" data-aud-menu="' + esc(a.id) + '" aria-expanded="' + !!mode + '" aria-label="Plus : télécharger, modifier, épingler, supprimer" title="Plus">⋯</button>'
-          : '<a class="aud-ico" href="' + esc(urlAudioSeance(a, true)) + '" download="' + esc(nomFichierAudio(a)) + '" aria-label="Télécharger" title="Télécharger">' + ICO_TELECHARGER + "</a>") + "</div>";
+          : '<a class="aud-ico" href="' + esc(urlAudioSeance(a, true)) + '" download="' + esc(nomFichierAudio(a)) + '" aria-label="Télécharger" title="Télécharger">' + ICO_TELECHARGER + "</a>") + "</div>" +
+      blocCommentaires(a.seance, a.id);
     if (mode === "menu") h += '<div class="aud-menu"><a class="btn small ghost" href="' + esc(urlAudioSeance(a, true)) + '" download="' + esc(nomFichierAudio(a)) + '">Télécharger</a>' +
       '<button type="button" class="btn small ghost" data-aud-modifier="' + esc(a.id) + '">Modifier</button>' +
       '<button type="button" class="btn small ghost" data-aud-epingle="' + esc(a.id) + '">' + (a.epingle ? "Désépingler" : "📌 Garder toujours") + "</button>" +
@@ -4142,7 +4180,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     if (!l.length && !peutSuivi) return "";
     var h = '<div class="aud-box" id="audios-seance"><div class="aud-box-tete"><b>🎧 Audios de la séance' + (l.length ? " · " + l.length : "") + "</b></div>";
     if (peutSuivi) h += studioAudioHTML(s, l.length);
-    if (l.length) h += '<div class="aud-liste">' + l.map(ligneAudio).join("") + "</div>" +
+    if (l.length) h += '<div class="aud-liste">' + l.map(ligneAudio).join("") + "</div>" + blocCommentaires(s.id, "") +
       (l.length > 1 ? '<a class="linkish aud-zip" href="' + esc(audiosApi.zip(s.id)) + '" download>Tout télécharger (.zip)</a>' : "");
     return h + "</div>";
   }
@@ -4333,7 +4371,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
       var a0 = parS[sid][0];
       html += '<h3 class="group aud-groupe">' + esc(jourLong(a0.date)) + " · " + esc(TYPES[a0.type] || "") +
         (peutSuivi || estDiscipline ? ' <button type="button" class="linkish" data-open-seance="' + esc(sid) + '">Ouvrir la séance</button>' : "") + "</h3>" +
-        '<div class="aud-liste">' + parS[sid].sort(function (a, b) { return (a.le || 0) - (b.le || 0); }).map(ligneAudio).join("") + "</div>";
+        '<div class="aud-liste">' + parS[sid].sort(function (a, b) { return (a.le || 0) - (b.le || 0); }).map(ligneAudio).join("") + "</div>" + blocCommentaires(sid, "");
     });
     app.innerHTML = html + "</section>";
     marquerAudiosVus();
@@ -4360,6 +4398,19 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
   }
   function clicAudios(b) {
     var d = b.dataset;
+    if (d.comOuvrir) { comOuvert = comOuvert === d.comOuvrir ? null : d.comOuvrir; afficher(); var ta = document.getElementById("com-" + d.comOuvrir); if (ta && comOuvert) ta.focus(); return true; }
+    if (d.comEnvoyer && audiosApi) {
+      var pc = d.comEnvoyer.split("|"), cle = pc[1] || "g-" + pc[0], zone = document.getElementById("com-" + cle), txt = (zone ? zone.value : comBrouillon[cle] || "").trim();
+      if (txt.length < 2) { toast("Écrivez votre commentaire."); if (zone) zone.focus(); return true; }
+      b.disabled = true;
+      audiosApi.commenter(pc[0], pc[1], txt).then(function () { comBrouillon[cle] = ""; afficher(); toast("Commentaire envoyé : tout le kourel peut le lire."); }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Envoi impossible. Réessayez."); });
+      return true;
+    }
+    if (d.comSuppr && audiosApi) {
+      b.disabled = true;
+      audiosApi.retirerCommentaire(d.comSuppr).then(function () { toast("Commentaire retiré."); }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Impossible de le retirer."); });
+      return true;
+    }
     if (d.audEnreg) { demarrerAudioSeance(d.audEnreg); return true; }
     if (d.audFichier) { choisirFichierAudio(d.audFichier); return true; }
     if (d.audStop !== undefined) { arreterAudioSeance(""); return true; }
@@ -4409,6 +4460,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
   app.addEventListener("input", function (e) {
     var id = e.target.id || "", v = valeursChamp(id), champ = id.replace(/^aud-(e-)?/, "");
     if (v && (champ === "nom" || champ === "ere" || champ === "titre")) v[champ] = e.target.value;
+    if (id.indexOf("com-") === 0) comBrouillon[id.slice(4)] = e.target.value;
   });
   app.addEventListener("change", function (e) {
     var id = e.target.id || "", v = valeursChamp(id);
@@ -5692,6 +5744,11 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
       snap.docs.forEach(function (d) { tarisDocs[d.id] = d.data(); });
       afficher();
     }, function () { /* pas de Tari enregistré (prototype claude.ai) */ });
+    db.collection("commentairesAudios").onSnapshot(function (snap) {
+      commentairesAudios = {};
+      snap.docs.forEach(function (d) { commentairesAudios[d.id] = Object.assign({ id: d.id }, d.data()); });
+      afficher();
+    }, function () { /* pas de commentaire */ });
     db.collection("audiosSeances").onSnapshot(function (snap) {
       audiosSeances = {};
       snap.docs.forEach(function (d) { audiosSeances[d.id] = Object.assign({ id: d.id }, d.data()); });

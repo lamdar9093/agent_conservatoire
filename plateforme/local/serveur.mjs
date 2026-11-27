@@ -43,7 +43,7 @@ const PERMISSION_COLLECTION = { seances: "suivi", evaluations: "suivi" };
 const roleDe = (sess) => (sess.admin ? "admin" : sess.conservatoire ? "conservatoire" : "membre");
 const peut = (sess, perm) => { const r = ROLES[roleDe(sess)]; return r === null || (!!perm && r.has(perm)); };
 // Collections lisibles par un membre (les autres sont réservées à l'administrateur).
-const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages", "taris", "audiosSeances"]);
+const LECTURE_MEMBRE = new Set(["membres", "seances", "khassidas", "dahiras", "programmes", "evaluations", "chants", "reglages", "taris", "audiosSeances", "commentairesAudios"]);
 // Fichiers accessibles sans connexion (le logo et les icônes de /marque/ aussi : page de connexion, onglet, écran d'accueil).
 const PUBLICS = new Set(["/connexion.html", "/local/connexion.js", "/favicon.ico", "/sw.js"]);
 const estPublic = (rel) => PUBLICS.has(rel) || /^\/marque\/[\w.-]+$/.test(rel);
@@ -400,6 +400,8 @@ function limiteConservation(decalage = 0) { const d = new Date(); d.setDate(d.ge
 async function supprimerAudioSeance(id, data) {
   if (data && /^[0-9a-f]{32}\.\w+$/.test(data.fichier || "")) await fsp.rm(path.join(AUDIOS_SEANCES, data.fichier), { force: true });
   await stock.supprimerDoc("audiosSeances", id);
+  // Ses commentaires partent avec lui.
+  for (const c of await stock.lireCollection("commentairesAudios")) if (c.data.audio === id) await stock.supprimerDoc("commentairesAudios", c.id);
 }
 async function nettoyerAudiosSeances() {
   const limite = limiteConservation(0);
@@ -408,7 +410,9 @@ async function nettoyerAudiosSeances() {
     if (d.data.epingle || !d.data.date || d.data.date >= limite) continue;
     await supprimerAudioSeance(d.id, d.data); n++;
   }
-  if (n) { prevenir("audiosSeances"); console.log(n + " audio(s) de répétition de plus d’un an effacé(s)."); }
+  // Commentaires sur l'ensemble d'une séance de plus d'un an (ceux d'un audio partent avec lui).
+  for (const c of await stock.lireCollection("commentairesAudios")) if (!c.data.audio && String(c.data.seance || "").slice(0, 10) < limite) { await stock.supprimerDoc("commentairesAudios", c.id); prevenir("commentairesAudios"); }
+  if (n) { prevenir("audiosSeances"); prevenir("commentairesAudios"); console.log(n + " audio(s) de répétition de plus d’un an effacé(s)."); }
 }
 setTimeout(() => nettoyerAudiosSeances().catch((e) => console.error(e)), 30000);
 setInterval(() => nettoyerAudiosSeances().catch((e) => console.error(e)), 6 * 3600000);
@@ -992,6 +996,35 @@ async function api(req, res, parts, sess) {
       return json(res, 200, { seances: seancesT, taris: tarisT, disque, epingles: tous.filter((d) => d.data.epingle).length,
         bientot: tous.filter((d) => !d.data.epingle && d.data.date && d.data.date < lim).length, conservationJours: 365 });
     }
+    /* Commentaires (demande de l'utilisateur) : sur un audio, ou sur l'ensemble des audios d'une séance (audio vide).
+       Tous ceux qui écoutent les audios de la séance les lisent et en écrivent ; chacun retire les siens, le Conservatoire et l'admin aussi.
+       POST audios-seances/commentaires { seance, audio, texte } · DELETE audios-seances/commentaires/<id> */
+    if (a === "commentaires") {
+      const nomMoi = ((await stock.lireDoc("membres", sess.membre)) || {}).nom || sess.membre;
+      if (req.method === "POST" && parts.length === 2) {
+        const c = await lireCorps(req), sid = String(c.seance || ""), texte = String(c.texte || "").trim().slice(0, 1000);
+        const s = nomValide(sid) ? await stock.lireDoc("seances", sid) : null;
+        if (!s) return json(res, 404, { code: "not_found", message: "Cette séance n’existe plus." });
+        if (texte.length < 2) return json(res, 400, { code: "court", message: "Écrivez votre commentaire." });
+        const audio = String(c.audio || "");
+        if (audio) { const ad = ID_AUDIO_SEANCE.test(audio) ? await stock.lireDoc("audiosSeances", audio) : null; if (!ad || ad.seance !== sid) return json(res, 404, { code: "not_found", message: "Cet audio n’existe plus." }); }
+        if (!(await audiosSeancesVisibles(sess, [{ id: "x", data: { seance: sid, type: s.type } }])).length) return json(res, 403, { code: "invalid_argument", message: "Réservé au kourel de la répétition." });
+        if (tropDenvois(sess.membre)) return json(res, 429, { code: "trop", message: "Trop d’envois rapprochés : réessayez dans une heure." });
+        const id = Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
+        await stock.ecrireDoc("commentairesAudios", id, { seance: sid, type: s.type, audio, membre: sess.membre, nom: nomMoi, texte, le: Date.now() });
+        prevenir("commentairesAudios");
+        return json(res, 200, { ok: true, id });
+      }
+      if (req.method === "DELETE" && parts.length === 3 && nomValide(b || "")) {
+        const d = await stock.lireDoc("commentairesAudios", b);
+        if (!d) return json(res, 404, { code: "not_found" });
+        if (d.membre !== sess.membre && !peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Seul son auteur peut retirer ce commentaire." });
+        await stock.supprimerDoc("commentairesAudios", b);
+        prevenir("commentairesAudios");
+        return json(res, 200, { ok: true });
+      }
+      return json(res, 405, { code: "invalid_argument" });
+    }
     if (!peut(sess, "suivi")) return json(res, 403, { code: "invalid_argument", message: "Seuls le Conservatoire et l’admin ajoutent les audios des répétitions." });
     const moiNom = ((await stock.lireDoc("membres", sess.membre)) || {}).nom || sess.membre;
     if (req.method === "POST" && parts.length === 2) {
@@ -1211,13 +1244,13 @@ async function api(req, res, parts, sess) {
       ? new Set((await stock.lireCollection("seances")).filter((x) => (x.data.participants || []).includes(sess.membre)).map((x) => x.id)) : null;
     docs = filtrerPour(sess, col, docs, mesSeances);
     if (col === "khassidas") { const vis = await khassidasVisibles(sess); if (vis) docs = docs.filter((d) => vis.has(d.id)); }
-    if (col === "audiosSeances") docs = await audiosSeancesVisibles(sess, docs);
+    if (col === "audiosSeances" || col === "commentairesAudios") docs = await audiosSeancesVisibles(sess, docs);
     if (id) return docs[0] ? json(res, 200, docs[0]) : json(res, 404, { code: "not_found" });
     return json(res, 200, { docs });
   }
   // Les Taris enregistrés ne s'écrivent que par leurs routes (envoi, prise, verdict).
   if (col === "taris") return json(res, 403, { code: "invalid_argument", message: "Les Taris s’envoient depuis Mon espace." });
-  if (col === "audiosSeances") return json(res, 403, { code: "invalid_argument", message: "Les audios s’ajoutent depuis la séance." });
+  if (col === "audiosSeances" || col === "commentairesAudios") return json(res, 403, { code: "invalid_argument", message: "Les audios et leurs commentaires s’ajoutent depuis la séance." });
   const corps = req.method === "PUT" || req.method === "PATCH" ? await lireCorps(req) : null;
   // Conservatoire : il peut marquer un khassida « en répétition » (et seulement cela).
   const marqueRepetition = col === "khassidas" && req.method === "PATCH" && corps && Object.keys(corps).length > 0
@@ -1259,7 +1292,8 @@ async function api(req, res, parts, sess) {
     if (col === "seances") {
       let n = 0;
       for (const d of await stock.lireCollection("audiosSeances")) if (d.data.seance === id) { await supprimerAudioSeance(d.id, d.data); n++; }
-      if (n) prevenir("audiosSeances");
+      for (const c of await stock.lireCollection("commentairesAudios")) if (c.data.seance === id) { await stock.supprimerDoc("commentairesAudios", c.id); n++; }
+      if (n) { prevenir("audiosSeances"); prevenir("commentairesAudios"); }
     }
     return json(res, 200, { ok: true });
   }
