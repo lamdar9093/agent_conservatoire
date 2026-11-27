@@ -2986,7 +2986,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     if (id === "kourels") {
       var manque = ["k1", "k2"].filter(function (k) { return !dieuwrigneDe(k); });
       return manque.length ? { txt: "Dieuwrigne à choisir : " + manque.map(function (k) { return TYPES[k]; }).join(" et "), alerte: true }
-        : { txt: "Dieuwrignes : " + ["k1", "k2"].map(function (k) { return dieuwrigneDe(k).nom.split(" ")[0] + " (" + ABR[k] + ")"; }).join(" · ") };
+        : { txt: "Dieuwrignes : " + ["k1", "k2"].map(function (k) { return dieuwrigneDe(k).nom + " (" + ABR[k] + ")"; }).join(" · ") };
     }
     if (id === "khassidas") { var nk = Object.keys(khassidas).length; return { txt: nk + " khassida" + (nk > 1 ? "s" : "") + " dans le répertoire" }; }
     chargerEspace();
@@ -3206,7 +3206,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
       comptesApi.refuser(idr).then(function () {
         if (comptesEtat.demandes) delete comptesEtat.demandes[idr];
         majPastille(); afficher(); chargerComptes();
-        toast("Demande refusée. " + (membres[idr] ? membres[idr].nom.split(" ")[0] : "Le membre") + " pourra en refaire une.");
+        toast("Demande refusée. " + (membres[idr] ? membres[idr].nom : "Le membre") + " pourra en refaire une.");
       }, function (e) { b.disabled = false; toast(e && e.message ? e.message : "Refus impossible."); });
       return;
     }
@@ -4156,7 +4156,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
   /* Un audio, sur une ligne : nom du khassida et ère, lecteur, Partager, et « ⋯ » (télécharger ; pour le Conservatoire : modifier, épingler, supprimer). */
   function ligneAudio(a) {
     var mode = audMenu && audMenu.id === a.id ? audMenu.mode : "";
-    var sous = [a.ere ? "ère " + a.ere : "", a.titre && (a.khTitre || a.khassida) ? a.titre : "", a.parNom ? "par " + prenomDe(a.parNom) : ""].filter(Boolean).join(" · ");
+    var sous = [a.ere ? "ère " + a.ere : "", a.titre && (a.khTitre || a.khassida) ? a.titre : "", a.parNom ? "par " + nomPar(a.par, a.parNom) : ""].filter(Boolean).join(" · ");
     var h = '<div class="aud' + (a.epingle ? " epingle" : "") + (mode ? " ouvert" : "") + '">' +
       '<div class="aud-tete"><b>' + esc(nomKhAudio(a)) + "</b>" + (a.epingle ? '<span class="aud-pin" title="Épinglé : gardé pour toujours">📌</span>' : "") + "</div>" +
       (sous ? '<small class="aud-sous">' + esc(sous) + "</small>" : "") +
@@ -4523,7 +4523,8 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
   }
   function fmtDuree(s) { s = Math.max(0, Math.round(Number(s) || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
   function initiales(nom) { return String(nom || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(function (x) { return x.charAt(0).toUpperCase(); }).join(""); }
-  function prenomDe(nom) { return String(nom || "").split(" ")[0]; }
+  /* Toujours le nom complet : plusieurs membres peuvent avoir le même prénom (ou le même nom). Le nom à jour du membre, sinon celui enregistré. */
+  function nomPar(id, nom) { return (id && membres[id] && membres[id].nom) || nom || ""; }
   function lienTari(sid, mid) { return "#tari/" + encodeURIComponent(sid) + (mid ? "/" + encodeURIComponent(mid) : ""); }
   function audioUrl(e) { return tarisApi && tarisApi.audio ? tarisApi.audio(e.fichier) : "/api/taris/audio/" + encodeURIComponent(e.fichier); }
   function quandDemande(s) { return (s.type === "rg" ? "à la répétition générale" : "à la répétition du " + (TYPES[s.type] || "kourel")) + " du " + asDate(s.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
@@ -4658,7 +4659,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     var aFaire = x.etat === "attendu" || x.etat === "retravailler", depasse = x.ech < today();
     var sous = [plageTari(td), kh && kh.ere ? "ère " + kh.ere : "", td.consigne].filter(Boolean).join(" · ");
     var quand = aFaire ? (depasse ? "Échéance dépassée : pas de dahira ni de prestation tant qu’il n’est pas maîtrisé" : "À maîtriser avant la répétition du " + jourEcheance(x.ech))
-      : p ? prenomDe(p.nom) + " du Conservatoire l’écoute en ce moment"
+      : p ? nomPar(p.par, p.nom) + " du Conservatoire l’écoute en ce moment"
       : "Envoyé " + ilYa(att.le) + " · en attente d’écoute";
     var mot = x.etat === "retravailler" && e && e.verdict === "retravailler" && (e.mot || e.vocal) ? motHTML(e, true) : "";
     var go = x.etat === "attendu" ? "Enregistrer mon Tari" : x.etat === "retravailler" ? "Réenregistrer" : "Écouter mon envoi";
@@ -4673,8 +4674,8 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
   function motHTML(e, sansLecteur) {
     var texte = e.mot || (e.vocal ? "" : e.verdict === "maitrise" ? "Maîtrisé." : "À retravailler.");
     return '<span class="dk-mot' + (e.verdict === "retravailler" ? " retravailler" : "") + '">' + esc(texte) +
-      (e.vocal ? (sansLecteur ? '<span class="dk-vocal-note">🎙️ ' + esc(prenomDe(e.parNom) || "Le Conservatoire") + " vous a laissé un vocal</span>"
-        : '<span class="dk-vocal"><span class="dk-vocal-tete">🎙️ Vocal de ' + esc(prenomDe(e.parNom) || "le Conservatoire") + "</span>" + lecteurHTML(audioUrl(e.vocal), e.vocal.duree, true) + "</span>") : "") +
+      (e.vocal ? (sansLecteur ? '<span class="dk-vocal-note">🎙️ ' + esc(nomPar(e.par, e.parNom) || "Le Conservatoire") + " vous a laissé un vocal</span>"
+        : '<span class="dk-vocal"><span class="dk-vocal-tete">🎙️ Vocal de ' + esc(nomPar(e.par, e.parNom) || "le Conservatoire") + "</span>" + lecteurHTML(audioUrl(e.vocal), e.vocal.duree, true) + "</span>") : "") +
       "<small>— " + esc(e.parNom || "Le Conservatoire") + (e.corrigeLe ? ", " + esc(ilYa(e.corrigeLe)) : "") + "</small></span>";
   }
 
@@ -4695,7 +4696,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     var kh = khassidas[t.td.khassida], m = membres[t.mid];
     var dock = estMoi ? dockMembre(t) : dockCorrecteur(t);
     if (kh && kh.page) {
-      montrerLecture(kh, t.td.tout ? null : t.td.de, retour, (estMoi ? "Mon Tari" : "Tari de " + prenomDe(m.nom)) + " · " + kh.titre, "", dock);
+      montrerLecture(kh, t.td.tout ? null : t.td.de, retour, (estMoi ? "Mon Tari" : "Tari de " + m.nom) + " · " + kh.titre, "", dock);
       return;
     }
     var cle = t.s.id + "|" + t.mid;
@@ -4747,7 +4748,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
         (e && e.verdict === "maitrise" ? "Validé par " + esc(e.parNom || "le Conservatoire") + ", " + esc(ilYa(e.corrigeLe)) : "Validé par le Conservatoire") + "</small></span></div>" +
         (e && e.verdict === "maitrise" && (e.mot || e.vocal) ? motHTML(e) : "") + (e && e.verdict === "maitrise" ? lecteurHTML(audioUrl(e), e.duree) : "");
     } else if (att) {
-      c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">' + (p ? "🎧" : "✓") + "</span><span><b>" + (p ? esc(prenomDe(p.nom)) + " écoute votre Tari" : "Envoyé, en attente d’écoute") + "</b>" +
+      c = '<div class="dk-etat"><span class="dk-etat-ico" aria-hidden="true">' + (p ? "🎧" : "✓") + "</span><span><b>" + (p ? esc(nomPar(p.par, p.nom)) + " écoute votre Tari" : "Envoyé, en attente d’écoute") + "</b>" +
         "<small>Envoyé " + esc(ilYa(att.le)) + (p ? " · sa réponse s’affichera ici" : " · vous pouvez encore le remplacer") + "</small></span></div>" +
         lecteurHTML(audioUrl(att), att.duree) +
         '<div class="dk-actions"><a class="btn primary" href="#moi">Terminé</a>' + (page && kh0 ? '<a class="btn" href="#khassida/' + encodeURIComponent(kh0.id) + '">Continuer à lire</a>' : "") + "</div>" +
@@ -4786,13 +4787,13 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
   function dockCorrecteur(t) {
     var s = t.s, mid = t.mid, td = t.td, d = dossierTari(s.id, mid), m = membres[mid], etat = etatAffiche(s, mid);
     var envois = envoisDe(d), e = dernierEnvoi(d), att = enAttente(d), p = priseActive(att), docId = docTariId(s.id, mid);
-    var aMoi = !!p && p.par === moiCourant, autre = !!p && !aMoi, pr = prenomDe(m.nom);
+    var aMoi = !!p && p.par === moiCourant, autre = !!p && !aMoi, pr = m.nom;
     var h = enteteDock(m.nom, [plageTari(td), tariAvecPage() ? "" : td.consigne, "Tari du " + jourCourt(s.date)].filter(Boolean).join(" · "), pillEtat(etat), tariAvecPage() ? "#taris" + (tarisFiltreKh ? "/" + encodeURIComponent(tarisFiltreKh) : "") : ""), c = "";
     if (correction.fait && correction.fait.docId === docId) {
       var reste = tarisAEcouter().filter(libreOuMien).filter(function (x) { return docTariId(x.s.id, x.mid) !== docId; });
       c = '<div class="dk-fait"><b>' + (correction.fait.verdict === "maitrise" ? "✓ Maîtrisé" : "↻ À retravailler") + " : réponse envoyée à " + esc(pr) + "</b>" +
         "<span>" + (reste.length ? "Encore " + reste.length + " Tari" + (reste.length > 1 ? "s" : "") + " à écouter." : "Plus aucun Tari à écouter. Merci !") + "</span>" +
-        '<div class="row">' + (reste.length ? '<button type="button" class="btn primary" data-tari-ouvrir="' + esc(reste[0].s.id + "|" + reste[0].mid) + '">Suivant : ' + esc(prenomDe(reste[0].m.nom)) + " →</button>" : "") +
+        '<div class="row">' + (reste.length ? '<button type="button" class="btn primary" data-tari-ouvrir="' + esc(reste[0].s.id + "|" + reste[0].mid) + '">Suivant : ' + esc(reste[0].m.nom) + " →</button>" : "") +
         '<a class="btn" href="#taris">Tous les Taris</a></div></div>';
       return '<div class="tari-dock-in">' + h + c + "</div>";
     }
@@ -4801,10 +4802,10 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
       if (mid === moiCourant) c += '<div class="dk-prise">C’est votre propre Tari : un autre membre du Conservatoire l’écoutera.</div>';
       else if (autre) {
         var min = Math.round((Date.now() - p.le) / 60000);
-        c += '<div class="dk-prise autre"><span>🎧 <b>' + esc(p.nom) + "</b> " + (min < 1 ? "vient de prendre ce Tari" : "écoute ce Tari depuis " + min + " min") + ". Vous pouvez l’écouter ; c’est à lui de répondre.</span></div>";
+        c += '<div class="dk-prise autre"><span>🎧 <b>' + esc(nomPar(p.par, p.nom)) + "</b> " + (min < 1 ? "vient de prendre ce Tari" : "écoute ce Tari depuis " + min + " min") + ". Vous pouvez l’écouter ; c’est à lui de répondre.</span></div>";
       }
       else {
-        c += aMoi ? '<div class="dk-prise moi"><span>✓ Vous l’avez pris : les autres voient « pris par ' + esc(prenomDe(p.nom)) + " ».</span>" + '<button type="button" class="linkish" data-tari-liberer="' + esc(docId) + '">Le laisser</button></div>'
+        c += aMoi ? '<div class="dk-prise moi"><span>✓ Vous l’avez pris : les autres voient « pris par ' + esc(nomPar(p.par, p.nom)) + " ».</span>" + '<button type="button" class="linkish" data-tari-liberer="' + esc(docId) + '">Le laisser</button></div>'
           : '<div class="dk-prise"><span>Personne ne l’écoute encore.</span><button type="button" class="btn small primary" data-tari-prendre="' + esc(docId) + '">🎧 Je le prends</button></div>';
         c += formulaireVerdict(docId, att.id, pr);
       }
@@ -5281,7 +5282,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     var infos = [plageTari(x.td), fmtDuree(att.duree), "reçu " + ilYa(att.le)].concat(n > 1 ? [n + "e envoi"] : []).filter(Boolean).join(" · ");
     return '<div class="tq-item ecouter' + (p && !aMoi ? " pris" : " neuf") + '"><span class="tq-avatar" aria-hidden="true">' + esc(initiales(x.m.nom)) + "</span>" +
       '<span class="tq-corps"><b>' + esc(x.m.nom) + "</b><small>" + esc(infos) + "</small>" +
-      (p ? '<small class="' + (aMoi ? "tq-moi" : "tq-pris") + '">🎧 ' + (aMoi ? "Pris par vous" : "Pris par " + esc(p.nom)) + " · " + esc(ilYa(p.le)) + "</small>" : "") + "</span>" +
+      (p ? '<small class="' + (aMoi ? "tq-moi" : "tq-pris") + '">🎧 ' + (aMoi ? "Pris par vous" : "Pris par " + esc(nomPar(p.par, p.nom))) + " · " + esc(ilYa(p.le)) + "</small>" : "") + "</span>" +
       (!peutSuivi ? '<span class="pill e">' + (p ? "En écoute" : "Pas encore écouté") + "</span>"
         : p && !aMoi ? '<a class="btn small ghost" href="' + lienTari(x.s.id, x.mid) + '">Voir</a>'
         : '<button type="button" class="btn small primary" data-tari-ouvrir="' + esc(x.s.id + "|" + x.mid) + '">' + (aMoi ? "Reprendre" : "Écouter et corriger") + "</button>") + "</div>";
