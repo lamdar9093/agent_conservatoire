@@ -1233,9 +1233,11 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     return c;
   }
   /* Compteurs d'une séance : absents présentés comme les retards (« 5 absents (1 a prévenu) ») ; court = liste des séances. */
+  /* Un retard est venu : il compte dans les présents (« 9 présents », « dont 4 en retard »), comme pour l'assiduité du Bilan. */
   function countsHTML(c, court) {
-    return '<span class="pill p">' + c.P + " présent" + (c.P > 1 ? "s" : "") + "</span>" +
-      (c.R ? '<span class="pill r">' + c.R + " retard" + (c.R > 1 ? "s" : "") + (c.RP && !court ? " (" + txtPrevenu(c.RP) + ")" : "") + "</span>" : "") +
+    var pres = c.P + c.R;
+    return '<span class="pill p">' + pres + " présent" + (pres > 1 ? "s" : "") + "</span>" +
+      (c.R ? '<span class="pill r">dont ' + c.R + " en retard" + (c.RP && !court ? " (" + txtPrevenu(c.RP) + ")" : "") + "</span>" : "") +
       (c.A ? '<span class="pill a">' + c.A + " absent" + (c.A > 1 ? "s" : "") + (c.E && !court ? " (" + txtPrevenu(c.E) + ")" : "") + "</span>" : "");
   }
 
@@ -1325,7 +1327,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
           var quand = k === 0 ? "aujourd’hui" : "hier, " + jourCourt(jour).toLowerCase();
           html += sx
             ? '<button type="button" class="appel-jour fait" data-open="' + esc(sid) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><span class="aj-titre"><b>' + (k === 0 ? "Répétition du jour" : "Répétition d’hier") + " · " + esc(TYPES[r.type]) + "</b>" + (momentSeance(sx) === "passee" ? ' <span class="pill n">Terminée</span>' : pillMoment(sx)) + "</span><small>" +
-              compter(sx).P + " présent" + (compter(sx).P > 1 ? "s" : "") + ", " + compter(sx).A + " absent" + (compter(sx).A > 1 ? "s" : "") + " · retards, Tari et audios de la séance" + '</small></span><span aria-hidden="true">›</span></button>'
+              (compter(sx).P + compter(sx).R) + " présent" + (compter(sx).P + compter(sx).R > 1 ? "s" : "") + ", " + compter(sx).A + " absent" + (compter(sx).A > 1 ? "s" : "") + " · retards, Tari et audios de la séance" + '</small></span><span aria-hidden="true">›</span></button>'
             : '<button type="button" class="appel-jour" data-appel-jour="' + esc(jour + "|" + r.type + "|" + r.horaire) + '"><span class="appel-ico" aria-hidden="true">📋</span><span><span class="aj-titre"><b>Faire l’appel · ' + esc(TYPES[r.type]) + "</b>" + (k === 0 ? pillMoment({ date: jour, type: r.type, horaire: r.horaire }) : "") + "</span><small>" + esc(quand) + (r.horaire ? " · " + esc(r.horaire) : "") + " · tout le monde présent, touchez seulement les absents et retards</small></span><span aria-hidden=\"true\">›</span></button>";
         });
       });
@@ -2323,7 +2325,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     L.push("*" + jour + "*" + (horaireDe(s) ? " · " + horaireDe(s) : ""));
     L.push("");
     var c = compter(s);
-    L.push(pluriel(c.P, "présent") + " · " + pluriel(c.R, "retard") + (c.RP ? " (" + c.RP + (c.RP > 1 ? " ont" : " a") + " prévenu)" : "") + " · " + pluriel(c.A, "absent") + (c.E ? " (" + c.E + (c.E > 1 ? " ont" : " a") + " prévenu)" : ""));
+    L.push(pluriel(c.P + c.R, "présent") + (c.R ? " (dont " + c.R + " en retard" + (c.RP ? ", " + c.RP + (c.RP > 1 ? " ont" : " a") + " prévenu" : "") + ")" : "") + " · " + pluriel(c.A, "absent") + (c.E ? " (" + c.E + (c.E > 1 ? " ont" : " a") + " prévenu)" : ""));
     L.push("");
     var absents = stats.filter(function (st) { return st.A && !st.E; }).sort(fr);
     var prevenus = stats.filter(function (st) { return st.E; }).sort(fr);
@@ -2332,7 +2334,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     if (absents.length) { L.push("🔴 *Absents" + (prevenus.length ? " sans prévenir" : "") + "* (" + absents.length + ")"); puces(L, absents.map(function (st) { return st.nom; })); L.push(""); }
     if (prevenus.length) { L.push("🔵 *Absents ayant prévenu* (" + prevenus.length + ")"); puces(L, prevenus.map(function (st) { return st.nom; })); L.push(""); }
     if (retards.length) { L.push("🟡 *En retard* (" + retards.length + ")"); puces(L, retards.map(function (st) { return st.nom + (retardPrevenu(s, st.id) ? " (a prévenu)" : ""); })); L.push(""); }
-    if (presents.length) { L.push("🟢 *Présents* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom; })); L.push(""); }
+    if (presents.length) { L.push("🟢 *Présents" + (retards.length ? " à l’heure" : "") + "* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom; })); L.push(""); }
     lignesPause(L, s.type, stats, s.date);
     if (s.tari && s.tari !== "aucun") {
       var manquants = nomsTari(s, tariCompte(s).manquants);
@@ -2754,7 +2756,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
       cm.E = 0;
       mes.forEach(function (s) { var v = (s.statuts || {})[moi.id] || "P"; ct[v]++; if (s.date.slice(0, 7) === mois) { cm[v]++; if (aPrevenu(s, moi.id)) cm.E++; } });
       html += '<section class="panel"><h2>Mes présences</h2><p class="muted">' + esc(moisLabel(mois)) + "</p>" +
-        '<div class="stats"><span class="pill p">' + cm.P + " présent" + (cm.P > 1 ? "s" : "") + '</span><span class="pill r">' + cm.R + " retard" + (cm.R > 1 ? "s" : "") + '</span><span class="pill a">' + cm.A + " absence" + (cm.A > 1 ? "s" : "") + (cm.E ? " (" + txtPrevenu(cm.E) + ")" : "") + "</span></div>" +
+        '<div class="stats"><span class="pill p">' + (cm.P + cm.R) + " présence" + (cm.P + cm.R > 1 ? "s" : "") + "</span>" + (cm.R ? '<span class="pill r">dont ' + cm.R + " en retard</span>" : "") + '<span class="pill a">' + cm.A + " absence" + (cm.A > 1 ? "s" : "") + (cm.E ? " (" + txtPrevenu(cm.E) + ")" : "") + "</span></div>" +
         '<p class="muted" style="margin-top:10px">Depuis le début : ' + mes.length + " séance" + (mes.length > 1 ? "s" : "") + ", " + ct.R + " retard" + (ct.R > 1 ? "s" : "") + ", " + ct.A + " absence" + (ct.A > 1 ? "s" : "") + ".</p>" +
         '<div class="list" style="margin-top:10px">' + mes.slice(0, 8).map(function (s) {
           var v = choixDe(s, moi.id);
