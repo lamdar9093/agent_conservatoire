@@ -2329,12 +2329,11 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     L.push("");
     var absents = stats.filter(function (st) { return st.A && !st.E; }).sort(fr);
     var prevenus = stats.filter(function (st) { return st.E; }).sort(fr);
-    var retards = stats.filter(function (st) { return st.R; }).sort(fr);
-    var presents = stats.filter(function (st) { return st.P; }).sort(fr);
+    /* Une seule liste des présents : les retards y sont, avec « (retard) » à côté du nom (message plus court). */
+    var presents = stats.filter(function (st) { return st.P || st.R; }).sort(fr);
     if (absents.length) { L.push("🔴 *Absents" + (prevenus.length ? " sans prévenir" : "") + "* (" + absents.length + ")"); puces(L, absents.map(function (st) { return st.nom; })); L.push(""); }
     if (prevenus.length) { L.push("🔵 *Absents ayant prévenu* (" + prevenus.length + ")"); puces(L, prevenus.map(function (st) { return st.nom; })); L.push(""); }
-    if (retards.length) { L.push("🟡 *En retard* (" + retards.length + ")"); puces(L, retards.map(function (st) { return st.nom + (retardPrevenu(s, st.id) ? " (a prévenu)" : ""); })); L.push(""); }
-    if (presents.length) { L.push("🟢 *Présents" + (retards.length ? " à l’heure" : "") + "* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom; })); L.push(""); }
+    if (presents.length) { L.push("🟢 *Présents* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom + (st.R ? (retardPrevenu(s, st.id) ? " (retard, a prévenu)" : " (retard)") : ""); })); L.push(""); }
     lignesPause(L, s.type, stats, s.date);
     if (s.tari && s.tari !== "aucun") {
       var manquants = nomsTari(s, tariCompte(s).manquants);
