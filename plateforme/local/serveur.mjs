@@ -673,11 +673,13 @@ async function apresMembre(col, id, avant) {
   prevenir("_comptes");
 }
 
-/* Un membre retiré d'un kourel (ou parti) quitte aussi les séances de ce kourel pas encore passées (celle du jour comprise),
-   si rien n'a été noté pour lui : l'historique des séances passées ne change pas (remarque de l'utilisateur, 26 novembre 2026). */
+/* Un membre retiré d'un kourel, mis en pause ou parti quitte aussi les séances de ce kourel pas encore passées (celle du jour comprise),
+   si rien n'a été noté pour lui : l'historique des séances passées ne change pas (remarques de l'utilisateur, 26 et 28 novembre 2026).
+   En pause, il garde son accès et voit toujours les activités de son kourel, mais il ne compte plus dans les séances. */
 const jourLocal = () => new Date().toLocaleDateString("en-CA", { timeZone: process.env.FUSEAU || "America/Toronto" });
 async function retirerDesSeancesAVenir(id, avant, m) {
-  const dans = (x, t) => (t === "rg" ? !!(x.k1 || x.k2) : !!x[t]) && (x.statut || "actif") !== "parti";
+  const actif = (x) => (x.statut || (x.actif === false ? "pause" : "actif")) === "actif";
+  const dans = (x, t) => (t === "rg" ? !!(x.k1 || x.k2) : !!x[t]) && actif(x);
   const t0 = jourLocal();
   for (const d of await stock.lireCollection("seances")) {
     const s = d.data;

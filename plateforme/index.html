@@ -193,6 +193,8 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6
   .table-wrap th { font-size: 10.5px; letter-spacing: 0.02em; }
   .table-wrap table { font-size: 13.5px; }
   .table-wrap th:nth-child(2), .table-wrap td:nth-child(2) { display: none; }
+  .table-wrap tr.ligne-pause td:nth-child(2) { display: table-cell; }
+.table-wrap tr.ligne-pause td { white-space: normal; }
   .table-wrap .sub { white-space: normal; font-size: 10.5px; line-height: 1.25; }
 }
 
@@ -2153,6 +2155,22 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     });
     return Object.keys(stats).map(function (k) { return stats[k]; }).sort(function (a, b) { return (b.A - a.A) || (b.R - a.R) || triNom(a, b); });
   }
+  /* Membres en pause du kourel affiché, sans séance comptée sur la période : une ligne « En pause » en bas du tableau du Bilan
+     (pas dans le message WhatsApp, demande de l'utilisateur du 28 novembre 2026). */
+  function pauseBilan(stats) {
+    var vus = {}, sc = seanceChoisie(), type = sc ? sc.type : filtre.kourel;
+    (stats || []).forEach(function (st) { vus[st.id] = true; });
+    return Object.keys(membres).map(function (k) { return membres[k]; })
+      .filter(function (m) {
+        if (statutMembre(m) !== "pause" || vus[m.id]) return false;
+        if (sc && m.depuis && m.depuis > sc.date) return false;
+        return !type || type === "tous" || type === "rg" ? (m.k1 || m.k2) : m[type];
+      })
+      .sort(triNom).map(function (m) {
+        return '<tr class="ligne-pause"><td>' + esc(m.nom) + ' <span class="chip">En pause</span></td><td colspan="5" class="muted">' +
+          "Pas compté" + (m.depuis ? " depuis le " + esc(jourCourt(m.depuis).toLowerCase()) : "") + "</td></tr>";
+      }).join("");
+  }
   function seanceChoisie() {
     if (filtre.periode.indexOf("seance:") !== 0) return null;
     var sid = filtre.periode.slice(7);
@@ -2213,7 +2231,7 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
             '<td><span class="bar"><span style="width:' + taux + '%"></span></span>' + taux + " %</td>" +
             '<td class="' + (st.R ? "c-r" : "") + '">' + st.R + '</td><td class="' + (st.A ? "c-a" : "") + '">' + st.A + (st.E ? '<span class="sub">' + txtPrevenu(st.E) + "</span>" : "") + "</td>" +
             '<td class="' + (st.tdus && st.trecus < st.tdus ? "c-r" : "") + '">' + (st.tdus ? st.trecus + "/" + st.tdus : "–") + "</td></tr>";
-        }).join("") + "</tbody></table></div></section>";
+        }).join("") + pauseBilan(stats) + "</tbody></table></div></section>";
     }
     app.innerHTML = html;
     document.getElementById("b-periode").value = filtre.periode;
@@ -2280,7 +2298,6 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
       puces(L, assidus.map(function (st) { return st.nom; }));
       L.push("");
     }
-    lignesPause(L, filtre.kourel, stats, null);
     var avecTari = false;
     parDate.forEach(function (s) {
       if (!s.tari || s.tari === "aucun") return;
@@ -2296,25 +2313,6 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     L.push("Merci à tous pour votre engagement.");
     L.push("Cellule Conservatoire · Dahira Mafatihul Bichri Touba Estrie");
     return L.join("\n");
-  }
-  /* Membres en pause à afficher : pas déjà comptés dans le bilan, et déjà en pause à la date de référence. */
-  function enPause(type, stats, dateRef) {
-    var comptes = {};
-    (stats || []).forEach(function (st) { comptes[st.id] = true; });
-    return Object.keys(membres).map(function (k) { return membres[k]; })
-      .filter(function (m) {
-        if (statutMembre(m) !== "pause" || comptes[m.id]) return false;
-        if (dateRef && m.depuis && m.depuis > dateRef) return false;
-        return !type || type === "tous" || type === "rg" ? (m.k1 || m.k2) : m[type];
-      })
-      .sort(triNom).map(function (m) { return m.nom; });
-  }
-  function lignesPause(L, type, stats, dateRef) {
-    var noms = enPause(type, stats, dateRef);
-    if (!noms.length) return;
-    L.push("⏸️ *En pause, présence non requise* (" + noms.length + ")");
-    puces(L, noms);
-    L.push("");
   }
   function texteSeance(s, stats) {
     var L = [];
@@ -2334,7 +2332,6 @@ h3.group.aud-groupe .linkish { margin-left: 6px; text-transform: none; letter-sp
     if (absents.length) { L.push("🔴 *Absents" + (prevenus.length ? " sans prévenir" : "") + "* (" + absents.length + ")"); puces(L, absents.map(function (st) { return st.nom; })); L.push(""); }
     if (prevenus.length) { L.push("🔵 *Absents ayant prévenu* (" + prevenus.length + ")"); puces(L, prevenus.map(function (st) { return st.nom; })); L.push(""); }
     if (presents.length) { L.push("🟢 *Présents* (" + presents.length + ")"); puces(L, presents.map(function (st) { return st.nom + (st.R ? (retardPrevenu(s, st.id) ? " (retard, a prévenu)" : " (retard)") : ""); })); L.push(""); }
-    lignesPause(L, s.type, stats, s.date);
     if (s.tari && s.tari !== "aucun") {
       var manquants = nomsTari(s, tariCompte(s).manquants);
       if (manquants.length) {
